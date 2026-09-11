@@ -1,0 +1,208 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+
+import 'demo_client.dart';
+import 'models.dart';
+import 'tdlib/tdlib_client.dart';
+import 'telegram_client.dart';
+
+/// Single source of truth for the UI.
+///
+/// Picks the backend at startup: TDLib when `--dart-define=TELEGRAM_API_ID`
+/// carries real credentials *and* the native library is present, demo data
+/// otherwise. Every screen listens to this notifier.
+class AppState extends ChangeNotifier {
+  AppState._(this.client);
+
+  static const _apiId = int.fromEnvironment('TELEGRAM_API_ID');
+  static const _apiHash = String.fromEnvironment('TELEGRAM_API_HASH');
+
+  final TelegramClient client;
+
+  final _subscriptions = <StreamSubscription<Object?>>[];
+
+  List<TgChat> _chats = const [];
+  TgAuthStage _stage = TgAuthStage.splash;
+  String _activeFolder = 'all';
+  String _searchQuery = '';
+  int? _typingChatId;
+
+  // User preferences, surfaced on the Settings screen.
+  bool _reduceTransparency = false;
+  bool _readReceipts = true;
+  bool _autoNightMode = true;
+  double _glassIntensity = 1.0;
+  int _messageFontSize = 16;
+  String _wallpaper = 'aurora';
+
+  List<TgChat> get chats => _chats;
+  TgAuthStage get stage => _stage;
+  String get activeFolder => _activeFolder;
+  String get searchQuery => _searchQuery;
+  int? get typingChatId => _typingChatId;
+  TgUser? get me => client.me;
+  List<TgFolder> get folders => client.folders;
+  List<TgStory> get stories => client.stories;
+  List<TgUser> get contacts => client.contacts;
+  List<TgCall> get calls => client.calls;
+
+  bool get reduceTransparency => _reduceTransparency;
+  bool get readReceipts => _readReceipts;
+  bool get autoNightMode => _autoNightMode;
+  double get glassIntensity => _glassIntensity;
+  int get messageFontSize => _messageFontSize;
+  String get wallpaper => _wallpaper;
+
+  int get totalUnread =>
+      _chats.fold(0, (sum, chat) => sum + (chat.isMuted ? 0 : chat.unreadCount));
+
+  /// Builds the state with whichever backend the environment allows.
+  static Future<AppState> create({
+    String databaseDirectory = '',
+    String filesDirectory = '',
+  }) async {
+    TelegramClient client = DemoTelegramClient();
+
+    if (_apiId != 0 && _apiHash.isNotEmpty) {
+      final live = TdlibTelegramClient(
+        apiId: _apiId,
+        apiHash: _apiHash,
+        databaseDirectory: databaseDirectory,
+        filesDirectory: filesDirectory,
+      );
+      try {
+        await live.start();
+        client = live;
+      } on StateError catch (error) {
+        // Native library missing — stay on the demo backend rather than
+        // presenting a dead login screen.
+        debugPrint('TDLib unavailable, falling back to demo: $error');
+        client = DemoTelegramClient();
+        await client.start();
+      }
+    } else {
+      await client.start();
+    }
+
+    final state = AppState._(client);
+    state._attach();
+    return state;
+  }
+
+  void _attach() {
+    _chats = client.currentChats;
+    _stage = client.currentStage;
+    _subscriptions
+      ..add(client.authStage.listen((stage) {
+        _stage = stage;
+        notifyListeners();
+      }))
+      ..add(client.chats.listen((chats) {
+        _chats = chats;
+        notifyListeners();
+      }))
+      ..add(client.typingChatId.listen((chatId) {
+        _typingChatId = chatId;
+        notifyListeners();
+      }));
+  }
+
+  @override
+  void dispose() {
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    client.dispose();
+    super.dispose();
+  }
+
+  // ── Chat list ─────────────────────────────────────────────────────────────
+
+  void setFolder(String id) {
+    if (_activeFolder == id) return;
+    _activeFolder = id;
+    notifyListeners();
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  /// Chats after folder and search filtering, pinned first.
+  List<TgChat> get visibleChats {
+    Iterable<TgChat> result = _chats;
+
+    switch (_activeFolder) {
+      case 'personal':
+        result = result.where((c) =>
+            c.kind == TgChatKind.private || c.kind == TgChatKind.saved);
+      case 'groups':
+        result = result.where((c) => c.kind == TgChatKind.group);
+      case 'channels':
+        result = result.where((c) => c.kind == TgChatKind.channel);
+      case 'bots':
+        result = result.where((c) => c.kind == TgChatKind.bot);
+      case 'unread':
+        result = result.where((c) => c.unreadCount > 0);
+    }
+
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      result = result.where((c) =>
+          c.title.toLowerCase().contains(query) ||
+          (c.lastMessage ?? '').toLowerCase().contains(query));
+    }
+
+    return result.toList();
+  }
+
+  int unreadInFolder(String id) {
+    final previous = _activeFolder;
+    _activeFolder = id;
+    final count = visibleChats.fold<int>(
+        0, (sum, chat) => sum + (chat.isMuted ? 0 : chat.unreadCount));
+    _activeFolder = previous;
+    return count;
+  }
+
+  TgChat? chatById(int id) {
+    for (final chat in _chats) {
+      if (chat.id == id) return chat;
+    }
+    return null;
+  }
+
+  // ── Preferences ───────────────────────────────────────────────────────────
+
+  void setReduceTransparency(bool value) {
+    _reduceTransparency = value;
+    notifyListeners();
+  }
+
+  void setReadReceipts(bool value) {
+    _readReceipts = value;
+    notifyListeners();
+  }
+
+  void setAutoNightMode(bool value) {
+    _autoNightMode = value;
+    notifyListeners();
+  }
+
+  void setGlassIntensity(double value) {
+    _glassIntensity = value;
+    notifyListeners();
+  }
+
+  void setMessageFontSize(int value) {
+    _messageFontSize = value.clamp(12, 22);
+    notifyListeners();
+  }
+
+  void setWallpaper(String value) {
+    _wallpaper = value;
+    notifyListeners();
+  }
+}

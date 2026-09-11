@@ -1,0 +1,132 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+
+import '../../app.dart';
+import '../../core/glass_tokens.dart';
+import '../../core/tg_theme.dart';
+import '../calls/calls_screen.dart';
+import '../chats/chats_screen.dart';
+import '../common/wallpaper.dart';
+import '../contacts/contacts_screen.dart';
+import '../settings/settings_screen.dart';
+
+/// The four-tab shell.
+///
+/// One [GlassScaffold] owns the wallpaper, the nav bar and the tab bar; each
+/// tab contributes an app bar and a scrollable body that share a
+/// [GlassLargeTitleController], so the large title collapses into the bar the
+/// way it does on iOS.
+class RootShell extends StatefulWidget {
+  const RootShell({super.key});
+
+  @override
+  State<RootShell> createState() => _RootShellState();
+}
+
+class _RootShellState extends State<RootShell> {
+  static const _tabCount = 4;
+
+  final _titleControllers = List.generate(
+    _tabCount,
+    (_) => GlassLargeTitleController(),
+    growable: false,
+  );
+
+  int _index = 0;
+
+  @override
+  void dispose() {
+    for (final controller in _titleControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onTabSelected(int index) {
+    if (index == _index) {
+      // Second tap on the active tab scrolls back to the top, like iOS.
+      final controller = _titleControllers[index].scrollController;
+      if (controller.hasClients) {
+        controller.animateTo(
+          0,
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+        );
+      }
+      return;
+    }
+    HapticFeedback.selectionClick();
+    setState(() => _index = index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final unread = state.totalUnread;
+
+    return GlassScaffold(
+      background: GlassWallpaper(
+        variant: state.wallpaper,
+        animate: !state.reduceTransparency,
+      ),
+      settings: GlassTokens.chrome(context),
+      statusBarStyle: GlassStatusBarStyle.auto,
+      appBarHeight: 52,
+      bottomBarHeight: 64,
+      appBar: _appBarFor(_index),
+      bottomBar: GlassTabBar.bottom(
+        selectedIndex: _index,
+        onTabSelected: _onTabSelected,
+        quality: GlassQuality.premium,
+        settings: GlassTokens.chrome(context),
+        selectedIconColor: TgColors.accent.resolveFrom(context),
+        unselectedIconColor: TgColors.secondaryLabel.resolveFrom(context),
+        tabs: [
+          GlassTab(
+            icon: const Icon(CupertinoIcons.chat_bubble_2),
+            activeIcon: const Icon(CupertinoIcons.chat_bubble_2_fill),
+            label: unread > 0 ? 'Chats ($unread)' : 'Chats',
+          ),
+          const GlassTab(
+            icon: Icon(CupertinoIcons.person_2),
+            activeIcon: Icon(CupertinoIcons.person_2_fill),
+            label: 'Contacts',
+          ),
+          const GlassTab(
+            icon: Icon(CupertinoIcons.phone),
+            activeIcon: Icon(CupertinoIcons.phone_fill),
+            label: 'Calls',
+          ),
+          const GlassTab(
+            icon: Icon(CupertinoIcons.settings),
+            activeIcon: Icon(CupertinoIcons.settings_solid),
+            label: 'Settings',
+          ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _index,
+        children: [
+          ChatsBody(controller: _titleControllers[0]),
+          ContactsBody(controller: _titleControllers[1]),
+          CallsBody(controller: _titleControllers[2]),
+          SettingsBody(controller: _titleControllers[3]),
+        ],
+      ),
+    );
+  }
+
+  Widget _appBarFor(int index) {
+    switch (index) {
+      case 1:
+        return ContactsAppBar(controller: _titleControllers[1]);
+      case 2:
+        return CallsAppBar(controller: _titleControllers[2]);
+      case 3:
+        return SettingsAppBar(controller: _titleControllers[3]);
+      default:
+        return ChatsAppBar(controller: _titleControllers[0]);
+    }
+  }
+}

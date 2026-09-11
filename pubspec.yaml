@@ -1,0 +1,23 @@
+name: telegram_liquid
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.3
+
+dependencies:
+  cupertino_icons: ^1.0.9
+  ffi: ^2.2.0
+  flutter:
+    sdk: flutter
+  liquid_glass_widgets: ^1.4.4
+  path_provider: ^2.1.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
