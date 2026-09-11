@@ -39,13 +39,9 @@ honest account of what exists and what is left.
 
 ## Missing — next session
 
-1. `lib/ui/chat/chat_screen.dart` — conversation: pinned nav bar with avatar and
-   presence, message list, day separators, typing indicator.
-2. `lib/ui/chat/widgets/message_bubble.dart` — glass bubbles (outgoing tinted
-   with the accent), reply quote, photo/voice/file kinds, reactions, upload
-   progress, long-press context menu with a reaction row.
-3. `lib/ui/chat/widgets/composer_bar.dart` — glass composer: text area,
-   attach button opening `GlassModalSheet`, voice button.
+(The conversation screen, message bubble and composer are now written; the
+four files below are what still block compilation.)
+
 4. `lib/ui/contacts/contacts_screen.dart` — `ContactsAppBar` + `ContactsBody`
    (grouped sections, alphabetical).
 5. `lib/ui/calls/calls_screen.dart` — `CallsAppBar` + `CallsBody`
