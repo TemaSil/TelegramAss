@@ -4,7 +4,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../app.dart';
 import '../../core/glass_tokens.dart';
-import '../../core/tg_icons.dart';
 import '../../core/tg_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../chat/chat_screen.dart';
@@ -26,17 +25,10 @@ class ArchiveScreen extends StatelessWidget {
       settings: GlassTokens.chrome(context),
       statusBarStyle: GlassStatusBarStyle.auto,
       appBarHeight: 52,
-      appBar: GlassAppBar(
+      appBar: GlassAppBar.pinned(
         toolbarHeight: 52,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         title: Text(l10n.archivedChats, style: TgText.navTitle(context)),
-        leading: GlassIconButton(
-          icon: const Icon(TgIcons.back, size: 22),
-          size: 42,
-          settings: GlassTokens.chrome(context),
-          quality: GlassTokens.quality(context),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
       ),
       body: chats.isEmpty
           ? Center(

@@ -32,26 +32,24 @@ class ChatsAppBar extends StatelessWidget {
     final state = AppScope.of(context);
     final l10n = AppL10n.of(context);
 
-    return GlassAppBar(
+    return GlassAppBar.pinned(
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       title: Text(l10n.chats, style: TgText.navTitle(context)),
-      leading: _EditMenu(state: state),
+      leading: [
+        GlassBarItem.custom(
+          id: 'edit',
+          background: GlassBarItemBackground.own,
+          child: _EditMenu(state: state),
+        ),
+      ],
       actions: [
-        GlassPullDownButton(
+        GlassBarItem.menu(
+          id: 'folders',
           icon: const Icon(TgIcons.filter, size: 19),
           menuWidth: 240,
-          quality: GlassTokens.quality(context),
-          // The callback reports the item title, which is also the folder name.
-          onSelected: (title) {
-            final folder = state.folders.firstWhere(
-              (folder) => _FolderBar.folderTitle(folder, l10n) == title,
-              orElse: () => state.folders.first,
-            );
-            state.setFolder(folder.id);
-          },
-          items: [
+          menuItems: [
             for (final folder in state.folders)
               GlassMenuItem(
                 title: _FolderBar.folderTitle(folder, l10n),
@@ -60,19 +58,17 @@ class ChatsAppBar extends StatelessWidget {
                       ? TgIcons.selected
                       : TgIcons.unselected,
                 ),
-                onTap: () {},
+                onTap: () => state.setFolder(folder.id),
               ),
           ],
         ),
-        const SizedBox(width: 6),
-        GlassIconButton(
+        GlassBarItem.sheet(
+          id: 'compose',
           icon: const Icon(TgIcons.compose, size: 20),
-          size: 44,
-          settings: GlassTokens.chrome(context),
-          quality: GlassTokens.quality(context),
-          onPressed: () => GlassModalSheet.show<void>(
+          onPresent: (anchor) => GlassModalSheet.show<void>(
             context: context,
             halfSize: 0.7,
+            morphFrom: anchor,
             settings: GlassTokens.panel(context),
             quality: GlassTokens.heroQuality(context),
             builder: (sheetContext) => NewMessageSheet(

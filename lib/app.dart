@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/app_localizations.dart';
@@ -50,6 +51,11 @@ class TelegramLiquidApp extends StatelessWidget {
             ),
             child: CupertinoApp(
               navigatorKey: _navigatorKey,
+              // Hoists the pinned bar items above the Navigator so they stay
+              // put and morph between routes, instead of sliding away with
+              // the page. This is the iOS 26 navigation transition.
+              builder: (context, child) =>
+                  GlassNavigationShell(child: child ?? const SizedBox.shrink()),
               onGenerateTitle: (context) => AppL10n.of(context).appName,
               debugShowCheckedModeBanner: false,
               // 'system' leaves the choice to the platform resolver.

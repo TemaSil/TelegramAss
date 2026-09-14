@@ -24,34 +24,40 @@ class SettingsAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
-    return GlassAppBar(
+    return GlassAppBar.pinned(
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       title: Text(l10n.settings, style: TgText.navTitle(context)),
       actions: [
-        GlassPopover(
-          popoverWidth: 250,
-          popoverHeight: 150,
-          quality: GlassTokens.heroQuality(context),
-          settings: GlassTokens.menu(context),
-          triggerBuilder: (context, toggle) => GlassIconButton(
-            icon: const Icon(TgIcons.help, size: 20),
-            size: 44,
-            settings: GlassTokens.chrome(context),
-            quality: GlassTokens.quality(context),
-            onPressed: toggle,
-          ),
-          contentBuilder: (context, close) => Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(l10n.aboutTitle, style: TgText.rowTitle(context)),
-                const SizedBox(height: 8),
-                Text(l10n.aboutBody, style: TgText.rowPreview(context)),
-              ],
+        // The popover's trigger is a glass button already, so the cluster
+        // draws none of its own behind it.
+        GlassBarItem.custom(
+          id: 'about',
+          background: GlassBarItemBackground.own,
+          child: GlassPopover(
+            popoverWidth: 250,
+            popoverHeight: 150,
+            quality: GlassTokens.heroQuality(context),
+            settings: GlassTokens.menu(context),
+            triggerBuilder: (context, toggle) => GlassIconButton(
+              icon: const Icon(TgIcons.help, size: 20),
+              size: 44,
+              settings: GlassTokens.chrome(context),
+              quality: GlassTokens.quality(context),
+              onPressed: toggle,
+            ),
+            contentBuilder: (context, close) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(l10n.aboutTitle, style: TgText.rowTitle(context)),
+                  const SizedBox(height: 8),
+                  Text(l10n.aboutBody, style: TgText.rowPreview(context)),
+                ],
+              ),
             ),
           ),
         ),

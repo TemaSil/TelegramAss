@@ -19,7 +19,7 @@ class ContactsAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassAppBar(
+    return GlassAppBar.pinned(
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -28,14 +28,15 @@ class ContactsAppBar extends StatelessWidget {
         style: TgText.navTitle(context),
       ),
       actions: [
-        GlassIconButton(
+        // The sheet grows out of the capsule it was opened from, which is what
+        // iOS 26 does with a bar button that presents one.
+        GlassBarItem.sheet(
+          id: 'add-contact',
           icon: const Icon(TgIcons.addContact, size: 20),
-          size: 44,
-          settings: GlassTokens.chrome(context),
-          quality: GlassTokens.quality(context),
-          onPressed: () => GlassModalSheet.show<void>(
+          onPresent: (anchor) => GlassModalSheet.show<void>(
             context: context,
             halfSize: 0.6,
+            morphFrom: anchor,
             settings: GlassTokens.panel(context),
             quality: GlassTokens.heroQuality(context),
             builder: (sheetContext) => AddContactSheet(

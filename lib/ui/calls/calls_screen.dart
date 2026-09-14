@@ -18,18 +18,16 @@ class CallsAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassAppBar(
+    return GlassAppBar.pinned(
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       title: Text(AppL10n.of(context).calls, style: TgText.navTitle(context)),
       actions: [
-        GlassIconButton(
+        GlassBarItem.icon(
+          id: 'new-call',
           icon: const Icon(TgIcons.newCall, size: 20),
-          size: 44,
-          settings: GlassTokens.chrome(context),
-          quality: GlassTokens.quality(context),
-          onPressed: () => _explainCalls(context),
+          onTap: () => _explainCalls(context),
         ),
       ],
     );

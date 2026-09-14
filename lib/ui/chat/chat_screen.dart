@@ -659,17 +659,11 @@ class _ChatAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
-    return GlassAppBar(
+    return GlassAppBar.pinned(
       toolbarHeight: 56,
       centerTitle: false,
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      leading: GlassIconButton(
-        icon: const Icon(TgIcons.back, size: 22),
-        size: 42,
-        settings: GlassTokens.chrome(context),
-        quality: GlassTokens.quality(context),
-        onPressed: onBack,
-      ),
+      onBack: onBack,
       title: GestureDetector(
         onTap: onInfo,
         behavior: HitTestBehavior.opaque,
@@ -710,21 +704,12 @@ class _ChatAppBar extends StatelessWidget {
         ),
       ),
       actions: [
-        GlassMenu(
-          autoAdjustToScreen: true,
+        GlassBarItem.menu(
+          id: 'chat-overflow',
+          icon: const Icon(TgIcons.more, size: 20),
           menuWidth: 235,
-          menuBorderRadius: 26,
-          quality: GlassTokens.heroQuality(context),
-          settings: GlassTokens.menu(context),
           menuAlignment: GlassMenuAlignment.bottomRight,
-          triggerBuilder: (context, toggleMenu) => GlassIconButton(
-            icon: const Icon(TgIcons.more, size: 20),
-            size: 42,
-            settings: GlassTokens.chrome(context),
-            quality: GlassTokens.quality(context),
-            onPressed: toggleMenu,
-          ),
-          items: [
+          menuItems: [
             GlassMenuItem(
               title: l10n.chatInfo,
               icon: const Icon(TgIcons.info),

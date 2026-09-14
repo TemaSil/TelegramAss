@@ -68,17 +68,10 @@ class _SessionsScreenState extends State<SessionsScreen> {
       settings: GlassTokens.chrome(context),
       statusBarStyle: GlassStatusBarStyle.auto,
       appBarHeight: 52,
-      appBar: GlassAppBar(
+      appBar: GlassAppBar.pinned(
         toolbarHeight: 52,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         title: Text(l10n.activeSessions, style: TgText.navTitle(context)),
-        leading: GlassIconButton(
-          icon: const Icon(TgIcons.back, size: 22),
-          size: 42,
-          settings: GlassTokens.chrome(context),
-          quality: GlassTokens.quality(context),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
       ),
       body: sessions == null
           ? const Center(child: CupertinoActivityIndicator())
