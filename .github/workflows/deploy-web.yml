@@ -32,9 +32,10 @@ jobs:
           channel: stable
           cache: true
 
+      # Pages has to be switched on once by hand — Settings → Pages → Source:
+      # GitHub Actions. The workflow token cannot do it: creating the site
+      # needs admin rights it is never given.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Install dependencies
         run: flutter pub get

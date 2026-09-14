@@ -614,6 +614,9 @@ class AppL10nEn extends AppL10n {
   String get attachmentFailed => 'Could not attach that file';
 
   @override
+  String get demoMode => 'Demo mode';
+
+  @override
   String get diagnostics => 'Diagnostics';
 
   @override

@@ -493,7 +493,7 @@ class SettingsBody extends StatelessWidget {
           isDestructive: true,
           onPressed: () {
             Navigator.of(context).pop();
-            state.client.logOut();
+            state.logOut();
           },
         ),
       ],

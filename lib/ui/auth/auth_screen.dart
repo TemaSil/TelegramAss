@@ -386,6 +386,12 @@ class _StatusBar extends StatelessWidget {
               label: l10n.proxy,
               onPressed: () => showProxySheet(context, state),
             ),
+            // Debug builds only: a way in that does not want a phone number.
+            if (state.canEnterDemo)
+              _LinkButton(
+                label: l10n.demoMode,
+                onPressed: state.useDemoBackend,
+              ),
           ],
         ),
       ],

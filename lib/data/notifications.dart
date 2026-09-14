@@ -127,6 +127,17 @@ class TgNotifications {
     );
   }
 
+  /// Points the announcer at a different backend.
+  ///
+  /// [start] runs once and keeps the client it was given; the debug demo
+  /// switch replaces that client after the fact, and without this the old one
+  /// would go on being asked for chats it no longer has.
+  void rebind(TelegramClient client) {
+    if (!_ready) return;
+    _client = client;
+    _listen(client);
+  }
+
   /// Announces messages from every chat at once: a per-chat stream would only
   /// cover conversations the user has already opened.
   void _listen(TelegramClient client) {

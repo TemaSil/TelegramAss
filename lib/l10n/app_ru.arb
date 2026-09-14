@@ -189,6 +189,7 @@
   "camera": "Камера",
   "chooseFromGallery": "Выбрать из галереи",
   "attachmentFailed": "Не удалось приложить файл",
+  "demoMode": "Демо-режим",
   "diagnostics": "Диагностика",
   "diagnosticsHint": "Что сообщил бэкенд Telegram с момента запуска.",
   "diagnosticsEmpty": "Пока ничего не записано.",

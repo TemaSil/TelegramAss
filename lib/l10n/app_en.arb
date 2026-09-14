@@ -269,6 +269,7 @@
   "camera": "Camera",
   "chooseFromGallery": "Choose from the gallery",
   "attachmentFailed": "Could not attach that file",
+  "demoMode": "Demo mode",
   "diagnostics": "Diagnostics",
   "diagnosticsHint": "What the Telegram backend has reported since launch.",
   "diagnosticsEmpty": "Nothing logged yet.",

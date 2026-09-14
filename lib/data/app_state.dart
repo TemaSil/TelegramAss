@@ -19,7 +19,7 @@ import 'telegram_client.dart';
 /// carries real credentials *and* the native library is present, demo data
 /// otherwise. Every screen listens to this notifier.
 class AppState extends ChangeNotifier {
-  AppState._(this.client, this._prefs);
+  AppState._(this._client, this._prefs);
 
   static const _apiId = int.fromEnvironment('TELEGRAM_API_ID');
   static const _apiHash = String.fromEnvironment('TELEGRAM_API_HASH');
@@ -27,7 +27,18 @@ class AppState extends ChangeNotifier {
   /// `--dart-define=DEMO_AUTOLOGIN=true` starts the demo backend signed in.
   static const _demoAutoLogin = bool.fromEnvironment('DEMO_AUTOLOGIN');
 
-  final TelegramClient client;
+  TelegramClient _client;
+
+  /// The backend every screen talks to. Swappable, because a debug build can
+  /// drop the live one for the demo account mid-session.
+  TelegramClient get client => _client;
+
+  /// True while the demo account is standing in for a real login.
+  bool get isDemoBackend => !_client.isLive;
+
+  /// Whether the demo switch is worth offering: only in a debug build, and
+  /// only when there is a live backend to switch away from.
+  bool get canEnterDemo => kDebugMode && _client.isLive;
 
   /// Null when the platform channel is unavailable (plain `dart test` runs),
   /// in which case preferences stay in memory for the session.
@@ -112,9 +123,19 @@ class AppState extends ChangeNotifier {
       debugPrint('Preferences unavailable: $error');
     }
 
-    TelegramClient client = DemoTelegramClient(autoLogin: _demoAutoLogin);
+    // A debug build that was put into demo mode stays there across launches:
+    // the point of the switch is not signing in by phone number every time.
+    final storedDemo = kDebugMode && (prefs?.getBool(_kDemoBackend) ?? false);
 
-    if (_apiId == 0 || _apiHash.isEmpty) {
+    TelegramClient client = DemoTelegramClient(
+      autoLogin: _demoAutoLogin || storedDemo,
+    );
+
+    if (storedDemo) {
+      TgDiagnostics.instance.info(
+        'Demo backend remembered from a previous run; TDLib not started.',
+      );
+    } else if (_apiId == 0 || _apiHash.isEmpty) {
       TgDiagnostics.instance.warn(
         'No API credentials compiled in — running the demo backend. Build with '
         '--dart-define=TELEGRAM_API_ID and TELEGRAM_API_HASH for live mode.',
@@ -125,7 +146,7 @@ class AppState extends ChangeNotifier {
       );
     }
 
-    if (_apiId != 0 && _apiHash.isNotEmpty) {
+    if (!storedDemo && _apiId != 0 && _apiHash.isNotEmpty) {
       final live = TdlibTelegramClient(
         apiId: _apiId,
         apiHash: _apiHash,
@@ -175,6 +196,9 @@ class AppState extends ChangeNotifier {
   static const _kWallpaper = 'wallpaper';
   static const _kLanguage = 'language';
   static const _kProxy = 'proxy';
+
+  /// Debug builds only — see [useDemoBackend].
+  static const _kDemoBackend = 'demo_backend';
 
   void _restore() {
     final prefs = _prefs;
@@ -232,11 +256,51 @@ class AppState extends ChangeNotifier {
       );
   }
 
-  @override
-  void dispose() {
+  void _detach() {
     for (final subscription in _subscriptions) {
       subscription.cancel();
     }
+    _subscriptions.clear();
+  }
+
+  /// Drops the live backend for the demo account, and remembers it.
+  ///
+  /// A debug build is installed to look at the app, not to sign in to it, and
+  /// TDLib wants a phone number and a code every time the data directory is
+  /// cleared. This swaps in the generated account instead — already signed in,
+  /// with mock chats — and the next launch starts there directly. Leaving is
+  /// [logOut]. Debug builds only: a release must never have a way past its own
+  /// login screen.
+  Future<void> useDemoBackend() async {
+    if (!canEnterDemo) return;
+
+    final previous = _client;
+    _detach();
+
+    final demo = DemoTelegramClient(autoLogin: true);
+    await demo.start();
+    _client = demo;
+    _prefs?.setBool(_kDemoBackend, true);
+
+    TgCustomEmoji.instance.attach(demo);
+    TgNotifications.instance.rebind(demo);
+    _attach();
+    notifyListeners();
+
+    // Last, so a failure on the way out cannot leave the app with no backend.
+    await previous.dispose();
+    TgDiagnostics.instance.info('Switched to the demo backend.');
+  }
+
+  /// Signs out, and leaves demo mode if that is where the sign-out came from.
+  Future<void> logOut() async {
+    _prefs?.remove(_kDemoBackend);
+    await _client.logOut();
+  }
+
+  @override
+  void dispose() {
+    _detach();
     client.dispose();
     super.dispose();
   }

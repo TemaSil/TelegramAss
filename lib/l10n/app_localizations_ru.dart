@@ -615,6 +615,9 @@ class AppL10nRu extends AppL10n {
   String get attachmentFailed => 'Не удалось приложить файл';
 
   @override
+  String get demoMode => 'Демо-режим';
+
+  @override
   String get diagnostics => 'Диагностика';
 
   @override
