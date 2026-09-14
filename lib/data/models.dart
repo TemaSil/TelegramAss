@@ -10,6 +10,19 @@ enum TgMessageStatus { sending, sent, delivered, read, failed }
 
 enum TgMessageKind { text, photo, video, voice, audio, file, sticker, service }
 
+/// How a sticker has to be drawn. Telegram ships three encodings and each one
+/// needs a different widget: a still image, a Lottie animation, or a video.
+enum TgStickerFormat {
+  /// A still WebP.
+  image,
+
+  /// A `.tgs`: gzipped Lottie.
+  lottie,
+
+  /// A `.webm`: VP9 video, which plays muted and on a loop.
+  video,
+}
+
 enum TgAuthStage { splash, phone, code, password, ready }
 
 class TgUser {
@@ -277,7 +290,7 @@ class TgMessage {
     this.uploadProgress,
     this.localPath,
     this.playablePath,
-    this.isAnimatedSticker = false,
+    this.stickerFormat,
     this.linkPreview,
   });
 
@@ -320,9 +333,10 @@ class TgMessage {
   /// its poster frame, not something that can be played.
   final String? playablePath;
 
-  /// True when [localPath] is a `.tgs`: gzipped Lottie, which is played
-  /// rather than drawn as an image.
-  final bool isAnimatedSticker;
+  /// Set on a sticker message, saying which of the three encodings this is.
+  /// A `video` sticker keeps its poster frame in [localPath] and the video
+  /// itself in [playablePath], the same split a video message uses.
+  final TgStickerFormat? stickerFormat;
 
   /// Unfurled link card, for text messages that carry one.
   final TgLinkPreview? linkPreview;
@@ -361,7 +375,7 @@ class TgMessage {
       uploadProgress: uploadProgress,
       localPath: localPath ?? this.localPath,
       playablePath: playablePath ?? this.playablePath,
-      isAnimatedSticker: isAnimatedSticker,
+      stickerFormat: stickerFormat,
       linkPreview: linkPreview ?? this.linkPreview,
     );
   }

@@ -168,7 +168,8 @@ formatted text with tappable links and spoilers; unfurled link previews; the
 unread divider and jump-to-latest; pinned messages; attachments that really
 attach (gallery strip, camera, files); downloaded avatars and photos with a
 full-screen viewer; voice notes and music that play, and voice messages you
-record by holding the mic; animated stickers, custom emoji and full-screen video; notifications while the app is closed, carried by a
+record by holding the mic; animated stickers in all three of Telegram's formats, custom emoji and
+full-screen video; notifications while the app is closed, carried by a
 foreground service rather than Firebase; contacts you can add by number, call history, active sessions that can be
 signed out, profile editing, a compose flow that finds anyone the server
 knows, and settings that persist.
@@ -177,7 +178,7 @@ Also, from the Telegram mods: a configurable double-tap reaction, forwarding
 without quoting, message details, and a hideable story rail.
 
 Not working yet, in rough order of how much they are missed: group and
-channel administration, voting in polls, albums, WebM video stickers, forum
+channel administration, voting in polls, albums, forum
 topics, and calls — which TDLib cannot carry at all and
 which need the separate `tgcalls` WebRTC stack.
 

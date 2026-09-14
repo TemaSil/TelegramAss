@@ -54,14 +54,22 @@ SOCKS5 proxy support; and an in-app diagnostics log.
 | Unread divider and jump-to-latest | done |
 | Multi-select and multi-forward, with attribution | done |
 | Video — poster, then full-screen playback with a scrubber | done |
-| Stickers | partial — static WebP and animated TGS play; WebM video stickers fall back to their emoji |
-| Custom emoji | partial — WebP and TGS emoji are drawn; WebM ones keep the fallback |
+| Stickers | done — WebP, TGS and WebM all draw; a video sticker shows its thumbnail until the first frame |
+| Custom emoji | done — WebP, TGS and WebM are all drawn inline |
 | In-chat search | partial — local text, but results jump to the message |
 | Shared media grid | done — real photos, tapping opens the viewer |
 | Polls, locations, contacts, dice | partial — shown and readable, not interactive |
 | Albums | missing |
 | Scheduled and silent send | missing |
 | Threads and channel comments | missing |
+
+One caveat on the video stickers, because it is visible: WebM stickers are
+VP9 *with an alpha channel*, and Android's own decoder — which is what
+`video_player` drives — decodes the colour stream and drops the alpha one.
+The sticker animates, but wherever it should be transparent it comes out as
+whatever the encoder left there, usually black. Real transparency needs
+libvpx's own decoder, which means a native extension per ABI; until that is
+built, a video sticker is a rectangle rather than a cut-out.
 
 ## Elsewhere
 
@@ -140,9 +148,8 @@ Need the base first:
    joining; member lists and leaving are in.
 2. **Voting in polls, and albums** — polls, locations and contacts are
    readable now; acting on them is not.
-3. **WebM video stickers and emoji**, now that a video player is in the app.
-4. **Forum topics**, which a busy account will notice.
-5. Then the rest of the mod toggles, which are a pleasant layer now that the
+3. **Forum topics**, which a busy account will notice.
+4. Then the rest of the mod toggles, which are a pleasant layer now that the
    base holds.
 
 Calls remain their own milestone and need a second native stack.

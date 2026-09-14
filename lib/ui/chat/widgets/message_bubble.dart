@@ -16,6 +16,7 @@ import 'attachment_image.dart';
 import 'bubble_shape.dart';
 import 'message_text.dart';
 import 'photo_viewer.dart';
+import 'video_sticker.dart';
 import 'video_viewer.dart';
 import '../../../core/tg_icons.dart';
 import '../../../data/audio_player.dart';
@@ -387,8 +388,22 @@ class MessageBubble extends StatelessWidget {
         );
 
       case TgMessageKind.sticker:
+        // A video sticker keeps its poster frame in localPath and the video in
+        // playablePath; the other two encodings are the file in localPath.
         final stickerPath = message.localPath;
-        if (stickerPath != null && message.isAnimatedSticker) {
+        final videoPath = message.stickerFormat == TgStickerFormat.video
+            ? message.playablePath
+            : null;
+        if (videoPath != null) {
+          return VideoSticker(
+            path: videoPath,
+            size: 140,
+            fallbackEmoji: message.text,
+            posterPath: stickerPath,
+          );
+        }
+        if (stickerPath != null &&
+            message.stickerFormat == TgStickerFormat.lottie) {
           return AnimatedSticker(
             path: stickerPath,
             size: 140,
@@ -403,8 +418,8 @@ class MessageBubble extends StatelessWidget {
             fit: BoxFit.contain,
           );
         }
-        // WebM video stickers would need a decoder; show the emoji they stand
-        // for rather than an empty bubble.
+        // Nothing has landed yet, or the encoding is one no widget here draws:
+        // show the emoji the sticker stands for rather than an empty bubble.
         return Text(
           message.text.isEmpty ? '🎨' : message.text,
           style: const TextStyle(fontSize: 54),

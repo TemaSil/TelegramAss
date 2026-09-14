@@ -8,6 +8,7 @@ import '../../../data/custom_emoji.dart';
 import '../../../data/models.dart';
 import 'animated_sticker.dart';
 import 'attachment_image.dart';
+import 'video_sticker.dart';
 
 /// Renders message text with the formatting TDLib reports.
 ///
@@ -191,21 +192,32 @@ class _MessageTextState extends State<MessageText> {
         final id = entity.customEmojiId;
         final path = id == null ? null : TgCustomEmoji.instance.pathFor(id);
         // The covered characters are the emoji Telegram itself falls back to,
-        // so they stand in until the sticker is on disk — and stay for the
-        // formats we cannot draw.
+        // so they stand in until the sticker is on disk.
         if (path == null) return TextSpan(text: slice);
 
         final size = (widget.style.fontSize ?? 16) * 1.35;
         return WidgetSpan(
           alignment: PlaceholderAlignment.middle,
-          child: path.endsWith('.tgs')
-              ? AnimatedSticker(path: path, size: size, fallbackEmoji: slice)
-              : AttachmentImage(
-                  path: path,
-                  width: size,
-                  height: size,
-                  fit: BoxFit.contain,
-                ),
+          // TDLib names the file after its encoding, which is what says how it
+          // has to be drawn: Lottie, video, or a still image.
+          child: switch (path.split('.').last) {
+            'tgs' => AnimatedSticker(
+              path: path,
+              size: size,
+              fallbackEmoji: slice,
+            ),
+            'webm' => VideoSticker(
+              path: path,
+              size: size,
+              fallbackEmoji: slice,
+            ),
+            _ => AttachmentImage(
+              path: path,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+            ),
+          },
         );
     }
   }

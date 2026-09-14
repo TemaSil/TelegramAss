@@ -412,6 +412,16 @@ class TdlibTelegramClient implements TelegramClient {
     return null;
   }
 
+  /// Maps TDLib's `StickerFormat` onto the widget that can draw it. An
+  /// unknown format answers null, and the message keeps the emoji fallback.
+  static TgStickerFormat? _stickerFormatFrom(String? format) =>
+      switch (format) {
+        'stickerFormatWebp' => TgStickerFormat.image,
+        'stickerFormatTgs' => TgStickerFormat.lottie,
+        'stickerFormatWebm' => TgStickerFormat.video,
+        _ => null,
+      };
+
   /// The local path of a file TDLib already has, without starting a download.
   static String? _readyPath(Map<String, dynamic>? file) {
     final local = file?['local'] as Map<String, dynamic>?;
@@ -743,18 +753,24 @@ class TdlibTelegramClient implements TelegramClient {
         ? null
         : (sizes.last as Map<String, dynamic>)['photo']
               as Map<String, dynamic>?;
-    // Stickers are a file too. WebP ones are an image; TGS ones are gzipped
-    // Lottie and are played. WebM video stickers would need a video decoder,
-    // so those still fall back to the emoji they stand for.
+    // Stickers are a file too. WebP ones are an image, TGS ones are gzipped
+    // Lottie, and WebM ones are VP9 video: three encodings, three widgets.
     final sticker = content?['sticker'] as Map<String, dynamic>?;
-    final stickerFormat =
-        (sticker?['format'] as Map<String, dynamic>?)?['@type'] as String?;
-    final isAnimatedSticker = stickerFormat == 'stickerFormatTgs';
-    final isDrawableSticker =
-        stickerFormat == 'stickerFormatWebp' || isAnimatedSticker;
-    final stickerFile = isDrawableSticker
-        ? (sticker?['sticker'] as Map<String, dynamic>?)
-        : null;
+    final stickerFormat = _stickerFormatFrom(
+      (sticker?['format'] as Map<String, dynamic>?)?['@type'] as String?,
+    );
+    // A video sticker shows its thumbnail until the video is on disk, so it
+    // splits the way a video message does: poster in one field, file in the
+    // other. The other two draw the sticker file itself.
+    final isVideoSticker = stickerFormat == TgStickerFormat.video;
+    final stickerFile = stickerFormat == null
+        ? null
+        : (sticker?['sticker'] as Map<String, dynamic>?);
+    final stickerThumb =
+        (sticker?['thumbnail'] as Map<String, dynamic>?)?['file']
+            as Map<String, dynamic>?;
+    final stickerPoster = isVideoSticker ? stickerThumb : stickerFile;
+    final videoStickerFile = isVideoSticker ? stickerFile : null;
 
     // A video shows its thumbnail rather than the video itself, which is far
     // too big to fetch just to draw a bubble.
@@ -778,11 +794,14 @@ class TdlibTelegramClient implements TelegramClient {
     final voice =
         (content?['voice_note'] as Map<String, dynamic>?)?['voice']
             as Map<String, dynamic>?;
+    // A video sticker is a few tens of kilobytes as well, and it is the whole
+    // message: it gets fetched up front for the same reason a voice note does.
+    final eager = voice ?? videoStickerFile;
     final playable =
-        (voice ?? audio?['audio'] ?? video?['video'] ?? document?['document'])
+        (eager ?? audio?['audio'] ?? video?['video'] ?? document?['document'])
             as Map<String, dynamic>?;
-    final playablePath = voice != null
-        ? _resolveFile(voice, priority: 24)
+    final playablePath = eager != null
+        ? _resolveFile(eager, priority: 24)
         : _readyPath(playable);
     final playableId = (playable?['id'] as num?)?.toInt();
     if (playableId != null) {
@@ -792,7 +811,7 @@ class TdlibTelegramClient implements TelegramClient {
       }
     }
 
-    final previewFile = largest ?? stickerFile ?? videoThumb;
+    final previewFile = largest ?? stickerPoster ?? videoThumb;
     final mediaPath = _resolveFile(previewFile, priority: 16);
     final mediaFileId = (previewFile?['id'] as num?)?.toInt();
     if (mediaPath == null && mediaFileId != null) {
@@ -817,7 +836,7 @@ class TdlibTelegramClient implements TelegramClient {
       entities: _entitiesOf(content),
       localPath: mediaPath,
       playablePath: playablePath,
-      isAnimatedSticker: isAnimatedSticker,
+      stickerFormat: stickerFormat,
       linkPreview: linkPreview,
       voiceSeconds:
           ((content?['voice_note'] as Map<String, dynamic>?)?['duration']
@@ -1456,12 +1475,11 @@ class TdlibTelegramClient implements TelegramClient {
     if (stickers == null || stickers.isEmpty) return null;
 
     final sticker = stickers.first;
-    final format =
-        (sticker['format'] as Map<String, dynamic>?)?['@type'] as String?;
-    // WebM emoji would want a video decoder; those keep the fallback.
-    if (format != 'stickerFormatWebp' && format != 'stickerFormatTgs') {
-      return null;
-    }
+    final format = _stickerFormatFrom(
+      (sticker['format'] as Map<String, dynamic>?)?['@type'] as String?,
+    );
+    // An encoding with no widget behind it keeps the fallback characters.
+    if (format == null) return null;
 
     final file = sticker['sticker'] as Map<String, dynamic>?;
     final path = _resolveFile(file, priority: 20);
