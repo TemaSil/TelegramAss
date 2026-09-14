@@ -57,7 +57,6 @@
       }
     }
   },
-  "newMessageHint": "New message — pick a contact from the Contacts tab",
   "reply": "Reply",
   "copy": "Copy",
   "forward": "Forward",
@@ -165,12 +164,10 @@
       }
     }
   },
-  "addContactHint": "Adding contacts needs the live TDLib backend",
   "all": "All",
   "missed": "Missed",
   "noCalls": "No calls here",
   "callCancelled": "Cancelled",
-  "callingName": "Calling {name}…",
   "@callingName": {
     "placeholders": {
       "name": {
@@ -178,7 +175,6 @@
       }
     }
   },
-  "newCallHint": "Placing calls needs the live TDLib backend",
   "appearance": "Appearance",
   "wallpaper": "Chat wallpaper",
   "wallpaperSubtitle": "Glass refracts whatever sits behind it.",
@@ -225,6 +221,16 @@
   "thisDevice": "This device",
   "otherSessions": "Other session",
   "notImplementedHere": "Changing the two-step password is not implemented here yet. Use another Telegram client; signing in with an existing password works.",
+  "editProfile": "Edit profile",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "username": "Username",
+  "bio": "Bio",
+  "save": "Save",
+  "addContact": "Add contact",
+  "phoneNumber": "Phone number",
+  "contactNotFound": "Nobody on Telegram uses that number.",
+  "callsUnavailable": "Voice and video calls are not supported yet — TDLib does not carry them.",
   "privacy": "Privacy",
   "messageNotifications": "Message notifications",
   "messageNotificationsSubtitle": "Keeps the connection alive so messages arrive while the app is closed",
@@ -239,7 +245,6 @@
   "logOutMessage": "You will need to sign in again to read your chats.",
   "aboutTitle": "About this build",
   "aboutBody": "A Flutter Telegram client rendered with the iOS 26 Liquid Glass material. Glass quality adapts to the device.",
-  "profileEditHint": "Profile editing needs the live backend",
   "myStory": "My Story",
   "replyToStory": "Reply to story",
   "errorInvalidPhone": "Enter a valid phone number",

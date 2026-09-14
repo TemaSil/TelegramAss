@@ -6,6 +6,7 @@ import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../chat/chat_screen.dart';
+import 'add_contact_sheet.dart';
 import '../common/tg_avatar.dart';
 import '../../core/tg_icons.dart';
 import '../../l10n/app_localizations.dart';
@@ -32,10 +33,21 @@ class ContactsAppBar extends StatelessWidget {
           size: 44,
           settings: GlassTokens.chrome(context),
           quality: GlassQuality.premium,
-          onPressed: () => GlassToast.show(
-            context,
-            message: AppL10n.of(context).addContactHint,
-            type: GlassToastType.info,
+          onPressed: () => GlassModalSheet.show<void>(
+            context: context,
+            halfSize: 0.6,
+            settings: GlassTokens.panel(context),
+            quality: GlassQuality.premium,
+            builder: (sheetContext) => AddContactSheet(
+              onAdded: (chatId) {
+                Navigator.of(sheetContext).pop();
+                Navigator.of(context).push(
+                  CupertinoPageRoute<void>(
+                    builder: (_) => ChatScreen(chatId: chatId),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],

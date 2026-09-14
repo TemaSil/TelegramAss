@@ -306,6 +306,10 @@ class AppState extends ChangeNotifier {
   List<TgChat> get archivedChats =>
       _chats.where((chat) => chat.isArchived).toList();
 
+  /// Rebuilds everything listening. Used after a change the backend makes
+  /// without an update of its own — editing the profile, say.
+  void refresh() => notifyListeners();
+
   TgChat? chatById(int id) {
     for (final chat in _chats) {
       if (chat.id == id) return chat;

@@ -79,7 +79,10 @@ SOCKS5 proxy support; and an in-app diagnostics log.
   password is not implemented, and the row says so rather than doing nothing.
 - **Calls** — impossible through TDLib, which carries neither voice nor video.
   They need `tgcalls` with its own native build for every ABI: a project in
-  itself.
+  itself. The history is real; the call buttons say why they cannot place one
+  rather than doing nothing.
+- **Profile** — name, username and bio are editable; the photo is not.
+- **Contacts** — adding by phone number works; the list is read-only otherwise.
 - **Platform** — no deep links, share-sheet integration, or passcode lock.
 
 ## Engineering

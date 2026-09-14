@@ -29,11 +29,7 @@ class CallsAppBar extends StatelessWidget {
           size: 44,
           settings: GlassTokens.chrome(context),
           quality: GlassQuality.premium,
-          onPressed: () => GlassToast.show(
-            context,
-            message: AppL10n.of(context).newCallHint,
-            type: GlassToastType.info,
-          ),
+          onPressed: () => _explainCalls(context),
         ),
       ],
     );
@@ -174,12 +170,25 @@ class _CallTile extends StatelessWidget {
           ),
         ],
       ),
-      onTap: () => GlassToast.show(
-        context,
-        message: l10n.callingName(call.peerName),
-        type: GlassToastType.info,
-        icon: const Icon(TgIcons.callsActive, size: 17),
-      ),
+      onTap: () => _explainCalls(context),
     );
   }
+}
+
+/// Calls need tgcalls, a native stack TDLib does not carry. The history is
+/// real; placing one is not, and saying so beats a button that does nothing.
+Future<void> _explainCalls(BuildContext context) {
+  final l10n = AppL10n.of(context);
+  return GlassDialog.show<void>(
+    context: context,
+    title: l10n.call,
+    message: l10n.callsUnavailable,
+    settings: GlassTokens.menu(context),
+    actions: [
+      GlassDialogAction(
+        label: l10n.ok,
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    ],
+  );
 }

@@ -355,12 +355,6 @@ abstract class AppL10n {
   /// **'{title} deleted'**
   String chatDeleted(String title);
 
-  /// No description provided for @newMessageHint.
-  ///
-  /// In en, this message translates to:
-  /// **'New message — pick a contact from the Contacts tab'**
-  String get newMessageHint;
-
   /// No description provided for @reply.
   ///
   /// In en, this message translates to:
@@ -667,12 +661,6 @@ abstract class AppL10n {
   /// **'{count} online'**
   String onlineCount(int count);
 
-  /// No description provided for @addContactHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Adding contacts needs the live TDLib backend'**
-  String get addContactHint;
-
   /// No description provided for @all.
   ///
   /// In en, this message translates to:
@@ -696,18 +684,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get callCancelled;
-
-  /// No description provided for @callingName.
-  ///
-  /// In en, this message translates to:
-  /// **'Calling {name}…'**
-  String callingName(String name);
-
-  /// No description provided for @newCallHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Placing calls needs the live TDLib backend'**
-  String get newCallHint;
 
   /// No description provided for @appearance.
   ///
@@ -967,6 +943,60 @@ abstract class AppL10n {
   /// **'Changing the two-step password is not implemented here yet. Use another Telegram client; signing in with an existing password works.'**
   String get notImplementedHere;
 
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile;
+
+  /// No description provided for @firstName.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get firstName;
+
+  /// No description provided for @lastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get lastName;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bio;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @addContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contact'**
+  String get addContact;
+
+  /// No description provided for @contactNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody on Telegram uses that number.'**
+  String get contactNotFound;
+
+  /// No description provided for @callsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice and video calls are not supported yet — TDLib does not carry them.'**
+  String get callsUnavailable;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:
@@ -1050,12 +1080,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'A Flutter Telegram client rendered with the iOS 26 Liquid Glass material. Glass quality adapts to the device.'**
   String get aboutBody;
-
-  /// No description provided for @profileEditHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Profile editing needs the live backend'**
-  String get profileEditHint;
 
   /// No description provided for @myStory.
   ///
@@ -1254,12 +1278,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Enter a server and a port'**
   String get proxyInvalid;
-
-  /// No description provided for @save.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get save;
 
   /// No description provided for @connection.
   ///

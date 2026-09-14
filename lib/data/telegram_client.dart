@@ -118,6 +118,23 @@ abstract class TelegramClient {
     bool asCopy = false,
   }) async {}
 
+  /// Changes the account's own name, bio or username. Anything left null is
+  /// left alone.
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? bio,
+    String? username,
+  }) async {}
+
+  /// Adds a contact by phone number and returns the chat id to open, or null
+  /// when Telegram has nobody registered on that number.
+  Future<int?> addContact(
+    String phone,
+    String firstName,
+    String lastName,
+  ) async => null;
+
   /// Devices signed in to this account, the current one first.
   Future<List<TgSession>> activeSessions() async => const [];
 

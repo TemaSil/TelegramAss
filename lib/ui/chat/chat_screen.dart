@@ -1520,6 +1520,22 @@ class _MediaSheet extends StatelessWidget {
 }
 
 class _ChatInfoSheet extends StatelessWidget {
+  static Future<void> _explainCalls(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    return GlassDialog.show<void>(
+      context: context,
+      title: l10n.call,
+      message: l10n.callsUnavailable,
+      settings: GlassTokens.menu(context),
+      actions: [
+        GlassDialogAction(
+          label: l10n.ok,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    );
+  }
+
   const _ChatInfoSheet({
     required this.chat,
     required this.onMedia,
@@ -1573,15 +1589,18 @@ class _ChatInfoSheet extends StatelessWidget {
             quality: GlassQuality.premium,
             settings: GlassTokens.chrome(context),
             items: [
+              // Calls need tgcalls, a second native stack TDLib does not
+              // carry. The buttons stay where Telegram puts them and say so
+              // rather than doing nothing.
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.calls),
                 label: l10n.call,
-                onTap: () {},
+                onTap: () => _explainCalls(context),
               ),
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.video),
                 label: l10n.video,
-                onTap: () {},
+                onTap: () => _explainCalls(context),
               ),
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.search),

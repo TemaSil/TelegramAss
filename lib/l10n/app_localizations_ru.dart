@@ -143,10 +143,6 @@ class AppL10nRu extends AppL10n {
   }
 
   @override
-  String get newMessageHint =>
-      'Новое сообщение — выберите контакт на вкладке «Контакты»';
-
-  @override
   String get reply => 'Ответить';
 
   @override
@@ -317,10 +313,6 @@ class AppL10nRu extends AppL10n {
   }
 
   @override
-  String get addContactHint =>
-      'Добавление контактов работает только с живым TDLib';
-
-  @override
   String get all => 'Все';
 
   @override
@@ -331,14 +323,6 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get callCancelled => 'Отменён';
-
-  @override
-  String callingName(String name) {
-    return 'Звоним: $name…';
-  }
-
-  @override
-  String get newCallHint => 'Звонки работают только с живым TDLib';
 
   @override
   String get appearance => 'Оформление';
@@ -482,6 +466,34 @@ class AppL10nRu extends AppL10n {
       'Смена облачного пароля здесь пока не сделана. Поменяйте его в другом клиенте Telegram; вход с существующим паролем работает.';
 
   @override
+  String get editProfile => 'Изменить профиль';
+
+  @override
+  String get firstName => 'Имя';
+
+  @override
+  String get lastName => 'Фамилия';
+
+  @override
+  String get username => 'Имя пользователя';
+
+  @override
+  String get bio => 'О себе';
+
+  @override
+  String get save => 'Сохранить';
+
+  @override
+  String get addContact => 'Добавить контакт';
+
+  @override
+  String get contactNotFound => 'На этом номере нет пользователя Telegram.';
+
+  @override
+  String get callsUnavailable =>
+      'Звонки пока не поддерживаются — TDLib их не передаёт.';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override
@@ -527,10 +539,6 @@ class AppL10nRu extends AppL10n {
   @override
   String get aboutBody =>
       'Telegram-клиент на Flutter, отрисованный материалом Liquid Glass из iOS 26. Качество стекла подстраивается под устройство.';
-
-  @override
-  String get profileEditHint =>
-      'Редактирование профиля работает только с живым бэкендом';
 
   @override
   String get myStory => 'Моя история';
@@ -633,9 +641,6 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get proxyInvalid => 'Укажите сервер и порт';
-
-  @override
-  String get save => 'Сохранить';
 
   @override
   String get connection => 'Соединение';

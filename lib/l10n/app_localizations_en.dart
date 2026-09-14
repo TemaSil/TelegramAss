@@ -145,10 +145,6 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
-  String get newMessageHint =>
-      'New message — pick a contact from the Contacts tab';
-
-  @override
   String get reply => 'Reply';
 
   @override
@@ -319,9 +315,6 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
-  String get addContactHint => 'Adding contacts needs the live TDLib backend';
-
-  @override
   String get all => 'All';
 
   @override
@@ -332,14 +325,6 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get callCancelled => 'Cancelled';
-
-  @override
-  String callingName(String name) {
-    return 'Calling $name…';
-  }
-
-  @override
-  String get newCallHint => 'Placing calls needs the live TDLib backend';
 
   @override
   String get appearance => 'Appearance';
@@ -481,6 +466,34 @@ class AppL10nEn extends AppL10n {
       'Changing the two-step password is not implemented here yet. Use another Telegram client; signing in with an existing password works.';
 
   @override
+  String get editProfile => 'Edit profile';
+
+  @override
+  String get firstName => 'First name';
+
+  @override
+  String get lastName => 'Last name';
+
+  @override
+  String get username => 'Username';
+
+  @override
+  String get bio => 'Bio';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get addContact => 'Add contact';
+
+  @override
+  String get contactNotFound => 'Nobody on Telegram uses that number.';
+
+  @override
+  String get callsUnavailable =>
+      'Voice and video calls are not supported yet — TDLib does not carry them.';
+
+  @override
   String get privacy => 'Privacy';
 
   @override
@@ -526,9 +539,6 @@ class AppL10nEn extends AppL10n {
   @override
   String get aboutBody =>
       'A Flutter Telegram client rendered with the iOS 26 Liquid Glass material. Glass quality adapts to the device.';
-
-  @override
-  String get profileEditHint => 'Profile editing needs the live backend';
 
   @override
   String get myStory => 'My Story';
@@ -631,9 +641,6 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get proxyInvalid => 'Enter a server and a port';
-
-  @override
-  String get save => 'Save';
 
   @override
   String get connection => 'Connection';

@@ -537,6 +537,41 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? bio,
+    String? username,
+  }) async {
+    final me = _me;
+    if (me == null) return;
+    _me = TgUser(
+      id: me.id,
+      name: [
+        firstName ?? me.name.split(' ').first,
+        if ((lastName ?? '').isNotEmpty)
+          lastName!
+        else if (firstName == null && me.name.split(' ').length > 1)
+          me.name.split(' ').last,
+      ].join(' ').trim(),
+      username: username ?? me.username,
+      phone: me.phone,
+      bio: bio ?? me.bio,
+      isOnline: me.isOnline,
+      lastSeen: me.lastSeen,
+      isVerified: me.isVerified,
+      isPremium: me.isPremium,
+    );
+  }
+
+  @override
+  Future<int?> addContact(
+    String phone,
+    String firstName,
+    String lastName,
+  ) async => _chats.isEmpty ? null : _chats.first.id;
+
+  @override
   Future<List<TgSession>> activeSessions() async => [
     TgSession(
       id: '1',

@@ -11,6 +11,7 @@ import '../common/wallpaper_picker.dart';
 import 'proxy_sheet.dart';
 import '../../core/tg_icons.dart';
 import '../../l10n/app_localizations.dart';
+import 'edit_profile_sheet.dart';
 import 'sessions_screen.dart';
 
 /// Nav bar for the Settings tab.
@@ -555,10 +556,12 @@ class _ProfileCard extends StatelessWidget {
             size: 40,
             settings: GlassTokens.chrome(context),
             quality: GlassQuality.premium,
-            onPressed: () => GlassToast.show(
-              context,
-              message: AppL10n.of(context).profileEditHint,
-              type: GlassToastType.info,
+            onPressed: () => GlassModalSheet.show<void>(
+              context: context,
+              halfSize: 0.62,
+              settings: GlassTokens.panel(context),
+              quality: GlassQuality.premium,
+              builder: (_) => const EditProfileSheet(),
             ),
           ),
         ],

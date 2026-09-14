@@ -1340,6 +1340,62 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? bio,
+    String? username,
+  }) async {
+    if (firstName != null || lastName != null) {
+      await _request({
+        '@type': 'setName',
+        'first_name': firstName ?? _me?.name.split(' ').first ?? '',
+        'last_name': lastName ?? '',
+      });
+    }
+    if (bio != null) {
+      await _request({'@type': 'setBio', 'bio': bio});
+    }
+    if (username != null) {
+      await _request({'@type': 'setUsername', 'username': username});
+    }
+    await _loadMe();
+  }
+
+  @override
+  Future<int?> addContact(
+    String phone,
+    String firstName,
+    String lastName,
+  ) async {
+    final response = await _request({
+      '@type': 'importContacts',
+      'contacts': [
+        {
+          '@type': 'contact',
+          'phone_number': phone,
+          'first_name': firstName,
+          'last_name': lastName,
+        },
+      ],
+    });
+
+    // Telegram answers with a user id of 0 for a number nobody is registered
+    // on, which is not an error — just nobody to write to.
+    final ids = response['user_ids'] as List?;
+    final userId = ids == null || ids.isEmpty ? 0 : (ids.first as num).toInt();
+    if (userId == 0) return null;
+
+    final chat = await _request({
+      '@type': 'createPrivateChat',
+      'user_id': userId,
+      'force': false,
+    });
+    final chatId = (chat['id'] as num?)?.toInt();
+    return chatId;
+  }
+
+  @override
   Future<List<TgSession>> activeSessions() async {
     final response = await _request({'@type': 'getActiveSessions'});
     final sessions = response['sessions'] as List?;
