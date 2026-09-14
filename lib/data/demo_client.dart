@@ -21,6 +21,10 @@ class DemoTelegramClient implements TelegramClient {
   final _messageControllers = <int, StreamController<List<TgMessage>>>{};
   final _messages = <int, List<TgMessage>>{};
 
+  /// Every pending delivery/typing/upload timer, so [dispose] can cancel them
+  /// instead of leaving them to fire against a closed controller.
+  final _timers = <Timer>{};
+
   List<TgChat> _chats = const [];
   TgAuthStage _stage = TgAuthStage.splash;
   TgUser? _me;
@@ -58,8 +62,23 @@ class DemoTelegramClient implements TelegramClient {
     _setStage(TgAuthStage.phone);
   }
 
+  /// Schedules [action] and forgets the timer once it has fired.
+  Timer _schedule(Duration delay, void Function() action) {
+    late final Timer timer;
+    timer = Timer(delay, () {
+      _timers.remove(timer);
+      action();
+    });
+    _timers.add(timer);
+    return timer;
+  }
+
   @override
   Future<void> dispose() async {
+    for (final timer in _timers) {
+      timer.cancel();
+    }
+    _timers.clear();
     _ambientTimer?.cancel();
     await _authController.close();
     await _chatsController.close();
@@ -369,23 +388,26 @@ class DemoTelegramClient implements TelegramClient {
   /// Walks a just-sent message through sending → sent → delivered → read,
   /// which is what makes the tick animation in the bubble feel alive.
   void _advanceStatus(int chatId, int messageId) {
-    Timer(const Duration(milliseconds: 420), () {
+    _schedule(const Duration(milliseconds: 420), () {
       _mutate(chatId, messageId, (m) => m.copyWith(status: TgMessageStatus.sent));
     });
-    Timer(const Duration(milliseconds: 1100), () {
-      _mutate(chatId, messageId, (m) => m.copyWith(status: TgMessageStatus.delivered));
+    _schedule(const Duration(milliseconds: 1100), () {
+      _mutate(
+          chatId, messageId, (m) => m.copyWith(status: TgMessageStatus.delivered));
     });
-    Timer(const Duration(milliseconds: 2400), () {
+    _schedule(const Duration(milliseconds: 2400), () {
       _mutate(chatId, messageId, (m) => m.copyWith(status: TgMessageStatus.read));
     });
   }
 
   void _simulateUpload(int chatId, int messageId) {
     var progress = 0.0;
-    Timer.periodic(const Duration(milliseconds: 180), (timer) {
+    late final Timer ticker;
+    ticker = Timer.periodic(const Duration(milliseconds: 180), (timer) {
       progress += 0.12 + _random.nextDouble() * 0.1;
       if (progress >= 1) {
         timer.cancel();
+        _timers.remove(ticker);
         _mutate(chatId, messageId,
             (m) => m.copyWith(uploadProgress: null, status: TgMessageStatus.sent));
         _advanceStatus(chatId, messageId);
@@ -393,6 +415,7 @@ class DemoTelegramClient implements TelegramClient {
         _mutate(chatId, messageId, (m) => m.copyWith(uploadProgress: progress));
       }
     });
+    _timers.add(ticker);
   }
 
   /// A short typing indicator followed by a canned reply, so an open
@@ -403,9 +426,9 @@ class DemoTelegramClient implements TelegramClient {
     if (chat.kind == TgChatKind.saved || chat.kind == TgChatKind.channel) return;
     if (_random.nextDouble() > 0.75) return;
 
-    Timer(const Duration(milliseconds: 900), () {
+    _schedule(const Duration(milliseconds: 900), () {
       _typingController.add(chatId);
-      Timer(Duration(milliseconds: 1400 + _random.nextInt(1200)), () {
+      _schedule(Duration(milliseconds: 1400 + _random.nextInt(1200)), () {
         _typingController.add(null);
         _append(
           chatId,

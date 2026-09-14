@@ -32,14 +32,28 @@ class ChatsAppBar extends StatelessWidget {
       actions: [
         GlassPullDownButton(
           icon: const Icon(CupertinoIcons.line_horizontal_3_decrease, size: 19),
-          buttonWidth: 44,
-          buttonHeight: 44,
           menuWidth: 240,
           quality: GlassQuality.premium,
-          onSelected: (index) {
-            const ids = ['all', 'unread', 'personal', 'groups', 'channels'];
-            if (index >= 0 && index < ids.length) state.setFolder(ids[index]);
+          // The callback reports the item title, which is also the folder name.
+          onSelected: (title) {
+            final folder = state.folders.firstWhere(
+              (folder) => folder.title == title,
+              orElse: () => state.folders.first,
+            );
+            state.setFolder(folder.id);
           },
+          items: [
+            for (final folder in state.folders)
+              GlassMenuItem(
+                title: folder.title,
+                icon: Icon(
+                  folder.id == state.activeFolder
+                      ? CupertinoIcons.checkmark_circle_fill
+                      : CupertinoIcons.circle,
+                ),
+                onTap: () {},
+              ),
+          ],
         ),
         const SizedBox(width: 6),
         GlassIconButton(

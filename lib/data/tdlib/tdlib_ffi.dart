@@ -9,22 +9,21 @@ import 'package:ffi/ffi.dart';
 /// `td_create_client_id` / `td_send` / `td_receive` / `td_execute`.
 /// See https://core.telegram.org/tdlib/getting-started
 ///
-/// The Android build expects `libtdjson.so` in `android/app/src/main/jniLibs/
-/// <abi>/`. When the library is absent, [TdJsonBindings.open] returns null and
+/// The Android build expects `libtdjson.so` in
+/// `android/app/src/main/jniLibs/<abi>/`. When the library is absent, [TdJsonBindings.open] returns null and
 /// the app falls back to the demo backend instead of crashing.
 class TdJsonBindings {
-  TdJsonBindings._(this._lib)
+  TdJsonBindings._(DynamicLibrary lib)
       : _createClientId =
-            _lib.lookupFunction<Int32 Function(), int Function()>(
+            lib.lookupFunction<Int32 Function(), int Function()>(
                 'td_create_client_id'),
-        _send = _lib.lookupFunction<Void Function(Int32, Pointer<Utf8>),
+        _send = lib.lookupFunction<Void Function(Int32, Pointer<Utf8>),
             void Function(int, Pointer<Utf8>)>('td_send'),
-        _receive = _lib.lookupFunction<Pointer<Utf8> Function(Double),
+        _receive = lib.lookupFunction<Pointer<Utf8> Function(Double),
             Pointer<Utf8> Function(double)>('td_receive'),
-        _execute = _lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>),
+        _execute = lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>),
             Pointer<Utf8> Function(Pointer<Utf8>)>('td_execute');
 
-  final DynamicLibrary _lib;
   final int Function() _createClientId;
   final void Function(int, Pointer<Utf8>) _send;
   final Pointer<Utf8> Function(double) _receive;
