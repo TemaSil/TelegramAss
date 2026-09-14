@@ -68,8 +68,10 @@ SOCKS5 proxy support; and an in-app diagnostics log.
   selection mode and forum topics are not.
 - **Search** — server-side across chats, public chats and messages. Searching
   within one chat is still local to the loaded history.
-- **Groups and channels** — read-only. No member lists, admin tools,
-  permissions, invite links, joining or leaving.
+- **Groups and channels** — member lists and leaving work; a channel the
+  account does not administer will not hand over its members, which is
+  Telegram's rule rather than a failure. Admin tools, permissions, invite
+  links and joining are still missing.
 - **Notifications** — a foreground service holds the TDLib connection and each
   new message becomes a local notification, which needs no Firebase project.
   Tapping one opens the chat. Not covered: in-app notification settings per
@@ -135,8 +137,8 @@ Need the base first:
 
 1. **Custom emoji.** Still the most visible thing left in ordinary text: the
    fallback emoji renders, the custom image does not.
-2. **Group and channel administration** — member lists, permissions, invite
-   links, joining and leaving.
+2. **Group and channel administration** — permissions, invite links and
+   joining; member lists and leaving are in.
 3. **Polls, locations and albums.**
 4. **WebM video stickers**, now that a video player is in the app.
 5. Then the rest of the mod toggles, which are a pleasant layer now that the

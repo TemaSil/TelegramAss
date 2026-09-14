@@ -537,6 +537,12 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<List<TgUser>> chatMembers(int chatId) async => contacts;
+
+  @override
+  Future<void> leaveChat(int chatId) async => deleteChat(chatId);
+
+  @override
   Future<void> updateProfile({
     String? firstName,
     String? lastName,

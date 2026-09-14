@@ -494,6 +494,21 @@ class AppL10nEn extends AppL10n {
       'Voice and video calls are not supported yet — TDLib does not carry them.';
 
   @override
+  String get members => 'Members';
+
+  @override
+  String get membersUnavailable => 'Telegram does not share this member list.';
+
+  @override
+  String get leaveGroup => 'Leave group';
+
+  @override
+  String get leaveChannel => 'Leave channel';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

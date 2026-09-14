@@ -494,6 +494,22 @@ class AppL10nRu extends AppL10n {
       'Звонки пока не поддерживаются — TDLib их не передаёт.';
 
   @override
+  String get members => 'Участники';
+
+  @override
+  String get membersUnavailable =>
+      'Telegram не отдаёт список участников этого чата.';
+
+  @override
+  String get leaveGroup => 'Покинуть группу';
+
+  @override
+  String get leaveChannel => 'Отписаться от канала';
+
+  @override
+  String get leave => 'Выйти';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

@@ -118,6 +118,12 @@ abstract class TelegramClient {
     bool asCopy = false,
   }) async {}
 
+  /// People in a group or channel, as far as the account may see them.
+  Future<List<TgUser>> chatMembers(int chatId) async => const [];
+
+  /// Leaves a group or channel.
+  Future<void> leaveChat(int chatId) async {}
+
   /// Changes the account's own name, bio or username. Anything left null is
   /// left alone.
   Future<void> updateProfile({

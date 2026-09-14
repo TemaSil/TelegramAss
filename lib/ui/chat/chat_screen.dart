@@ -371,7 +371,56 @@ class _ChatScreenState extends State<ChatScreen> {
           Navigator.of(context).pop();
           _openSearch();
         },
+        onMembers: () {
+          Navigator.of(context).pop();
+          _openMembers(chat);
+        },
+        onLeave: () {
+          Navigator.of(context).pop();
+          _confirmLeave(chat);
+        },
       ),
+    );
+  }
+
+  /// Who is in the group or channel.
+  Future<void> _openMembers(TgChat chat) async {
+    final members = await AppScope.read(context).client.chatMembers(chat.id);
+    if (!mounted) return;
+    await GlassModalSheet.show<void>(
+      context: context,
+      halfSize: 0.65,
+      settings: GlassTokens.panel(context),
+      quality: GlassQuality.premium,
+      builder: (_) => _MembersSheet(members: members),
+    );
+  }
+
+  Future<void> _confirmLeave(TgChat chat) async {
+    final l10n = AppL10n.of(context);
+    await GlassDialog.show<void>(
+      context: context,
+      title: chat.kind == TgChatKind.channel
+          ? l10n.leaveChannel
+          : l10n.leaveGroup,
+      message: chat.title,
+      settings: GlassTokens.menu(context),
+      actions: [
+        GlassDialogAction(
+          label: l10n.cancel,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        GlassDialogAction(
+          label: l10n.leave,
+          isDestructive: true,
+          onPressed: () {
+            Navigator.of(context).pop();
+            AppScope.read(context).client.leaveChat(chat.id);
+            // Leaving closes the conversation, as it does everywhere else.
+            Navigator.of(context).maybePop();
+          },
+        ),
+      ],
     );
   }
 
@@ -1459,6 +1508,75 @@ class _ForwardSheet extends StatelessWidget {
   }
 }
 
+/// Who is in a group or channel.
+class _MembersSheet extends StatelessWidget {
+  const _MembersSheet({required this.members});
+
+  final List<TgUser> members;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    if (members.isEmpty) {
+      return Center(
+        // A channel the account does not administer will not hand over its
+        // member list at all, which is Telegram's rule rather than a failure.
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            l10n.membersUnavailable,
+            textAlign: TextAlign.center,
+            style: TgText.rowPreview(context),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.members,
+            textAlign: TextAlign.center,
+            style: TgText.rowTitle(context),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.builder(
+              itemCount: members.length,
+              itemBuilder: (context, index) {
+                final member = members[index];
+                return CupertinoListTile.notched(
+                  leading: TgAvatar(
+                    seed: member.id,
+                    initials: member.initials,
+                    size: 38,
+                    isOnline: member.isOnline,
+                  ),
+                  title: Text(member.name, maxLines: 1),
+                  subtitle: Text(
+                    member.username != null
+                        ? '@\${member.username}'
+                        : (member.lastSeen ?? ''),
+                    maxLines: 1,
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    CupertinoPageRoute<void>(
+                      builder: (_) => ChatScreen(chatId: member.id),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Photo grid for the chat's shared media.
 class _MediaSheet extends StatelessWidget {
   const _MediaSheet({required this.photos});
@@ -1541,12 +1659,16 @@ class _ChatInfoSheet extends StatelessWidget {
     required this.onMedia,
     required this.onWallpaper,
     required this.onSearch,
+    required this.onMembers,
+    required this.onLeave,
   });
 
   final TgChat chat;
   final VoidCallback onMedia;
   final VoidCallback onWallpaper;
   final VoidCallback onSearch;
+  final VoidCallback onMembers;
+  final VoidCallback onLeave;
 
   @override
   Widget build(BuildContext context) {
@@ -1634,8 +1756,43 @@ class _ChatInfoSheet extends StatelessWidget {
                 trailing: const CupertinoListTileChevron(),
                 onTap: onWallpaper,
               ),
+              if (chat.kind == TgChatKind.group ||
+                  chat.kind == TgChatKind.channel)
+                CupertinoListTile.notched(
+                  leading: const Icon(TgIcons.contacts),
+                  title: Text(l10n.members),
+                  additionalInfo: chat.memberCount == null
+                      ? null
+                      : Text('${chat.memberCount}'),
+                  trailing: const CupertinoListTileChevron(),
+                  onTap: onMembers,
+                ),
             ],
           ),
+          if (chat.kind == TgChatKind.group ||
+              chat.kind == TgChatKind.channel) ...[
+            const SizedBox(height: 14),
+            CupertinoListSection.insetGrouped(
+              margin: EdgeInsets.zero,
+              children: [
+                CupertinoListTile.notched(
+                  leading: Icon(
+                    TgIcons.logOut,
+                    color: CupertinoColors.systemRed.resolveFrom(context),
+                  ),
+                  title: Text(
+                    chat.kind == TgChatKind.channel
+                        ? l10n.leaveChannel
+                        : l10n.leaveGroup,
+                    style: TextStyle(
+                      color: CupertinoColors.systemRed.resolveFrom(context),
+                    ),
+                  ),
+                  onTap: onLeave,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

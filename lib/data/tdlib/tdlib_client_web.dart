@@ -167,6 +167,12 @@ class TdlibTelegramClient implements TelegramClient {
   }) async {}
 
   @override
+  Future<List<TgUser>> chatMembers(int chatId) async => const [];
+
+  @override
+  Future<void> leaveChat(int chatId) async {}
+
+  @override
   Future<void> updateProfile({
     String? firstName,
     String? lastName,

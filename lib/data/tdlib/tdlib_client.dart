@@ -67,6 +67,9 @@ class TdlibTelegramClient implements TelegramClient {
   /// finished video does not overwrite its own poster frame.
   final _playablePathOfFile = <int, (int chatId, int messageId)>{};
 
+  /// Everyone TDLib has told us about, by user id.
+  final _userIndex = <int, TgUser>{};
+
   /// The account's own folders, filled in by updateChatFolders.
   List<TgFolder> _folders = const [];
 
@@ -371,6 +374,9 @@ class TdlibTelegramClient implements TelegramClient {
 
   void _onUser(Map<String, dynamic> json) {
     final user = _userFrom(json);
+    // Kept whether or not there is a chat with them: group member lists are
+    // full of people the account has never written to.
+    _userIndex[user.id] = user;
     final chat = _chatIndex[user.id];
     if (chat == null) return;
     _chatIndex[user.id] = chat.copyWith();
@@ -1337,6 +1343,68 @@ class TdlibTelegramClient implements TelegramClient {
       'send_copy': asCopy,
       'remove_caption': false,
     });
+  }
+
+  @override
+  Future<List<TgUser>> chatMembers(int chatId) async {
+    // Basic groups carry their members in full info; supergroups and channels
+    // need a paged request, and often refuse it outright for a channel the
+    // account does not administer.
+    final basicGroupId = _chatOfBasicGroup.entries
+        .where((entry) => entry.value == chatId)
+        .map((entry) => entry.key)
+        .firstOrNull;
+    if (basicGroupId != null) {
+      final info = await _request({
+        '@type': 'getBasicGroupFullInfo',
+        'basic_group_id': basicGroupId,
+      });
+      final members = info['members'] as List?;
+      return [
+        for (final raw in (members ?? const []).cast<Map<String, dynamic>>())
+          if (_userIndex[_memberUserId(raw)] != null)
+            _userIndex[_memberUserId(raw)]!,
+      ];
+    }
+
+    final supergroupId = _chatOfGroup.entries
+        .where((entry) => entry.value == chatId)
+        .map((entry) => entry.key)
+        .firstOrNull;
+    if (supergroupId == null) return const [];
+
+    final response = await _request({
+      '@type': 'getSupergroupMembers',
+      'supergroup_id': supergroupId,
+      'offset': 0,
+      'limit': 200,
+    });
+    final members = response['members'] as List?;
+    if (members == null) return const [];
+
+    final users = <TgUser>[];
+    for (final raw in members.cast<Map<String, dynamic>>()) {
+      final userId = _memberUserId(raw);
+      if (userId == null) continue;
+      final known = _userIndex[userId];
+      if (known != null) {
+        users.add(known);
+      } else {
+        // Not seen yet; ask, and it fills in for the next open.
+        _send({'@type': 'getUser', 'user_id': userId});
+      }
+    }
+    return users;
+  }
+
+  static int? _memberUserId(Map<String, dynamic> member) {
+    final sender = member['member_id'] as Map<String, dynamic>?;
+    return (sender?['user_id'] as num?)?.toInt();
+  }
+
+  @override
+  Future<void> leaveChat(int chatId) async {
+    await _request({'@type': 'leaveChat', 'chat_id': chatId});
   }
 
   @override

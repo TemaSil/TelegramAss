@@ -997,6 +997,36 @@ abstract class AppL10n {
   /// **'Voice and video calls are not supported yet — TDLib does not carry them.'**
   String get callsUnavailable;
 
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @membersUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram does not share this member list.'**
+  String get membersUnavailable;
+
+  /// No description provided for @leaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroup;
+
+  /// No description provided for @leaveChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave channel'**
+  String get leaveChannel;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:
