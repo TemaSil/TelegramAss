@@ -261,6 +261,26 @@ class MessageBubble extends StatelessWidget {
           ],
         );
 
+      case TgMessageKind.video:
+        return _VideoContent(
+          path: message.localPath,
+          seconds: message.voiceSeconds,
+          tint: textColor,
+          caption: message.text,
+          fontSize: fontSize,
+        );
+
+      case TgMessageKind.audio:
+        return _AudioContent(
+          title: message.audioTitle?.isNotEmpty == true
+              ? message.audioTitle!
+              : (message.fileName ?? 'Audio'),
+          performer: message.audioPerformer,
+          size: message.fileSize,
+          seconds: message.voiceSeconds,
+          tint: textColor,
+        );
+
       case TgMessageKind.voice:
         return _VoiceContent(
           seconds: message.voiceSeconds ?? 12,
@@ -515,6 +535,155 @@ class _VoiceContent extends StatelessWidget {
           style: TextStyle(fontSize: 12.5, color: tint),
         ),
       ],
+    );
+  }
+}
+
+/// A video is shown as its poster with a play badge; tapping opens the frame
+/// full screen. Playing the video itself is not wired up yet.
+class _VideoContent extends StatelessWidget {
+  const _VideoContent({
+    required this.path,
+    required this.seconds,
+    required this.tint,
+    required this.caption,
+    required this.fontSize,
+  });
+
+  final String? path;
+  final int? seconds;
+  final Color tint;
+  final String caption;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (path != null)
+                AttachmentImage(path: path!, width: 220, height: 150)
+              else
+                Container(
+                  width: 220,
+                  height: 150,
+                  color: CupertinoColors.black.withValues(alpha: 0.35),
+                ),
+              const Icon(TgIcons.play, size: 34, color: CupertinoColors.white),
+              if (seconds != null)
+                Positioned(
+                  left: 8,
+                  bottom: 8,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.black.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      child: Text(
+                        TgFormat.duration(Duration(seconds: seconds!)),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: CupertinoColors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (caption.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            caption,
+            style: TextStyle(fontSize: fontSize, height: 1.3, color: tint),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Music: title, performer, and how long it runs.
+class _AudioContent extends StatelessWidget {
+  const _AudioContent({
+    required this.title,
+    required this.performer,
+    required this.size,
+    required this.seconds,
+    required this.tint,
+  });
+
+  final String title;
+  final String? performer;
+  final String? size;
+  final int? seconds;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = [
+      if (performer != null && performer!.isNotEmpty) performer!,
+      if (seconds != null) TgFormat.duration(Duration(seconds: seconds!)),
+      if (size != null && size!.isNotEmpty) size!,
+    ].join(' · ');
+
+    return SizedBox(
+      width: 230,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: tint.withValues(alpha: 0.18),
+            ),
+            child: Icon(TgIcons.play, size: 18, color: tint),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: tint,
+                  ),
+                ),
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: tint.withValues(alpha: 0.75),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

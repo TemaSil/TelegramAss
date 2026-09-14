@@ -596,8 +596,19 @@ class TdlibTelegramClient implements TelegramClient {
         ? (sticker?['sticker'] as Map<String, dynamic>?)
         : null;
 
-    final mediaPath = _resolveFile(largest ?? stickerFile, priority: 16);
-    final mediaFileId = ((largest ?? stickerFile)?['id'] as num?)?.toInt();
+    // A video shows its thumbnail rather than the video itself, which is far
+    // too big to fetch just to draw a bubble.
+    final video =
+        (content?['video'] ?? content?['animation']) as Map<String, dynamic>?;
+    final videoThumb =
+        (video?['thumbnail'] as Map<String, dynamic>?)?['file']
+            as Map<String, dynamic>?;
+    final document = content?['document'] as Map<String, dynamic>?;
+    final audio = content?['audio'] as Map<String, dynamic>?;
+
+    final previewFile = largest ?? stickerFile ?? videoThumb;
+    final mediaPath = _resolveFile(previewFile, priority: 16);
+    final mediaFileId = (previewFile?['id'] as num?)?.toInt();
     if (mediaPath == null && mediaFileId != null) {
       _messageOfFile[mediaFileId] = (chatId, messageId);
     }
@@ -618,6 +629,23 @@ class TdlibTelegramClient implements TelegramClient {
       isEdited: ((json['edit_date'] as num?) ?? 0) > 0,
       reactions: _reactionsFrom(json['interaction_info']),
       localPath: mediaPath,
+      voiceSeconds:
+          ((content?['voice_note'] as Map<String, dynamic>?)?['duration']
+                  as num?)
+              ?.toInt() ??
+          (video?['duration'] as num?)?.toInt() ??
+          (audio?['duration'] as num?)?.toInt(),
+      audioTitle: audio?['title'] as String?,
+      audioPerformer: audio?['performer'] as String?,
+      fileName:
+          document?['file_name'] as String? ??
+          audio?['file_name'] as String? ??
+          video?['file_name'] as String?,
+      fileSize: _humanSize(
+        ((document?['document'] ?? audio?['audio'] ?? video?['video'])
+                as Map<String, dynamic>?)?['size']
+            as int?,
+      ),
     );
   }
 
@@ -641,8 +669,13 @@ class TdlibTelegramClient implements TelegramClient {
     switch (type) {
       case 'messagePhoto':
         return TgMessageKind.photo;
+      case 'messageVideo':
+      case 'messageAnimation':
+        return TgMessageKind.video;
       case 'messageVoiceNote':
         return TgMessageKind.voice;
+      case 'messageAudio':
+        return TgMessageKind.audio;
       case 'messageDocument':
         return TgMessageKind.file;
       case 'messageSticker':
@@ -652,6 +685,19 @@ class TdlibTelegramClient implements TelegramClient {
       default:
         return TgMessageKind.service;
     }
+  }
+
+  /// Bytes as Telegram writes them next to a file name.
+  static String _humanSize(int? bytes) {
+    if (bytes == null || bytes <= 0) return '';
+    if (bytes >= 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    }
+    if (bytes >= 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    return '$bytes B';
   }
 
   static String _textOf(Map<String, dynamic>? content) {
@@ -669,10 +715,20 @@ class TdlibTelegramClient implements TelegramClient {
     switch (content?['@type'] as String?) {
       case 'messagePhoto':
         return '📷 Photo';
+      case 'messageVideo':
+        return '🎬 Video';
+      case 'messageAnimation':
+        return '🎬 GIF';
       case 'messageVoiceNote':
         return '🎤 Voice message';
+      case 'messageAudio':
+        final audio = content?['audio'] as Map<String, dynamic>?;
+        final title = audio?['title'] as String?;
+        return '🎵 ${title == null || title.isEmpty ? 'Audio' : title}';
       case 'messageDocument':
-        return '📎 Document';
+        final document = content?['document'] as Map<String, dynamic>?;
+        final name = document?['file_name'] as String?;
+        return '📎 ${name == null || name.isEmpty ? 'Document' : name}';
       case 'messageSticker':
         return '🎨 Sticker';
       default:

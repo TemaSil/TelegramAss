@@ -91,23 +91,26 @@ class _ComposerBarState extends State<ComposerBar> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: GlassTextArea(
-                  controller: widget.controller,
-                  placeholder: widget.editing != null
-                      ? l10n.editMessage
-                      : l10n.message,
-                  minLines: 1,
-                  maxLines: 5,
-                  minHeight: 46,
-                  maxHeight: 132,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                child: GlassContainer(
                   shape: const LiquidRoundedRectangle(borderRadius: 23),
                   settings: GlassTokens.composer(context),
                   quality: GlassQuality.premium,
-                  textStyle: TgText.body(context),
+                  child: CupertinoTextField(
+                    controller: widget.controller,
+                    placeholder: widget.editing != null
+                        ? l10n.editMessage
+                        : l10n.message,
+                    minLines: 1,
+                    maxLines: 5,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    style: TgText.body(context),
+                    // The glass is the surface; the field must not paint a
+                    // second one on top of it.
+                    decoration: const BoxDecoration(),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

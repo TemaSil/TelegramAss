@@ -101,13 +101,12 @@ class _CallsBodyState extends State<CallsBody> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GlassGroupedSection(
+              child: CupertinoListSection.insetGrouped(
+                margin: EdgeInsets.zero,
                 header: Text(
                   _filter == 1 ? l10n.missed : l10n.recent,
                   style: TgText.sectionHeader(context),
                 ),
-                settings: GlassTokens.panel(context),
-                quality: GlassQuality.premium,
                 children: [for (final call in calls) _CallTile(call: call)],
               ),
             ),
@@ -130,7 +129,7 @@ class _CallTile extends StatelessWidget {
         ? TgColors.destructive.resolveFrom(context)
         : TgColors.secondaryLabel.resolveFrom(context);
 
-    return GlassListTile(
+    return CupertinoListTile.notched(
       leading: TgAvatar(
         seed: call.peerId,
         initials: call.peerName.substring(0, 1),

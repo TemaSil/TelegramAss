@@ -149,13 +149,12 @@ class _ContactsBodyState extends State<ContactsBody> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: GlassGroupedSection(
+              child: CupertinoListSection.insetGrouped(
+                margin: EdgeInsets.zero,
                 header: Text(entry.key, style: TgText.sectionHeader(context)),
-                settings: GlassTokens.panel(context),
-                quality: GlassQuality.premium,
                 children: [
                   for (final user in entry.value)
-                    GlassListTile(
+                    CupertinoListTile.notched(
                       leading: TgAvatar(
                         seed: user.id,
                         initials: user.initials,
@@ -186,7 +185,7 @@ class _ContactsBodyState extends State<ContactsBody> {
                             ? l10n.presenceOnline
                             : (user.lastSeen ?? user.username ?? ''),
                       ),
-                      trailing: const Icon(TgIcons.forward, size: 16),
+                      trailing: const CupertinoListTileChevron(),
                       onTap: () => Navigator.of(context).push(
                         CupertinoPageRoute<void>(
                           builder: (_) => ChatScreen(chatId: user.id),

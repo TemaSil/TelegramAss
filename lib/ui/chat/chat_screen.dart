@@ -12,6 +12,7 @@ import '../../data/models.dart';
 import '../common/tg_avatar.dart';
 import '../common/wallpaper.dart';
 import '../common/wallpaper_picker.dart';
+import 'widgets/attachment_sheet.dart';
 import 'widgets/bubble_entrance.dart';
 import 'widgets/composer_bar.dart';
 import 'widgets/message_bubble.dart';
@@ -126,32 +127,37 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _openAttachments() async {
-    await GlassModalSheet.show<void>(
+    await showCupertinoModalPopup<void>(
       context: context,
-      halfSize: 0.42,
-      settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
-      builder: (sheetContext) => _AttachmentSheet(
-        onPhoto: () {
-          Navigator.of(sheetContext).pop();
-          _pickPhoto(ImageSource.gallery);
-        },
-        onCamera: () {
-          Navigator.of(sheetContext).pop();
-          _pickPhoto(ImageSource.camera);
-        },
-        onFile: () {
-          Navigator.of(sheetContext).pop();
-          _pickFile();
-        },
-        onLocation: () {
-          Navigator.of(sheetContext).pop();
-          GlassToast.show(
-            context,
-            message: AppL10n.of(context).locationNotWired,
-            type: GlassToastType.info,
-          );
-        },
+      builder: (sheetContext) => CupertinoPopupSurface(
+        isSurfacePainted: true,
+        child: AttachmentSheet(
+          onPickedAsset: (path) {
+            Navigator.of(sheetContext).pop();
+            AppScope.read(context).client.sendPhoto(widget.chatId, path: path);
+            _scrollToBottom();
+          },
+          onGallery: () {
+            Navigator.of(sheetContext).pop();
+            _pickPhoto(ImageSource.gallery);
+          },
+          onCamera: () {
+            Navigator.of(sheetContext).pop();
+            _pickPhoto(ImageSource.camera);
+          },
+          onFile: () {
+            Navigator.of(sheetContext).pop();
+            _pickFile();
+          },
+          onLocation: () {
+            Navigator.of(sheetContext).pop();
+            GlassToast.show(
+              context,
+              message: AppL10n.of(context).locationNotWired,
+              type: GlassToastType.info,
+            );
+          },
+        ),
       ),
     );
   }
@@ -599,12 +605,7 @@ class _MessageListState extends State<_MessageList>
               if (cursor == 0) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(
-                    child: GlassProgressIndicator.circular(
-                      size: 22,
-                      strokeWidth: 2.5,
-                    ),
-                  ),
+                  child: Center(child: CupertinoActivityIndicator()),
                 );
               }
               cursor -= 1;
@@ -906,7 +907,7 @@ class _SearchSheetState extends State<_SearchSheet> {
                     itemCount: _results.length,
                     itemBuilder: (context, index) {
                       final message = _results[index];
-                      return GlassListTile.standalone(
+                      return CupertinoListTile.notched(
                         leading: Icon(
                           message.isOutgoing ? TgIcons.sent : TgIcons.chats,
                           size: 18,
@@ -956,7 +957,7 @@ class _ForwardSheet extends StatelessWidget {
               itemCount: chats.length,
               itemBuilder: (context, index) {
                 final chat = chats[index];
-                return GlassListTile.standalone(
+                return CupertinoListTile.notched(
                   leading: TgAvatar(
                     seed: chat.id,
                     initials: chat.initials,
@@ -965,7 +966,7 @@ class _ForwardSheet extends StatelessWidget {
                   ),
                   title: Text(chat.title, maxLines: 1),
                   subtitle: Text(chat.presence, maxLines: 1),
-                  trailing: const Icon(TgIcons.forwardMessage, size: 17),
+                  trailing: const CupertinoListTileChevron(),
                   onTap: () => onPick(chat),
                 );
               },
@@ -1030,89 +1031,6 @@ class _MediaSheet extends StatelessWidget {
                 );
               },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AttachmentSheet extends StatelessWidget {
-  const _AttachmentSheet({
-    required this.onPhoto,
-    required this.onCamera,
-    required this.onFile,
-    required this.onLocation,
-  });
-
-  final VoidCallback onPhoto;
-  final VoidCallback onCamera;
-  final VoidCallback onFile;
-  final VoidCallback onLocation;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppL10n.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.send,
-            textAlign: TextAlign.center,
-            style: TgText.rowTitle(context),
-          ),
-          const SizedBox(height: 18),
-          GlassButtonGroup.icons(
-            direction: Axis.horizontal,
-            quality: GlassQuality.premium,
-            settings: GlassTokens.chrome(context),
-            iconSize: 22,
-            items: [
-              GlassButtonGroupItem(
-                icon: const Icon(TgIcons.photo),
-                label: l10n.photo,
-                onTap: onPhoto,
-              ),
-              GlassButtonGroupItem(
-                icon: const Icon(TgIcons.camera),
-                label: l10n.camera,
-                onTap: onCamera,
-              ),
-              GlassButtonGroupItem(
-                icon: const Icon(TgIcons.document),
-                label: l10n.file,
-                onTap: onFile,
-              ),
-              GlassButtonGroupItem(
-                icon: const Icon(TgIcons.location),
-                label: l10n.location,
-                onTap: onLocation,
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          GlassGroupedSection(
-            header: Text(l10n.recent),
-            settings: GlassTokens.panel(context),
-            children: [
-              GlassListTile(
-                leading: const Icon(TgIcons.media),
-                title: Text(l10n.cameraRoll),
-                subtitle: Text(l10n.chooseFromGallery),
-                trailing: const Icon(TgIcons.forward, size: 16),
-                onTap: onPhoto,
-              ),
-              GlassListTile(
-                leading: const Icon(TgIcons.folder),
-                title: Text(l10n.documents),
-                subtitle: Text(l10n.browseFiles),
-                trailing: const Icon(TgIcons.forward, size: 16),
-                onTap: onFile,
-              ),
-            ],
           ),
         ],
       ),
@@ -1192,11 +1110,11 @@ class _ChatInfoSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          GlassGroupedSection(
+          CupertinoListSection.insetGrouped(
+            margin: EdgeInsets.zero,
             header: Text(l10n.info),
-            settings: GlassTokens.panel(context),
             children: [
-              GlassListTile(
+              CupertinoListTile.notched(
                 leading: const Icon(TgIcons.unmute),
                 title: Text(l10n.notifications),
                 trailing: Text(
@@ -1204,16 +1122,16 @@ class _ChatInfoSheet extends StatelessWidget {
                   style: TgText.rowPreview(context),
                 ),
               ),
-              GlassListTile(
+              CupertinoListTile.notched(
                 leading: const Icon(TgIcons.media),
                 title: Text(l10n.mediaLinksDocs),
-                trailing: const Icon(TgIcons.forward, size: 16),
+                trailing: const CupertinoListTileChevron(),
                 onTap: onMedia,
               ),
-              GlassListTile(
+              CupertinoListTile.notched(
                 leading: const Icon(TgIcons.wallpaper),
                 title: Text(l10n.chatWallpaper),
-                trailing: const Icon(TgIcons.forward, size: 16),
+                trailing: const CupertinoListTileChevron(),
                 onTap: onWallpaper,
               ),
             ],

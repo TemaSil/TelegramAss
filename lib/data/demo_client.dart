@@ -647,6 +647,10 @@ class DemoTelegramClient implements TelegramClient {
     switch (message.kind) {
       case TgMessageKind.photo:
         return message.text.isEmpty ? '📷 Photo' : '📷 ${message.text}';
+      case TgMessageKind.video:
+        return '🎬 Video';
+      case TgMessageKind.audio:
+        return '🎵 Audio';
       case TgMessageKind.voice:
         return '🎤 Voice message';
       case TgMessageKind.file:

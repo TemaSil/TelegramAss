@@ -91,24 +91,23 @@ class SettingsBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: GlassGroupedSection(
+            child: CupertinoListSection.insetGrouped(
+              margin: EdgeInsets.zero,
               header: Text(
                 l10n.appearance,
                 style: TgText.sectionHeader(context),
               ),
-              settings: GlassTokens.panel(context),
-              quality: GlassQuality.premium,
               children: [
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.wallpaper),
                   title: Text(l10n.wallpaper),
-                  trailing: _ValueChevron(
-                    value:
-                        GlassWallpaper.labels[state.wallpaper] ?? l10n.choose,
+                  additionalInfo: Text(
+                    GlassWallpaper.labels[state.wallpaper] ?? l10n.choose,
                   ),
+                  trailing: const CupertinoListTileChevron(),
                   onTap: () => showWallpaperPicker(context, state),
                 ),
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.nightMode),
                   title: Text(l10n.autoNightMode),
                   subtitle: Text(l10n.autoNightModeSubtitle),
@@ -119,16 +118,15 @@ class SettingsBody extends StatelessWidget {
                     activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.language),
                   title: Text(l10n.language),
-                  trailing: _ValueChevron(
-                    value: _languageLabel(state.language, l10n),
-                  ),
+                  additionalInfo: Text(_languageLabel(state.language, l10n)),
+                  trailing: const CupertinoListTileChevron(),
                   onTap: () => _pickLanguage(context, state, l10n),
                 ),
                 if (!state.autoNightMode)
-                  GlassListTile(
+                  CupertinoListTile.notched(
                     leading: Icon(
                       state.darkMode
                           ? TgIcons.nightModeFilled
@@ -142,7 +140,7 @@ class SettingsBody extends StatelessWidget {
                       activeColor: TgColors.accent.resolveFrom(context),
                     ),
                   ),
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.transparency),
                   title: Text(l10n.reduceTransparency),
                   subtitle: Text(l10n.reduceTransparencySubtitle),
@@ -234,12 +232,11 @@ class SettingsBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: GlassGroupedSection(
+            child: CupertinoListSection.insetGrouped(
+              margin: EdgeInsets.zero,
               header: Text(l10n.privacy, style: TgText.sectionHeader(context)),
-              settings: GlassTokens.panel(context),
-              quality: GlassQuality.premium,
               children: [
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.receipts),
                   title: Text(l10n.readReceipts),
                   trailing: GlassSwitch(
@@ -249,19 +246,19 @@ class SettingsBody extends StatelessWidget {
                     activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.privacy),
                   title: Text(l10n.twoStepVerification),
-                  trailing: const Icon(TgIcons.forward, size: 16),
+                  trailing: const CupertinoListTileChevron(),
                   onTap: () {},
                 ),
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.sessions),
                   title: Text(l10n.activeSessions),
                   trailing: GlassBadge(
                     count: 3,
                     settings: GlassTokens.chrome(context),
-                    child: const Icon(TgIcons.forward, size: 16),
+                    child: const CupertinoListTileChevron(),
                   ),
                   onTap: () {},
                 ),
@@ -272,22 +269,22 @@ class SettingsBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: GlassGroupedSection(
+            child: CupertinoListSection.insetGrouped(
+              margin: EdgeInsets.zero,
               header: Text(
                 l10n.connection,
                 style: TgText.sectionHeader(context),
               ),
-              settings: GlassTokens.panel(context),
-              quality: GlassQuality.premium,
               children: [
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.proxy),
                   title: Text(l10n.proxy),
-                  trailing: _ValueChevron(
-                    value: state.proxy == null || !state.proxy!.enabled
+                  additionalInfo: Text(
+                    state.proxy == null || !state.proxy!.enabled
                         ? l10n.proxyOff
                         : '${state.proxy!.server}:${state.proxy!.port}',
                   ),
+                  trailing: const CupertinoListTileChevron(),
                   onTap: () => showProxySheet(context, state),
                 ),
               ],
@@ -297,16 +294,15 @@ class SettingsBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: GlassGroupedSection(
+            child: CupertinoListSection.insetGrouped(
+              margin: EdgeInsets.zero,
               header: Text(l10n.backend, style: TgText.sectionHeader(context)),
               footer: Text(
                 state.client.isLive ? l10n.backendLive : l10n.backendDemo,
                 style: TgText.timestamp(context),
               ),
-              settings: GlassTokens.panel(context),
-              quality: GlassQuality.premium,
               children: [
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: Icon(
                     state.client.isLive ? TgIcons.channel : TgIcons.demo,
                   ),
@@ -316,7 +312,7 @@ class SettingsBody extends StatelessWidget {
                     style: TgText.rowPreview(context),
                   ),
                 ),
-                GlassListTile(
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.logOut),
                   title: Text(
                     l10n.logOut,
@@ -392,26 +388,6 @@ class SettingsBody extends StatelessWidget {
             state.client.logOut();
           },
         ),
-      ],
-    );
-  }
-}
-
-/// The iOS settings idiom for a row that opens a chooser: the current value
-/// in grey, then a chevron.
-class _ValueChevron extends StatelessWidget {
-  const _ValueChevron({required this.value});
-
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(value, style: TgText.rowPreview(context)),
-        const SizedBox(width: 6),
-        const Icon(TgIcons.forward, size: 16),
       ],
     );
   }

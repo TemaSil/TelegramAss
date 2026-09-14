@@ -8,7 +8,7 @@ enum TgChatKind { private, group, channel, bot, saved }
 
 enum TgMessageStatus { sending, sent, delivered, read, failed }
 
-enum TgMessageKind { text, photo, voice, file, sticker, service }
+enum TgMessageKind { text, photo, video, voice, audio, file, sticker, service }
 
 enum TgAuthStage { splash, phone, code, password, ready }
 
@@ -190,6 +190,8 @@ class TgMessage {
     this.isEdited = false,
     this.mediaSeed,
     this.voiceSeconds,
+    this.audioTitle,
+    this.audioPerformer,
     this.fileName,
     this.fileSize,
     this.uploadProgress,
@@ -213,6 +215,10 @@ class TgMessage {
   /// Deterministic seed used to paint a placeholder for photo messages.
   final int? mediaSeed;
   final int? voiceSeconds;
+
+  /// Music metadata, for `messageAudio`.
+  final String? audioTitle;
+  final String? audioPerformer;
   final String? fileName;
   final String? fileSize;
 
@@ -247,6 +253,8 @@ class TgMessage {
       isEdited: isEdited ?? this.isEdited,
       mediaSeed: mediaSeed,
       voiceSeconds: voiceSeconds,
+      audioTitle: audioTitle,
+      audioPerformer: audioPerformer,
       fileName: fileName,
       fileSize: fileSize,
       uploadProgress: uploadProgress,
