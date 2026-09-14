@@ -53,6 +53,18 @@ class _ChatScreenState extends State<ChatScreen> {
   /// scrolled away from the newest message.
   bool _showJumpToLatest = false;
 
+  /// Keys of the message rows currently built, so a search hit or a pinned
+  /// message can be scrolled to.
+  final _messageKeys = <int, GlobalKey>{};
+
+  /// Message flashed after a jump, the way Telegram marks where it landed.
+  int? _highlighted;
+
+  /// Pinned messages, newest first, and which one the bar is showing. Tapping
+  /// the bar walks through them, as the official clients do.
+  List<TgMessage> _pinned = const [];
+  int _pinnedIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +76,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final draft = AppScope.read(context).chatById(widget.chatId)?.draft;
     if (draft != null && draft.isNotEmpty) _composerController.text = draft;
     _resolveUnreadAnchor();
+    _loadPinned();
     client.messagesOf(widget.chatId).listen((messages) {
       if (!mounted) return;
       final wasAtBottom = _isNearBottom;
@@ -128,6 +141,66 @@ class _ChatScreenState extends State<ChatScreen> {
     if (incoming.isEmpty) return;
     final index = incoming.length - unread;
     _unreadAnchorId = incoming[index < 0 ? 0 : index].id;
+  }
+
+  /// Scrolls to a message and flashes it.
+  ///
+  /// Only rows the list has actually built carry a context, so a message far
+  /// up the thread is first approached by proportion and then settled on
+  /// exactly once it exists.
+  Future<void> _jumpTo(int messageId) async {
+    final index = _messages.indexWhere((m) => m.id == messageId);
+    if (index == -1) return;
+
+    if (_messageKeys[messageId]?.currentContext == null &&
+        _scrollController.hasClients) {
+      final extent = _scrollController.position.maxScrollExtent;
+      _scrollController.jumpTo(
+        (extent * index / _messages.length).clamp(0.0, extent),
+      );
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    final target = _messageKeys[messageId]?.currentContext;
+    if (target != null && target.mounted) {
+      await Scrollable.ensureVisible(
+        target,
+        alignment: 0.4,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
+
+    if (!mounted) return;
+    setState(() => _highlighted = messageId);
+    await Future<void>.delayed(const Duration(milliseconds: 1400));
+    if (mounted) setState(() => _highlighted = null);
+  }
+
+  Future<void> _loadPinned() async {
+    final pinned = await AppScope.read(context).client
+        .pinnedMessages(widget.chatId);
+    if (!mounted) return;
+    setState(() {
+      _pinned = pinned;
+      _pinnedIndex = 0;
+    });
+  }
+
+  void _tapPinnedBar() {
+    if (_pinned.isEmpty) return;
+    final message = _pinned[_pinnedIndex];
+    setState(() => _pinnedIndex = (_pinnedIndex + 1) % _pinned.length);
+    _jumpTo(message.id);
+  }
+
+  Future<void> _togglePinned(TgMessage message) async {
+    final isPinned = _pinned.any((pinned) => pinned.id == message.id);
+    await AppScope.read(context).client
+        .setMessagePinned(widget.chatId, message.id, pinned: !isPinned);
+    // TDLib reports the change as a service message rather than an update we
+    // track, so the list is simply re-read.
+    await _loadPinned();
   }
 
   Future<void> _onScroll() async {
@@ -282,7 +355,13 @@ class _ChatScreenState extends State<ChatScreen> {
       halfSize: 0.6,
       settings: GlassTokens.panel(context),
       quality: GlassQuality.premium,
-      builder: (_) => _SearchSheet(chatId: widget.chatId),
+      builder: (sheetContext) => _SearchSheet(
+        chatId: widget.chatId,
+        onOpen: (message) {
+          Navigator.of(sheetContext).pop();
+          _jumpTo(message.id);
+        },
+      ),
     );
   }
 
@@ -409,6 +488,11 @@ class _ChatScreenState extends State<ChatScreen> {
             isTyping: isTyping,
             loadingMore: _loadingMore,
             unreadAnchorId: _unreadAnchorId,
+            // The pinned bar floats over the thread; the list has to start below
+            // it or the newest messages hide behind it.
+            extraTopPadding: _pinned.isEmpty ? 0 : 50,
+            messageKeys: _messageKeys,
+            highlightedId: _highlighted,
             onReply: (message) => setState(() {
               _editing = null;
               _replyTo = message;
@@ -421,9 +505,23 @@ class _ChatScreenState extends State<ChatScreen> {
             onDelete: (message) =>
                 state.client.deleteMessage(widget.chatId, message.id),
             onForward: _forward,
+            onTogglePin: _togglePinned,
+            pinnedIds: {for (final message in _pinned) message.id},
             onReact: (message, emoji) =>
                 state.client.toggleReaction(widget.chatId, message.id, emoji),
           ),
+          if (_pinned.isNotEmpty)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + 56,
+              left: 0,
+              right: 0,
+              child: _PinnedBar(
+                message: _pinned[_pinnedIndex],
+                index: _pinnedIndex,
+                total: _pinned.length,
+                onTap: _tapPinnedBar,
+              ),
+            ),
           Positioned(
             right: 14,
             bottom: 14,
@@ -566,11 +664,16 @@ class _MessageList extends StatefulWidget {
     required this.isTyping,
     required this.loadingMore,
     required this.unreadAnchorId,
+    required this.messageKeys,
+    required this.highlightedId,
     required this.onReply,
     required this.onEdit,
     required this.onDelete,
     required this.onForward,
     required this.onReact,
+    required this.onTogglePin,
+    required this.pinnedIds,
+    required this.extraTopPadding,
   });
 
   final TgChat chat;
@@ -583,11 +686,24 @@ class _MessageList extends StatefulWidget {
 
   /// First message the user had not read when the chat opened, or null.
   final int? unreadAnchorId;
+
+  /// Filled in as rows are built, so the screen can scroll to one by id.
+  final Map<int, GlobalKey> messageKeys;
+
+  /// Message to flash, just after a jump.
+  final int? highlightedId;
   final ValueChanged<TgMessage> onReply;
   final ValueChanged<TgMessage> onEdit;
   final ValueChanged<TgMessage> onDelete;
   final ValueChanged<TgMessage> onForward;
   final void Function(TgMessage, String) onReact;
+  final ValueChanged<TgMessage> onTogglePin;
+
+  /// Ids currently pinned, so the menu can offer Unpin instead of Pin.
+  final Set<int> pinnedIds;
+
+  /// Room left at the top for the pinned bar.
+  final double extraTopPadding;
 
   @override
   State<_MessageList> createState() => _MessageListState();
@@ -629,7 +745,8 @@ class _MessageListState extends State<_MessageList>
   Widget build(BuildContext context) {
     final chat = widget.chat;
     final messages = widget.messages;
-    final topPad = MediaQuery.paddingOf(context).top + 56;
+    final topPad =
+        MediaQuery.paddingOf(context).top + 56 + widget.extraTopPadding;
 
     return GlassScrollEdgeEffect(
       fadeTop: true,
@@ -695,7 +812,13 @@ class _MessageListState extends State<_MessageList>
             final isNew = !widget.settled.contains(message.id);
             widget.settled.add(message.id);
 
+            final key = widget.messageKeys.putIfAbsent(
+              message.id,
+              GlobalKey.new,
+            );
+
             return Column(
+              key: key,
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (needsSeparator) _DaySeparator(date: message.date),
@@ -705,19 +828,29 @@ class _MessageListState extends State<_MessageList>
                   reveal: _reveal,
                   extent: _revealExtent,
                   date: message.date,
-                  child: BubbleEntrance(
-                    enabled: isNew,
-                    fromRight: message.isOutgoing,
-                    child: MessageBubble(
-                      message: message,
-                      fontSize: widget.fontSize,
-                      showTail: showTail,
-                      showSender: showSender,
-                      onReply: widget.onReply,
-                      onEdit: widget.onEdit,
-                      onDelete: widget.onDelete,
-                      onForward: widget.onForward,
-                      onReact: widget.onReact,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    color: widget.highlightedId == message.id
+                        ? TgColors.accent
+                              .resolveFrom(context)
+                              .withValues(alpha: 0.16)
+                        : const Color(0x00000000),
+                    child: BubbleEntrance(
+                      enabled: isNew,
+                      fromRight: message.isOutgoing,
+                      child: MessageBubble(
+                        message: message,
+                        fontSize: widget.fontSize,
+                        showTail: showTail,
+                        showSender: showSender,
+                        onReply: widget.onReply,
+                        onEdit: widget.onEdit,
+                        onDelete: widget.onDelete,
+                        onForward: widget.onForward,
+                        onReact: widget.onReact,
+                        onTogglePin: widget.onTogglePin,
+                        isPinned: widget.pinnedIds.contains(message.id),
+                      ),
                     ),
                   ),
                 ),
@@ -819,6 +952,90 @@ class _UnreadSeparator extends StatelessWidget {
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
             color: color,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The pinned-message bar under the app bar. Tapping it walks through the
+/// pinned messages and scrolls to each in turn.
+class _PinnedBar extends StatelessWidget {
+  const _PinnedBar({
+    required this.message,
+    required this.index,
+    required this.total,
+    required this.onTap,
+  });
+
+  final TgMessage message;
+  final int index;
+  final int total;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    final accent = TgColors.accent.resolveFrom(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 4, 10, 0),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: GlassContainer(
+          height: 46,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shape: const LiquidRoundedRectangle(borderRadius: 18),
+          settings: GlassTokens.chrome(context),
+          child: Row(
+            children: [
+              Container(
+                width: 3,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      total > 1
+                          ? '\${l10n.pinnedMessage} #\${total - index}'
+                          : l10n.pinnedMessage,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: accent,
+                      ),
+                    ),
+                    Text(
+                      message.text.trim().isEmpty
+                          ? l10n.attachment
+                          : message.text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: TgColors.secondaryLabel.resolveFrom(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                TgIcons.pinFilled,
+                size: 16,
+                color: TgColors.tertiaryLabel.resolveFrom(context),
+              ),
+            ],
           ),
         ),
       ),
@@ -983,9 +1200,12 @@ class _TypingDotsState extends State<_TypingDots>
 
 /// Search over the messages of one conversation.
 class _SearchSheet extends StatefulWidget {
-  const _SearchSheet({required this.chatId});
+  const _SearchSheet({required this.chatId, required this.onOpen});
 
   final int chatId;
+
+  /// Closes the sheet and scrolls the thread to the chosen message.
+  final ValueChanged<TgMessage> onOpen;
 
   @override
   State<_SearchSheet> createState() => _SearchSheetState();
@@ -1047,6 +1267,8 @@ class _SearchSheetState extends State<_SearchSheet> {
                           '${TgFormat.daySeparator(message.date)} · '
                           '${TgFormat.time(message.date)}',
                         ),
+                        trailing: const CupertinoListTileChevron(),
+                        onTap: () => widget.onOpen(message),
                       );
                     },
                   ),

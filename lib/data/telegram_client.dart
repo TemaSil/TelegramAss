@@ -108,6 +108,16 @@ abstract class TelegramClient {
   /// a tap would only add latency — so this is for music and documents.
   Future<void> downloadMessageMedia(int chatId, int messageId) async {}
 
+  /// Messages pinned in [chatId], newest first.
+  Future<List<TgMessage>> pinnedMessages(int chatId) async => const [];
+
+  /// Pins [messageId], or unpins it when [pinned] is false.
+  Future<void> setMessagePinned(
+    int chatId,
+    int messageId, {
+    required bool pinned,
+  }) async {}
+
   /// Searches the server: conversations the account has, public chats found
   /// by name, and messages from every chat at once.
   ///

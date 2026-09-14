@@ -859,6 +859,30 @@ abstract class AppL10n {
   /// **'Messages'**
   String get messagesSection;
 
+  /// No description provided for @pinnedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned message'**
+  String get pinnedMessage;
+
+  /// No description provided for @pinMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get pinMessage;
+
+  /// No description provided for @unpinMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get unpinMessage;
+
+  /// No description provided for @attachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment'**
+  String get attachment;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:

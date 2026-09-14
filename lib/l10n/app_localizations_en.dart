@@ -418,6 +418,18 @@ class AppL10nEn extends AppL10n {
   String get messagesSection => 'Messages';
 
   @override
+  String get pinnedMessage => 'Pinned message';
+
+  @override
+  String get pinMessage => 'Pin';
+
+  @override
+  String get unpinMessage => 'Unpin';
+
+  @override
+  String get attachment => 'Attachment';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

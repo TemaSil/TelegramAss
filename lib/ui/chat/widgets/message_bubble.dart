@@ -34,6 +34,8 @@ class MessageBubble extends StatelessWidget {
     required this.onDelete,
     required this.onForward,
     required this.onReact,
+    required this.onTogglePin,
+    required this.isPinned,
     this.showTail = true,
     this.showSender = false,
   });
@@ -45,6 +47,10 @@ class MessageBubble extends StatelessWidget {
   final ValueChanged<TgMessage> onDelete;
   final ValueChanged<TgMessage> onForward;
   final void Function(TgMessage message, String emoji) onReact;
+  final ValueChanged<TgMessage> onTogglePin;
+
+  /// Whether this message is currently pinned in the chat.
+  final bool isPinned;
 
   /// Last message of a group gets the wider corner.
   final bool showTail;
@@ -120,6 +126,11 @@ class MessageBubble extends StatelessWidget {
               title: l10n.forward,
               icon: const Icon(TgIcons.forwardMessage),
               onTap: () => onForward(message),
+            ),
+            GlassMenuItem(
+              title: isPinned ? l10n.unpinMessage : l10n.pinMessage,
+              icon: Icon(isPinned ? TgIcons.pinFilled : TgIcons.pin),
+              onTap: () => onTogglePin(message),
             ),
             const GlassMenuDivider(),
             GlassMenuItem(

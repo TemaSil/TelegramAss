@@ -417,6 +417,18 @@ class AppL10nRu extends AppL10n {
   String get messagesSection => 'Сообщения';
 
   @override
+  String get pinnedMessage => 'Закреплённое сообщение';
+
+  @override
+  String get pinMessage => 'Закрепить';
+
+  @override
+  String get unpinMessage => 'Открепить';
+
+  @override
+  String get attachment => 'Вложение';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

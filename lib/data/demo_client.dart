@@ -22,6 +22,7 @@ class DemoTelegramClient implements TelegramClient {
   final _authController = StreamController<TgAuthStage>.broadcast();
   final _chatsController = StreamController<List<TgChat>>.broadcast();
   final _typingController = StreamController<int?>.broadcast();
+  final _pinned = <int, Set<int>>{};
   final _incomingController = StreamController<TgMessage>.broadcast();
   final _messageControllers = <int, StreamController<List<TgMessage>>>{};
   final _messages = <int, List<TgMessage>>{};
@@ -503,6 +504,26 @@ class DemoTelegramClient implements TelegramClient {
   @override
   Future<void> toggleMute(int chatId) async {
     _updateChat(chatId, (chat) => chat.copyWith(isMuted: !chat.isMuted));
+  }
+
+  @override
+  Future<List<TgMessage>> pinnedMessages(int chatId) async => [
+    for (final id in _pinned[chatId] ?? const <int>{})
+      ...?_messages[chatId]?.where((message) => message.id == id),
+  ];
+
+  @override
+  Future<void> setMessagePinned(
+    int chatId,
+    int messageId, {
+    required bool pinned,
+  }) async {
+    final set = _pinned.putIfAbsent(chatId, () => <int>{});
+    if (pinned) {
+      set.add(messageId);
+    } else {
+      set.remove(messageId);
+    }
   }
 
   @override

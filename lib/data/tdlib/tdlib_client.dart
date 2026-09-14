@@ -1291,6 +1291,47 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<List<TgMessage>> pinnedMessages(int chatId) async {
+    // Recent TDLib has no pinned_message_id on the chat; the pinned set is a
+    // filtered search, which also covers chats with several of them.
+    final response = await _request({
+      '@type': 'searchChatMessages',
+      'chat_id': chatId,
+      'query': '',
+      'limit': 20,
+      'filter': {'@type': 'searchMessagesFilterPinned'},
+    });
+    final messages = response['messages'] as List?;
+    if (messages == null) return const [];
+    return [
+      for (final raw in messages.cast<Map<String, dynamic>>())
+        _messageFrom(raw),
+    ];
+  }
+
+  @override
+  Future<void> setMessagePinned(
+    int chatId,
+    int messageId, {
+    required bool pinned,
+  }) async {
+    _send(
+      pinned
+          ? {
+              '@type': 'pinChatMessage',
+              'chat_id': chatId,
+              'message_id': messageId,
+              'disable_notification': false,
+            }
+          : {
+              '@type': 'unpinChatMessage',
+              'chat_id': chatId,
+              'message_id': messageId,
+            },
+    );
+  }
+
+  @override
   Future<TgSearchResults> searchGlobal(String query) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return TgSearchResults.empty;
