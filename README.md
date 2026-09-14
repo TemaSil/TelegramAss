@@ -46,6 +46,10 @@ both directions:
 - **Bubbles are iMessage's**, not glass: solid blue and grey, with a tail on
   the last message of a run. A translucent bubble makes text fight the
   wallpaper behind it.
+- **The typeface is Inter.** `CupertinoApp` asks for `.SF Pro Text`, which
+  exists only on iOS — on Android Flutter substitutes Roboto, and every screen
+  reads as an Android app however the chrome is drawn. SF Pro cannot ship in
+  an APK; Inter has the same metrics and the OFL allows it.
 - **Custom code only where iOS has no widget and Telegram does have the
   thing**: gradient monogram avatars, delivery ticks, the voice waveform, the
   typing dots, the bubble outline, the chat wallpaper.

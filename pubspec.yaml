@@ -39,6 +39,20 @@ flutter:
   uses-material-design: true
   generate: true
 
+  # Inter stands in for SF Pro, which cannot ship in an APK. See TgText.family.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+
 # Generates the Android launcher icons from assets/app_icon.png.
 flutter_launcher_icons:
   android: true

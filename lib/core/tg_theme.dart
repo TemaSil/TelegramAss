@@ -71,6 +71,43 @@ class TgColors {
 class TgText {
   TgText._();
 
+  /// The typeface the whole app is set in.
+  ///
+  /// `CupertinoApp` asks for `.SF Pro Text`, which exists on iOS and nowhere
+  /// else — on Android Flutter quietly substitutes Roboto, and every screen
+  /// then reads as an Android app however carefully the chrome is drawn. SF
+  /// Pro cannot ship inside an APK: Apple licenses it for developing *for*
+  /// Apple platforms. Inter is drawn to the same metrics, covers Cyrillic,
+  /// and is under the SIL Open Font License, which does allow it.
+  static const family = 'Inter';
+
+  /// Puts [family] on every style the framework resolves from the theme.
+  ///
+  /// The styles below do not name a family: a `Text` merges its style onto
+  /// the default one, so they inherit whatever `textStyle` carries. The nav
+  /// bar, action sheets and pickers are built by Cupertino itself and read
+  /// their own entries, which is why each is set here.
+  static CupertinoTextThemeData textTheme(CupertinoTextThemeData base) =>
+      base.copyWith(
+        textStyle: base.textStyle.copyWith(fontFamily: family),
+        actionTextStyle: base.actionTextStyle.copyWith(fontFamily: family),
+        actionSmallTextStyle: base.actionSmallTextStyle.copyWith(
+          fontFamily: family,
+        ),
+        tabLabelTextStyle: base.tabLabelTextStyle.copyWith(fontFamily: family),
+        navTitleTextStyle: base.navTitleTextStyle.copyWith(fontFamily: family),
+        navLargeTitleTextStyle: base.navLargeTitleTextStyle.copyWith(
+          fontFamily: family,
+        ),
+        navActionTextStyle: base.navActionTextStyle.copyWith(
+          fontFamily: family,
+        ),
+        pickerTextStyle: base.pickerTextStyle.copyWith(fontFamily: family),
+        dateTimePickerTextStyle: base.dateTimePickerTextStyle.copyWith(
+          fontFamily: family,
+        ),
+      );
+
   static TextStyle navTitle(BuildContext context) => TextStyle(
     fontSize: 17,
     fontWeight: FontWeight.w600,

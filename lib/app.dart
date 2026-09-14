@@ -63,10 +63,7 @@ class TelegramLiquidApp extends StatelessWidget {
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
               ],
-              theme: CupertinoThemeData(
-                brightness: brightness,
-                primaryColor: TgColors.accent,
-              ),
+              theme: _themeFor(brightness),
               home: state.stage == TgAuthStage.ready
                   ? const RootShell()
                   : const AuthScreen(),
@@ -76,6 +73,16 @@ class TelegramLiquidApp extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The Cupertino theme, with the app's typeface on every style the framework
+/// resolves for itself.
+CupertinoThemeData _themeFor(Brightness brightness) {
+  final base = CupertinoThemeData(
+    brightness: brightness,
+    primaryColor: TgColors.accent,
+  );
+  return base.copyWith(textTheme: TgText.textTheme(base.textTheme));
 }
 
 /// `AppScope.of(context)` anywhere below the app root.
