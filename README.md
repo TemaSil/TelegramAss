@@ -159,16 +159,26 @@ LD_LIBRARY_PATH=<dir with libtdjson.so> \
 
 ## State of it
 
-Working: login with two-factor, chat list with folders, search, stories and
-context menus, conversations with replies, editing, deletion, reactions,
-drafts, forwarding, formatted text and tappable links, attachments that really
-attach (gallery strip, camera, files), downloaded avatars and photos, a
-full-screen photo viewer, contacts, call history, and settings that persist.
+Working: login with two-factor; the chat list with the account's own folders,
+the archive, stories and context menus; search that asks the server rather than
+filtering what is loaded — chats, public chats and message text across every
+conversation; conversations with replies, editing, deletion, reactions, drafts,
+selection mode and proper forwarding that keeps Telegram's attribution;
+formatted text with tappable links and spoilers; unfurled link previews; the
+unread divider and jump-to-latest; pinned messages; attachments that really
+attach (gallery strip, camera, files); downloaded avatars and photos with a
+full-screen viewer; voice notes and music that play, and voice messages you
+record by holding the mic; notifications while the app is closed, carried by a
+foreground service rather than Firebase; contacts, call history, and settings
+that persist.
 
-Not working yet, in rough order of how much they are missed: push
-notifications, voice recording and playback, server-side search, group and
-channel administration, stickers beyond static ones, and calls — which TDLib
-cannot carry at all and which need the separate `tgcalls` WebRTC stack.
+Also, from the Telegram mods: a configurable double-tap reaction, forwarding
+without quoting, message details, and a hideable story rail.
+
+Not working yet, in rough order of how much they are missed: animated and
+custom-emoji stickers, group and channel administration, polls and locations,
+video playback, forum topics, and calls — which TDLib cannot carry at all and
+which need the separate `tgcalls` WebRTC stack.
 
 [ROADMAP.md](ROADMAP.md) has the full account, compared against both the
 official client and Nekogram.

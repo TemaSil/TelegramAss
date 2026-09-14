@@ -7,15 +7,29 @@ import 'core/glass_preferences.dart';
 import 'core/tg_theme.dart';
 import 'data/app_state.dart';
 import 'data/models.dart';
+import 'data/notifications.dart';
+import 'ui/chat/chat_screen.dart';
 import 'ui/auth/auth_screen.dart';
 import 'ui/shell/root_shell.dart';
 
 /// Exposes [AppState] to the widget tree and swaps between login and the
 /// main shell as authorization advances.
 class TelegramLiquidApp extends StatelessWidget {
-  const TelegramLiquidApp({super.key, required this.state});
+  TelegramLiquidApp({super.key, required this.state}) {
+    // Tapping a notification should land in the conversation it came from,
+    // which needs a navigator that outlives any one screen.
+    TgNotifications.instance.onOpenChat = (chatId) {
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null || state.stage != TgAuthStage.ready) return;
+      navigator.push(
+        CupertinoPageRoute<void>(builder: (_) => ChatScreen(chatId: chatId)),
+      );
+    };
+  }
 
   final AppState state;
+
+  static final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +49,7 @@ class TelegramLiquidApp extends StatelessWidget {
               reduceTransparency: state.reduceTransparency,
             ),
             child: CupertinoApp(
+              navigatorKey: _navigatorKey,
               onGenerateTitle: (context) => AppL10n.of(context).appName,
               debugShowCheckedModeBanner: false,
               // 'system' leaves the choice to the platform resolver.
