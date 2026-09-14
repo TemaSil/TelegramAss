@@ -403,6 +403,18 @@ class AppL10nEn extends AppL10n {
   String get ok => 'OK';
 
   @override
+  String get archive => 'Archive';
+
+  @override
+  String get unarchive => 'Unarchive';
+
+  @override
+  String get archivedChats => 'Archived Chats';
+
+  @override
+  String get archiveEmpty => 'No archived chats';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

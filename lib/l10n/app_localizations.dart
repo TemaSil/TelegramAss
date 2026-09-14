@@ -829,6 +829,30 @@ abstract class AppL10n {
   /// **'OK'**
   String get ok;
 
+  /// No description provided for @archive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archive;
+
+  /// No description provided for @unarchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get unarchive;
+
+  /// No description provided for @archivedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived Chats'**
+  String get archivedChats;
+
+  /// No description provided for @archiveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived chats'**
+  String get archiveEmpty;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:

@@ -23,6 +23,7 @@ class ChatRow extends StatelessWidget {
     required this.onPin,
     required this.onMarkRead,
     required this.onDelete,
+    required this.onArchive,
     this.isTyping = false,
   });
 
@@ -32,6 +33,7 @@ class ChatRow extends StatelessWidget {
   final VoidCallback onPin;
   final VoidCallback onMarkRead;
   final VoidCallback onDelete;
+  final VoidCallback onArchive;
   final bool isTyping;
 
   @override
@@ -67,6 +69,11 @@ class ChatRow extends StatelessWidget {
             icon: const Icon(TgIcons.markRead),
             onTap: onMarkRead,
           ),
+        GlassMenuItem(
+          title: chat.isArchived ? l10n.unarchive : l10n.archive,
+          icon: const Icon(TgIcons.archive),
+          onTap: onArchive,
+        ),
         const GlassMenuDivider(),
         GlassMenuItem(
           title: l10n.deleteChat,

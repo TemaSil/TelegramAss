@@ -402,6 +402,18 @@ class AppL10nRu extends AppL10n {
   String get ok => 'OK';
 
   @override
+  String get archive => 'В архив';
+
+  @override
+  String get unarchive => 'Из архива';
+
+  @override
+  String get archivedChats => 'Архив';
+
+  @override
+  String get archiveEmpty => 'В архиве пусто';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

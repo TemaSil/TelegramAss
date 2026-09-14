@@ -63,6 +63,9 @@ class TdlibTelegramClient implements TelegramClient {
   /// the download without re-reading the message from TDLib.
   final _playableOfMessage = <(int, int), int>{};
 
+  /// The account's own folders, filled in by updateChatFolders.
+  List<TgFolder> _folders = const [];
+
   TdJsonBindings? _bindings;
   Isolate? _receiveIsolate;
   ReceivePort? _receivePort;
@@ -277,6 +280,10 @@ class TdlibTelegramClient implements TelegramClient {
           (update['user_id'] as num?)?.toInt(),
           update['status'] as Map<String, dynamic>?,
         );
+      case 'updateChatPosition':
+        _onChatPosition(update);
+      case 'updateChatFolders':
+        _onChatFolders(update);
       case 'updateConnectionState':
         final state =
             (update['state'] as Map<String, dynamic>?)?['@type'] as String?;
@@ -317,6 +324,13 @@ class TdlibTelegramClient implements TelegramClient {
         _setStage(TgAuthStage.ready);
         _loadMe();
         _send({'@type': 'loadChats', 'limit': 40});
+        // The archive is a separate list; without this the folder shows empty
+        // until something in it moves.
+        _send({
+          '@type': 'loadChats',
+          'chat_list': {'@type': 'chatListArchive'},
+          'limit': 40,
+        });
       case 'authorizationStateClosed':
         _setStage(TgAuthStage.phone);
     }
@@ -494,6 +508,7 @@ class TdlibTelegramClient implements TelegramClient {
     final pinned =
         positions != null &&
         positions.any((p) => (p as Map)['is_pinned'] == true);
+    final lists = _listsFrom(positions);
 
     // Avatars are small; give them a high priority so the list fills in fast.
     final photo =
@@ -532,7 +547,76 @@ class TdlibTelegramClient implements TelegramClient {
       lastMessageOutgoing:
           (json['last_message'] as Map<String, dynamic>?)?['is_outgoing'] ==
           true,
+      lists: lists,
     );
+    _chatsController.add(currentChats);
+  }
+
+  /// Which lists a chat sits in, read from the positions TDLib reports.
+  ///
+  /// A chat with no position at all has been removed from every list; calling
+  /// that `main` would resurrect it in the chat list, so it gets an empty set.
+  static Set<String> _listsFrom(List? positions) {
+    if (positions == null) return const {'main'};
+    final lists = <String>{};
+    for (final entry in positions.cast<Map<String, dynamic>>()) {
+      final list = entry['list'] as Map<String, dynamic>?;
+      switch (list?['@type'] as String?) {
+        case 'chatListMain':
+          lists.add('main');
+        case 'chatListArchive':
+          lists.add('archive');
+        case 'chatListFolder':
+          final folderId = (list?['chat_folder_id'] as num?)?.toInt();
+          if (folderId != null) lists.add('folder:$folderId');
+      }
+    }
+    return lists;
+  }
+
+  /// A single position changing — a chat archived, unarchived, or added to a
+  /// folder. TDLib sends one position at a time, so the rest are kept.
+  void _onChatPosition(Map<String, dynamic> update) {
+    final id = (update['chat_id'] as num?)?.toInt();
+    final chat = id == null ? null : _chatIndex[id];
+    if (id == null || chat == null) return;
+
+    final position = update['position'] as Map<String, dynamic>?;
+    final named = _listsFrom(position == null ? null : [position]);
+    if (named.isEmpty) return;
+    final name = named.first;
+
+    // order "0" means the chat left that list.
+    final present = (position?['order'] as String?) != '0';
+    final lists = Set<String>.from(chat.lists);
+    if (present) {
+      lists.add(name);
+    } else {
+      lists.remove(name);
+    }
+
+    _chatIndex[id] = chat.copyWith(
+      lists: lists,
+      isPinned: position?['is_pinned'] as bool? ?? chat.isPinned,
+    );
+    _chatsController.add(currentChats);
+  }
+
+  /// The account's own folders, as the user arranged them.
+  void _onChatFolders(Map<String, dynamic> update) {
+    final raw = update['chat_folders'] as List?;
+    if (raw == null) return;
+    _folders = [
+      for (final entry in raw.cast<Map<String, dynamic>>())
+        if ((entry['id'] as num?) != null)
+          TgFolder(
+            id: 'folder:${(entry['id'] as num).toInt()}',
+            // Newer TDLib wraps the title in a formattedText.
+            title: entry['title'] is Map
+                ? ((entry['title'] as Map)['text'] as String? ?? 'Folder')
+                : (entry['title'] as String? ?? 'Folder'),
+          ),
+    ];
     _chatsController.add(currentChats);
   }
 
@@ -970,13 +1054,9 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
-  List<TgFolder> get folders => const [
-    TgFolder(id: 'all', title: 'All Chats'),
-    TgFolder(id: 'personal', title: 'Personal'),
-    TgFolder(id: 'groups', title: 'Groups'),
-    TgFolder(id: 'channels', title: 'Channels'),
-    TgFolder(id: 'unread', title: 'Unread'),
-    TgFolder(id: 'bots', title: 'Bots'),
+  List<TgFolder> get folders => [
+    const TgFolder(id: 'all', title: 'All Chats'),
+    ..._folders,
   ];
 
   @override
@@ -1206,6 +1286,19 @@ class TdlibTelegramClient implements TelegramClient {
         '@type': 'chatNotificationSettings',
         'use_default_mute_for': false,
         'mute_for': chat.isMuted ? 0 : 2147483647,
+      },
+    });
+  }
+
+  @override
+  Future<void> toggleArchive(int chatId) async {
+    final chat = _chatIndex[chatId];
+    if (chat == null) return;
+    _send({
+      '@type': 'addChatToList',
+      'chat_id': chatId,
+      'chat_list': {
+        '@type': chat.isArchived ? 'chatListMain' : 'chatListArchive',
       },
     });
   }

@@ -66,6 +66,7 @@ class TgChat {
     this.hasStory = false,
     this.draft,
     this.photoPath,
+    this.lists = const {'main'},
   });
 
   final int id;
@@ -87,6 +88,13 @@ class TgChat {
 
   /// Local path of the downloaded chat photo, once TDLib has it on disk.
   final String? photoPath;
+
+  /// Which chat lists this conversation belongs to: `main`, `archive`, or
+  /// `folder:<id>` for one of the account's own folders. A chat can be in
+  /// several at once, which is exactly how Telegram's folders work.
+  final Set<String> lists;
+
+  bool get isArchived => lists.contains('archive');
 
   String get initials {
     final parts = title.trim().split(RegExp(r'\s+'));
@@ -124,6 +132,7 @@ class TgChat {
     String? subtitle,
     String? draft,
     String? photoPath,
+    Set<String>? lists,
   }) {
     return TgChat(
       id: id,
@@ -143,6 +152,7 @@ class TgChat {
       hasStory: hasStory,
       draft: draft ?? this.draft,
       photoPath: photoPath ?? this.photoPath,
+      lists: lists ?? this.lists,
     );
   }
 
@@ -341,6 +351,8 @@ class TgMessage {
 class TgFolder {
   const TgFolder({required this.id, required this.title, this.unreadCount = 0});
 
+  /// `all`, `archive`, `folder:<id>` for one of the account's own folders, or
+  /// one of the demo backend's fixed kinds.
   final String id;
   final String title;
   final int unreadCount;

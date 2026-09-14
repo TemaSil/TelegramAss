@@ -9,6 +9,7 @@ import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../chat/chat_screen.dart';
 import '../stories/story_viewer.dart';
+import 'archive_screen.dart';
 import 'widgets/chat_row.dart';
 import 'widgets/story_rail.dart';
 import '../../core/tg_icons.dart';
@@ -230,6 +231,21 @@ class _ChatsBodyState extends State<ChatsBody> {
             ),
           ),
           SliverToBoxAdapter(child: _FolderBar(state: state)),
+          if (state.archivedChats.isNotEmpty && state.activeFolder != 'archive')
+            SliverToBoxAdapter(
+              child: _ArchiveRow(
+                count: state.archivedChats.length,
+                unread: state.archivedChats.fold<int>(
+                  0,
+                  (sum, chat) => sum + (chat.isMuted ? 0 : chat.unreadCount),
+                ),
+                onTap: () => Navigator.of(context).push(
+                  CupertinoPageRoute<void>(
+                    builder: (_) => const ArchiveScreen(),
+                  ),
+                ),
+              ),
+            ),
         ],
         if (chats.isEmpty)
           SliverToBoxAdapter(child: _EmptyState(query: state.searchQuery))
@@ -250,6 +266,10 @@ class _ChatsBodyState extends State<ChatsBody> {
                   state.client.toggleMute(chat.id);
                 },
                 onMarkRead: () => state.client.markChatRead(chat.id),
+                onArchive: () {
+                  HapticFeedback.selectionClick();
+                  state.client.toggleArchive(chat.id);
+                },
                 onDelete: () => _confirmDelete(context, chat),
               );
             }, childCount: chats.length),
@@ -266,6 +286,46 @@ class _ChatsBodyState extends State<ChatsBody> {
 /// and the glass one mis-measured segments whose labels carry a count — the
 /// indicator drifted off its label. This is the plain iOS reading: a scrolling
 /// row of labels, the selected one in a pill, the unread count beside it.
+/// The row above the chat list that leads into the archive, the way iOS
+/// Telegram surfaces it.
+class _ArchiveRow extends StatelessWidget {
+  const _ArchiveRow({
+    required this.count,
+    required this.unread,
+    required this.onTap,
+  });
+
+  final int count;
+  final int unread;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    return CupertinoListSection.insetGrouped(
+      margin: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+      children: [
+        CupertinoListTile.notched(
+          leading: Icon(
+            TgIcons.archive,
+            color: TgColors.secondaryLabel.resolveFrom(context),
+          ),
+          title: Text(l10n.archivedChats),
+          additionalInfo: Text('\$count'),
+          trailing: unread > 0
+              ? GlassBadge(
+                  count: unread,
+                  settings: GlassTokens.chrome(context),
+                  child: const CupertinoListTileChevron(),
+                )
+              : const CupertinoListTileChevron(),
+          onTap: onTap,
+        ),
+      ],
+    );
+  }
+}
+
 class _FolderBar extends StatelessWidget {
   const _FolderBar({required this.state});
 

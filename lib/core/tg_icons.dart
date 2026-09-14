@@ -49,6 +49,7 @@ class TgIcons {
   static const bot = SFSymbols.chevron_left_slash_chevron_right;
   static const channel = SFSymbols.antenna_radiowaves_left_and_right;
   static const folder = SFSymbols.folder;
+  static const archive = SFSymbols.archivebox;
 
   // Messages
   static const reply = SFSymbols.arrowshape_turn_up_left;

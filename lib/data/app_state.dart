@@ -238,6 +238,17 @@ class AppState extends ChangeNotifier {
   List<TgChat> get visibleChats {
     Iterable<TgChat> result = _chats;
 
+    // The archive is a list of its own and never shows in the chat list.
+    if (_activeFolder == 'archive') {
+      result = result.where((c) => c.isArchived);
+    } else {
+      result = result.where((c) => !c.isArchived);
+    }
+
+    if (_activeFolder.startsWith('folder:')) {
+      result = result.where((c) => c.lists.contains(_activeFolder));
+    }
+
     switch (_activeFolder) {
       case 'personal':
         result = result.where(
@@ -275,6 +286,11 @@ class AppState extends ChangeNotifier {
     _activeFolder = previous;
     return count;
   }
+
+  /// Chats the account has archived, newest first. Shown on their own screen,
+  /// reached from the row above the chat list.
+  List<TgChat> get archivedChats =>
+      _chats.where((chat) => chat.isArchived).toList();
 
   TgChat? chatById(int id) {
     for (final chat in _chats) {

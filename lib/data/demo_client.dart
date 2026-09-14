@@ -506,6 +506,23 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> toggleArchive(int chatId) async {
+    _updateChat(chatId, (chat) {
+      final lists = Set<String>.from(chat.lists);
+      if (chat.isArchived) {
+        lists
+          ..remove('archive')
+          ..add('main');
+      } else {
+        lists
+          ..remove('main')
+          ..add('archive');
+      }
+      return chat.copyWith(lists: lists);
+    });
+  }
+
+  @override
   Future<void> togglePin(int chatId) async {
     _updateChat(chatId, (chat) => chat.copyWith(isPinned: !chat.isPinned));
     _sortChats();

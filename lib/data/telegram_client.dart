@@ -115,6 +115,9 @@ abstract class TelegramClient {
 
   Future<void> togglePin(int chatId);
 
+  /// Moves a chat into the archive, or back out of it.
+  Future<void> toggleArchive(int chatId);
+
   /// Typing indicator for the currently open chat.
   Stream<int?> get typingChatId;
 
