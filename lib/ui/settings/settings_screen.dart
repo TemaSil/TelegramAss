@@ -234,6 +234,41 @@ class SettingsBody extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: CupertinoListSection.insetGrouped(
               margin: EdgeInsets.zero,
+              header: Text(
+                l10n.modSettings,
+                style: TgText.sectionHeader(context),
+              ),
+              children: [
+                CupertinoListTile.notched(
+                  leading: const Icon(TgIcons.stories),
+                  title: Text(l10n.showStories),
+                  trailing: GlassSwitch(
+                    value: state.showStories,
+                    onChanged: state.setShowStories,
+                    settings: GlassTokens.chrome(context),
+                    activeColor: TgColors.accent.resolveFrom(context),
+                  ),
+                ),
+                CupertinoListTile.notched(
+                  leading: const Icon(TgIcons.reactions),
+                  title: Text(l10n.doubleTapReaction),
+                  additionalInfo: Text(
+                    state.doubleTapReaction.isEmpty
+                        ? l10n.reactionOff
+                        : state.doubleTapReaction,
+                  ),
+                  trailing: const CupertinoListTileChevron(),
+                  onTap: () => _pickDoubleTapReaction(context, state),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: CupertinoListSection.insetGrouped(
+              margin: EdgeInsets.zero,
               header: Text(l10n.privacy, style: TgText.sectionHeader(context)),
               children: [
                 CupertinoListTile.notched(
@@ -372,6 +407,35 @@ class SettingsBody extends StatelessWidget {
             ),
             onPressed: () {
               state.setLanguage(code);
+              Navigator.of(context).pop();
+            },
+          ),
+      ],
+    );
+  }
+
+  /// Which emoji a double-tap sends, or none at all.
+  Future<void> _pickDoubleTapReaction(
+    BuildContext context,
+    AppState state,
+  ) async {
+    final l10n = AppL10n.of(context);
+    await showGlassActionSheet<void>(
+      context: context,
+      title: l10n.doubleTapReaction,
+      settings: GlassTokens.menu(context),
+      quality: GlassQuality.premium,
+      actions: [
+        for (final emoji in const ['❤️', '👍', '🔥', '😂', '😮', ''])
+          GlassActionSheetAction(
+            label: emoji.isEmpty ? l10n.reactionOff : emoji,
+            icon: Icon(
+              state.doubleTapReaction == emoji
+                  ? TgIcons.selected
+                  : TgIcons.unselected,
+            ),
+            onPressed: () {
+              state.setDoubleTapReaction(emoji);
               Navigator.of(context).pop();
             },
           ),

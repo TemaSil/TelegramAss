@@ -94,6 +94,8 @@ class TgIcons {
   static const proxy = SFSymbols.network;
   static const privacy = SFSymbols.lock;
   static const receipts = SFSymbols.checkmark_seal_fill;
+  static const stories = SFSymbols.circle_dashed;
+  static const reactions = SFSymbols.heart_circle;
   static const sessions = SFSymbols.iphone_gen3;
   static const logOut = SFSymbols.rectangle_portrait_and_arrow_right;
   static const premium = SFSymbols.star_fill;

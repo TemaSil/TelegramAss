@@ -430,6 +430,41 @@ class AppL10nEn extends AppL10n {
   String get attachment => 'Attachment';
 
   @override
+  String get select => 'Select';
+
+  @override
+  String selectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected',
+      one: '1 selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get messageDetails => 'Message details';
+
+  @override
+  String get from => 'From';
+
+  @override
+  String get doubleTapReaction => 'Double-tap reaction';
+
+  @override
+  String get showStories => 'Show stories';
+
+  @override
+  String get modSettings => 'Extras';
+
+  @override
+  String get reactionOff => 'Off';
+
+  @override
+  String get forwardWithoutQuoting => 'Forward without quoting';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

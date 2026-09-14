@@ -159,6 +159,14 @@ class TdlibTelegramClient implements TelegramClient {
   Future<void> toggleMute(int chatId) async {}
 
   @override
+  Future<void> forwardMessages(
+    int fromChatId,
+    int toChatId,
+    List<int> messageIds, {
+    bool asCopy = false,
+  }) async {}
+
+  @override
   Future<List<TgMessage>> pinnedMessages(int chatId) async => const [];
 
   @override

@@ -33,9 +33,12 @@ class MessageBubble extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onForward,
+    required this.onForwardCopy,
     required this.onReact,
     required this.onTogglePin,
     required this.isPinned,
+    required this.onSelect,
+    required this.selecting,
     this.showTail = true,
     this.showSender = false,
   });
@@ -46,11 +49,19 @@ class MessageBubble extends StatelessWidget {
   final ValueChanged<TgMessage> onEdit;
   final ValueChanged<TgMessage> onDelete;
   final ValueChanged<TgMessage> onForward;
+  final ValueChanged<TgMessage> onForwardCopy;
   final void Function(TgMessage message, String emoji) onReact;
   final ValueChanged<TgMessage> onTogglePin;
 
   /// Whether this message is currently pinned in the chat.
   final bool isPinned;
+
+  /// Adds or removes this message from the selection.
+  final ValueChanged<TgMessage> onSelect;
+
+  /// True while the thread is picking messages, in which case a tap toggles
+  /// this one instead of opening what it holds.
+  final bool selecting;
 
   /// Last message of a group gets the wider corner.
   final bool showTail;
@@ -85,13 +96,23 @@ class MessageBubble extends StatelessWidget {
               : GlassMenuAlignment.bottomLeft,
           triggerBuilder: (context, toggleMenu) => GestureDetector(
             behavior: HitTestBehavior.opaque,
+            onTap: selecting ? () => onSelect(message) : null,
             onLongPress: () {
               HapticFeedback.mediumImpact();
-              toggleMenu();
+              if (selecting) {
+                onSelect(message);
+              } else {
+                toggleMenu();
+              }
             },
             onDoubleTap: () {
+              // The mods made this configurable because ❤️ is not everyone's
+              // reflex; an empty setting turns it off entirely.
+              if (selecting) return;
+              final emoji = AppScope.of(context).doubleTapReaction;
+              if (emoji.isEmpty) return;
               HapticFeedback.lightImpact();
-              onReact(message, '❤️');
+              onReact(message, emoji);
             },
             child: _bubble(context),
           ),
@@ -112,6 +133,11 @@ class MessageBubble extends StatelessWidget {
               onTap: () => onReply(message),
             ),
             GlassMenuItem(
+              title: l10n.select,
+              icon: const Icon(TgIcons.markRead),
+              onTap: () => onSelect(message),
+            ),
+            GlassMenuItem(
               title: l10n.copy,
               icon: const Icon(TgIcons.copy),
               onTap: () => Clipboard.setData(ClipboardData(text: message.text)),
@@ -128,6 +154,16 @@ class MessageBubble extends StatelessWidget {
               onTap: () => onForward(message),
             ),
             GlassMenuItem(
+              title: l10n.forwardWithoutQuoting,
+              icon: const Icon(TgIcons.copy),
+              onTap: () => onForwardCopy(message),
+            ),
+            GlassMenuItem(
+              title: l10n.messageDetails,
+              icon: const Icon(TgIcons.info),
+              onTap: () => _showDetails(context, message),
+            ),
+            GlassMenuItem(
               title: isPinned ? l10n.unpinMessage : l10n.pinMessage,
               icon: Icon(isPinned ? TgIcons.pinFilled : TgIcons.pin),
               onTap: () => onTogglePin(message),
@@ -142,6 +178,42 @@ class MessageBubble extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// Date, id and sender — what the mods call message details, and what you
+  /// want the moment something needs reporting or quoting precisely.
+  static Future<void> _showDetails(
+    BuildContext context,
+    TgMessage message,
+  ) async {
+    final l10n = AppL10n.of(context);
+    final lines = <String>[
+      '${TgFormat.daySeparator(message.date)}, '
+          '${TgFormat.time(message.date)}',
+      'ID: ${message.id}',
+      if (message.senderName != null) '${l10n.from}: ${message.senderName}',
+      if (message.isEdited) l10n.edited,
+    ];
+
+    await GlassDialog.show<void>(
+      context: context,
+      title: l10n.messageDetails,
+      message: lines.join('\n'),
+      settings: GlassTokens.menu(context),
+      actions: [
+        GlassDialogAction(
+          label: l10n.copy,
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: lines.join('\n')));
+            Navigator.of(context).pop();
+          },
+        ),
+        GlassDialogAction(
+          label: l10n.ok,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
     );
   }
 

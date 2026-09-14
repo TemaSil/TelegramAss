@@ -190,4 +190,58 @@ void main() {
         .firstWhere((m) => m.id == message.id);
     expect(updated.reactions.any((r) => r.emoji == '👍'), isFalse);
   });
+
+  test('forwarding copies messages into the destination chat', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final source = state.chats.first;
+    final destination = state.chats.firstWhere((chat) => chat.id != source.id);
+    final picked = state.client.currentMessagesOf(source.id).take(2).toList();
+    final before = state.client.currentMessagesOf(destination.id).length;
+
+    await state.client.forwardMessages(
+      source.id,
+      destination.id,
+      picked.map((message) => message.id).toList(),
+    );
+
+    final after = state.client.currentMessagesOf(destination.id);
+    expect(after.length, before + picked.length);
+    expect(after.last.text, picked.last.text);
+    // A forward is a new message in the destination, sent by us.
+    expect(after.last.isOutgoing, isTrue);
+    expect(after.last.id, isNot(picked.last.id));
+  });
+
+  test('archiving moves a chat out of the main list', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final chat = state.chats.first;
+    expect(chat.isArchived, isFalse);
+
+    await state.client.toggleArchive(chat.id);
+    await settle();
+    expect(state.chatById(chat.id)?.isArchived, isTrue);
+    expect(state.visibleChats.any((c) => c.id == chat.id), isFalse);
+    expect(state.archivedChats.any((c) => c.id == chat.id), isTrue);
+
+    await state.client.toggleArchive(chat.id);
+    await settle();
+    expect(state.chatById(chat.id)?.isArchived, isFalse);
+    expect(state.visibleChats.any((c) => c.id == chat.id), isTrue);
+  });
+
+  test('global search finds messages by text, not just chat titles', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final chat = state.chats.first;
+    await state.client.sendText(chat.id, 'refraction on the tab bar');
+    final results = await state.client.searchGlobal('refraction');
+
+    expect(results.messages, isNotEmpty);
+    expect(results.messages.any((m) => m.text.contains('refraction')), isTrue);
+  });
 }

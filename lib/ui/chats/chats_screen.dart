@@ -256,20 +256,21 @@ class _ChatsBodyState extends State<ChatsBody> {
           ),
         ),
         if (state.searchQuery.isEmpty) ...[
-          SliverToBoxAdapter(
-            child: StoryRail(
-              stories: state.stories,
-              onOpen: (index) => Navigator.of(context).push(
-                CupertinoPageRoute<void>(
-                  builder: (_) => StoryViewerScreen(
-                    stories: state.stories,
-                    initialIndex: index,
+          if (state.showStories)
+            SliverToBoxAdapter(
+              child: StoryRail(
+                stories: state.stories,
+                onOpen: (index) => Navigator.of(context).push(
+                  CupertinoPageRoute<void>(
+                    builder: (_) => StoryViewerScreen(
+                      stories: state.stories,
+                      initialIndex: index,
+                    ),
+                    fullscreenDialog: true,
                   ),
-                  fullscreenDialog: true,
                 ),
               ),
             ),
-          ),
           SliverToBoxAdapter(child: _FolderBar(state: state)),
           if (state.archivedChats.isNotEmpty && state.activeFolder != 'archive')
             SliverToBoxAdapter(

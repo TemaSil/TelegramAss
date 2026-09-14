@@ -45,6 +45,13 @@ class AppState extends ChangeNotifier {
   bool _autoNightMode = true;
   bool _darkMode = true;
   bool _notifications = true;
+
+  /// Borrowed from the Telegram mods: things the official client fixes and
+  /// people keep asking for.
+  bool _showStories = true;
+
+  /// Emoji a double-tap sends, or empty for no double-tap reaction at all.
+  String _doubleTapReaction = '❤️';
   double _glassIntensity = 1.0;
   int _messageFontSize = 16;
 
@@ -72,6 +79,8 @@ class AppState extends ChangeNotifier {
   bool get readReceipts => _readReceipts;
   bool get autoNightMode => _autoNightMode;
   bool get notifications => _notifications;
+  bool get showStories => _showStories;
+  String get doubleTapReaction => _doubleTapReaction;
 
   /// Used only when [autoNightMode] is off.
   bool get darkMode => _darkMode;
@@ -155,6 +164,8 @@ class AppState extends ChangeNotifier {
   static const _kReadReceipts = 'read_receipts';
   static const _kAutoNightMode = 'auto_night_mode';
   static const _kNotifications = 'notifications';
+  static const _kShowStories = 'show_stories';
+  static const _kDoubleTapReaction = 'double_tap_reaction';
   static const _kDarkMode = 'dark_mode';
   static const _kGlassIntensity = 'glass_intensity';
   static const _kMessageFontSize = 'message_font_size';
@@ -170,6 +181,9 @@ class AppState extends ChangeNotifier {
     _readReceipts = prefs.getBool(_kReadReceipts) ?? _readReceipts;
     _autoNightMode = prefs.getBool(_kAutoNightMode) ?? _autoNightMode;
     _notifications = prefs.getBool(_kNotifications) ?? _notifications;
+    _showStories = prefs.getBool(_kShowStories) ?? _showStories;
+    _doubleTapReaction =
+        prefs.getString(_kDoubleTapReaction) ?? _doubleTapReaction;
     _darkMode = prefs.getBool(_kDarkMode) ?? _darkMode;
     _glassIntensity = prefs.getDouble(_kGlassIntensity) ?? _glassIntensity;
     _messageFontSize = prefs.getInt(_kMessageFontSize) ?? _messageFontSize;
@@ -317,6 +331,19 @@ class AppState extends ChangeNotifier {
     _notifications = value;
     _prefs?.setBool(_kNotifications, value);
     TgNotifications.instance.setEnabled(value);
+    notifyListeners();
+  }
+
+  void setShowStories(bool value) {
+    _showStories = value;
+    _prefs?.setBool(_kShowStories, value);
+    notifyListeners();
+  }
+
+  /// An empty string turns the double-tap reaction off.
+  void setDoubleTapReaction(String emoji) {
+    _doubleTapReaction = emoji;
+    _prefs?.setString(_kDoubleTapReaction, emoji);
     notifyListeners();
   }
 

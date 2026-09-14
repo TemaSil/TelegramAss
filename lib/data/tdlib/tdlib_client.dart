@@ -1291,6 +1291,25 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> forwardMessages(
+    int fromChatId,
+    int toChatId,
+    List<int> messageIds, {
+    bool asCopy = false,
+  }) async {
+    if (messageIds.isEmpty) return;
+    _send({
+      '@type': 'forwardMessages',
+      'chat_id': toChatId,
+      'from_chat_id': fromChatId,
+      // TDLib requires these in increasing order.
+      'message_ids': [...messageIds]..sort(),
+      'send_copy': asCopy,
+      'remove_caption': false,
+    });
+  }
+
+  @override
   Future<List<TgMessage>> pinnedMessages(int chatId) async {
     // Recent TDLib has no pinned_message_id on the chat; the pinned set is a
     // filtered search, which also covers chats with several of them.

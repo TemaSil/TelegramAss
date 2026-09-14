@@ -208,6 +208,18 @@
   "pinMessage": "Pin",
   "unpinMessage": "Unpin",
   "attachment": "Attachment",
+  "select": "Select",
+  "selectedCount": "{count, plural, =1{1 selected} other{{count} selected}}",
+  "@selectedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "messageDetails": "Message details",
+  "from": "From",
+  "doubleTapReaction": "Double-tap reaction",
+  "showStories": "Show stories",
+  "modSettings": "Extras",
+  "reactionOff": "Off",
+  "forwardWithoutQuoting": "Forward without quoting",
   "privacy": "Privacy",
   "messageNotifications": "Message notifications",
   "messageNotificationsSubtitle": "Keeps the connection alive so messages arrive while the app is closed",

@@ -507,6 +507,36 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> forwardMessages(
+    int fromChatId,
+    int toChatId,
+    List<int> messageIds, {
+    bool asCopy = false,
+  }) async {
+    final source = _messages[fromChatId] ?? const <TgMessage>[];
+    for (final id in messageIds) {
+      for (final message in source) {
+        if (message.id != id) continue;
+        _append(
+          toChatId,
+          TgMessage(
+            id: _nextMessageId++,
+            chatId: toChatId,
+            text: message.text,
+            date: DateTime.now(),
+            isOutgoing: true,
+            kind: message.kind,
+            status: TgMessageStatus.sending,
+            entities: message.entities,
+            localPath: message.localPath,
+            linkPreview: message.linkPreview,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   Future<List<TgMessage>> pinnedMessages(int chatId) async => [
     for (final id in _pinned[chatId] ?? const <int>{})
       ...?_messages[chatId]?.where((message) => message.id == id),

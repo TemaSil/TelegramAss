@@ -429,6 +429,43 @@ class AppL10nRu extends AppL10n {
   String get attachment => 'Вложение';
 
   @override
+  String get select => 'Выбрать';
+
+  @override
+  String selectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Выбрано $count',
+      many: 'Выбрано $count',
+      few: 'Выбрано $count',
+      one: 'Выбрано 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get messageDetails => 'О сообщении';
+
+  @override
+  String get from => 'От';
+
+  @override
+  String get doubleTapReaction => 'Реакция по двойному тапу';
+
+  @override
+  String get showStories => 'Показывать истории';
+
+  @override
+  String get modSettings => 'Дополнительно';
+
+  @override
+  String get reactionOff => 'Выключено';
+
+  @override
+  String get forwardWithoutQuoting => 'Переслать без цитаты';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

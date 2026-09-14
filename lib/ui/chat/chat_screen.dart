@@ -65,6 +65,10 @@ class _ChatScreenState extends State<ChatScreen> {
   List<TgMessage> _pinned = const [];
   int _pinnedIndex = 0;
 
+  /// Messages picked in selection mode. Non-empty means the thread is in that
+  /// mode: the composer becomes an action bar and taps toggle instead of open.
+  final _selected = <int>{};
+
   @override
   void initState() {
     super.initState();
@@ -175,6 +179,20 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _highlighted = messageId);
     await Future<void>.delayed(const Duration(milliseconds: 1400));
     if (mounted) setState(() => _highlighted = null);
+  }
+
+  void _toggleSelected(TgMessage message) {
+    setState(() {
+      if (!_selected.remove(message.id)) _selected.add(message.id);
+    });
+  }
+
+  void _deleteSelected() {
+    final client = AppScope.read(context).client;
+    for (final id in _selected) {
+      client.deleteMessage(widget.chatId, id);
+    }
+    setState(_selected.clear);
   }
 
   Future<void> _loadPinned() async {
@@ -366,7 +384,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   /// Picks a destination chat and forwards [message] into it.
-  Future<void> _forward(TgMessage message) async {
+  Future<void> _forward(TgMessage message) => _forwardAll([message.id]);
+
+  /// Forwards a set of messages, keeping Telegram's own attribution header —
+  /// or, with [asCopy], sending them as if written fresh, which is what the
+  /// mods call forwarding without quoting.
+  Future<void> _forwardAll(List<int> messageIds, {bool asCopy = false}) async {
+    if (messageIds.isEmpty) return;
     final state = AppScope.read(context);
     await GlassModalSheet.show<void>(
       context: context,
@@ -377,7 +401,13 @@ class _ChatScreenState extends State<ChatScreen> {
         chats: state.chats.where((chat) => chat.id != widget.chatId).toList(),
         onPick: (chat) {
           Navigator.of(sheetContext).pop();
-          state.client.sendText(chat.id, message.text);
+          state.client.forwardMessages(
+            widget.chatId,
+            chat.id,
+            messageIds,
+            asCopy: asCopy,
+          );
+          setState(_selected.clear);
           GlassToast.show(
             context,
             message: AppL10n.of(context).forwardedTo(chat.title),
@@ -456,27 +486,34 @@ class _ChatScreenState extends State<ChatScreen> {
         onSearch: _openSearch,
         onToggleMute: () => state.client.toggleMute(chat.id),
       ),
-      bottomBar: ComposerBar(
-        controller: _composerController,
-        replyTo: _replyTo,
-        editing: _editing,
-        onCancelReply: () => setState(() {
-          _replyTo = null;
-          _editing = null;
-          _composerController.clear();
-        }),
-        onSend: _send,
-        onAttach: _openAttachments,
-        onVoiceRecorded: (path, seconds, isOpus) {
-          state.client.sendVoice(
-            widget.chatId,
-            seconds,
-            path: path,
-            isOpus: isOpus,
-          );
-          _scrollToBottom();
-        },
-      ),
+      bottomBar: _selected.isNotEmpty
+          ? _SelectionBar(
+              count: _selected.length,
+              onCancel: () => setState(_selected.clear),
+              onForward: () => _forwardAll(_selected.toList()),
+              onDelete: _deleteSelected,
+            )
+          : ComposerBar(
+              controller: _composerController,
+              replyTo: _replyTo,
+              editing: _editing,
+              onCancelReply: () => setState(() {
+                _replyTo = null;
+                _editing = null;
+                _composerController.clear();
+              }),
+              onSend: _send,
+              onAttach: _openAttachments,
+              onVoiceRecorded: (path, seconds, isOpus) {
+                state.client.sendVoice(
+                  widget.chatId,
+                  seconds,
+                  path: path,
+                  isOpus: isOpus,
+                );
+                _scrollToBottom();
+              },
+            ),
       body: Stack(
         children: [
           _MessageList(
@@ -505,8 +542,11 @@ class _ChatScreenState extends State<ChatScreen> {
             onDelete: (message) =>
                 state.client.deleteMessage(widget.chatId, message.id),
             onForward: _forward,
+            onForwardCopy: (message) => _forwardAll([message.id], asCopy: true),
             onTogglePin: _togglePinned,
             pinnedIds: {for (final message in _pinned) message.id},
+            selected: _selected,
+            onToggleSelected: _toggleSelected,
             onReact: (message, emoji) =>
                 state.client.toggleReaction(widget.chatId, message.id, emoji),
           ),
@@ -670,9 +710,12 @@ class _MessageList extends StatefulWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onForward,
+    required this.onForwardCopy,
     required this.onReact,
     required this.onTogglePin,
     required this.pinnedIds,
+    required this.selected,
+    required this.onToggleSelected,
     required this.extraTopPadding,
   });
 
@@ -696,11 +739,16 @@ class _MessageList extends StatefulWidget {
   final ValueChanged<TgMessage> onEdit;
   final ValueChanged<TgMessage> onDelete;
   final ValueChanged<TgMessage> onForward;
+  final ValueChanged<TgMessage> onForwardCopy;
   final void Function(TgMessage, String) onReact;
   final ValueChanged<TgMessage> onTogglePin;
 
   /// Ids currently pinned, so the menu can offer Unpin instead of Pin.
   final Set<int> pinnedIds;
+
+  /// Ids picked in selection mode, and the callback that toggles one.
+  final Set<int> selected;
+  final ValueChanged<TgMessage> onToggleSelected;
 
   /// Room left at the top for the pinned bar.
   final double extraTopPadding;
@@ -830,7 +878,11 @@ class _MessageListState extends State<_MessageList>
                   date: message.date,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    color: widget.highlightedId == message.id
+                    color: widget.selected.contains(message.id)
+                        ? TgColors.accent
+                              .resolveFrom(context)
+                              .withValues(alpha: 0.22)
+                        : widget.highlightedId == message.id
                         ? TgColors.accent
                               .resolveFrom(context)
                               .withValues(alpha: 0.16)
@@ -847,9 +899,14 @@ class _MessageListState extends State<_MessageList>
                         onEdit: widget.onEdit,
                         onDelete: widget.onDelete,
                         onForward: widget.onForward,
+                        onForwardCopy: widget.onForwardCopy,
                         onReact: widget.onReact,
                         onTogglePin: widget.onTogglePin,
                         isPinned: widget.pinnedIds.contains(message.id),
+                        onSelect: widget.onToggleSelected,
+                        // While picking, a tap anywhere on the row toggles it
+                        // rather than opening whatever it holds.
+                        selecting: widget.selected.isNotEmpty,
                       ),
                     ),
                   ),
@@ -953,6 +1010,73 @@ class _UnreadSeparator extends StatelessWidget {
             fontWeight: FontWeight.w600,
             color: color,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Replaces the composer while messages are picked: how many, and what can be
+/// done with them.
+class _SelectionBar extends StatelessWidget {
+  const _SelectionBar({
+    required this.count,
+    required this.onCancel,
+    required this.onForward,
+    required this.onDelete,
+  });
+
+  final int count;
+  final VoidCallback onCancel;
+  final VoidCallback onForward;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(10, 0, 10, bottomPad > 0 ? bottomPad : 10),
+      child: GlassContainer(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        shape: const LiquidRoundedRectangle(borderRadius: 24),
+        settings: GlassTokens.composer(context),
+        child: Row(
+          children: [
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: Size.zero,
+              onPressed: onCancel,
+              child: Text(l10n.cancel),
+            ),
+            Expanded(
+              child: Text(
+                l10n.selectedCount(count),
+                textAlign: TextAlign.center,
+                style: TgText.body(context)
+                    .copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            GlassIconButton(
+              icon: const Icon(TgIcons.forwardMessage, size: 20),
+              size: 40,
+              settings: GlassTokens.composer(context),
+              onPressed: onForward,
+            ),
+            const SizedBox(width: 6),
+            GlassIconButton(
+              icon: Icon(
+                TgIcons.delete,
+                size: 20,
+                color: CupertinoColors.systemRed.resolveFrom(context),
+              ),
+              size: 40,
+              settings: GlassTokens.composer(context),
+              onPressed: onDelete,
+            ),
+          ],
         ),
       ),
     );

@@ -883,6 +883,60 @@ abstract class AppL10n {
   /// **'Attachment'**
   String get attachment;
 
+  /// No description provided for @select.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get select;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 selected} other{{count} selected}}'**
+  String selectedCount(int count);
+
+  /// No description provided for @messageDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Message details'**
+  String get messageDetails;
+
+  /// No description provided for @from.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get from;
+
+  /// No description provided for @doubleTapReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap reaction'**
+  String get doubleTapReaction;
+
+  /// No description provided for @showStories.
+  ///
+  /// In en, this message translates to:
+  /// **'Show stories'**
+  String get showStories;
+
+  /// No description provided for @modSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Extras'**
+  String get modSettings;
+
+  /// No description provided for @reactionOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get reactionOff;
+
+  /// No description provided for @forwardWithoutQuoting.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward without quoting'**
+  String get forwardWithoutQuoting;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:

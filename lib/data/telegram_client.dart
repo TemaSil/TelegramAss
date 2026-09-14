@@ -108,6 +108,16 @@ abstract class TelegramClient {
   /// a tap would only add latency — so this is for music and documents.
   Future<void> downloadMessageMedia(int chatId, int messageId) async {}
 
+  /// Forwards messages between chats, keeping Telegram's own "forwarded from"
+  /// attribution. [asCopy] sends them as if written fresh, which is what
+  /// Telegram calls forwarding without quoting.
+  Future<void> forwardMessages(
+    int fromChatId,
+    int toChatId,
+    List<int> messageIds, {
+    bool asCopy = false,
+  }) async {}
+
   /// Messages pinned in [chatId], newest first.
   Future<List<TgMessage>> pinnedMessages(int chatId) async => const [];
 
