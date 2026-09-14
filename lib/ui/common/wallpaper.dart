@@ -19,6 +19,10 @@ class GlassWallpaper extends StatefulWidget {
   final String variant;
   final bool animate;
 
+  /// The plain system background — the iOS default, and what the chat list,
+  /// contacts, calls and settings always use.
+  static const none = 'none';
+
   static const palettes = <String, List<Color>>{
     'aurora': [
       Color(0xFF3B2E7E),
@@ -47,6 +51,7 @@ class GlassWallpaper extends StatefulWidget {
   };
 
   static const labels = <String, String>{
+    none: 'None',
     'aurora': 'Aurora',
     'sunset': 'Sunset',
     'mint': 'Mint',
@@ -89,6 +94,14 @@ class _GlassWallpaperState extends State<GlassWallpaper>
   @override
   Widget build(BuildContext context) {
     final dark = CupertinoTheme.of(context).brightness == Brightness.dark;
+
+    if (widget.variant == GlassWallpaper.none) {
+      return ColoredBox(
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: const SizedBox.expand(),
+      );
+    }
+
     final colors =
         GlassWallpaper.palettes[widget.variant] ??
         GlassWallpaper.palettes['aurora']!;

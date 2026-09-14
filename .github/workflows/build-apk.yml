@@ -70,8 +70,11 @@ jobs:
           else
             echo "No API credentials configured — building in demo mode."
           fi
-          flutter build apk --debug $DEFINES
-          flutter build apk --release $DEFINES
+          # The run number becomes the Android versionCode, so each build is
+          # seen as an update rather than the same version reinstalled.
+          VERSION="--build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }}"
+          flutter build apk --debug $VERSION $DEFINES
+          flutter build apk --release $VERSION $DEFINES
 
       - name: Name the artifacts
         run: |

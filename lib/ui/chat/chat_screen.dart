@@ -454,6 +454,7 @@ class _ChatAppBar extends StatelessWidget {
       ),
       actions: [
         GlassMenu(
+          autoAdjustToScreen: true,
           menuWidth: 235,
           menuBorderRadius: 26,
           quality: GlassQuality.premium,
@@ -580,7 +581,13 @@ class _MessageListState extends State<_MessageList>
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
-          padding: EdgeInsets.fromLTRB(0, topPad + 8, 0, 16),
+          // Leave room for the composer, which floats above the list.
+          padding: EdgeInsets.fromLTRB(
+            0,
+            topPad + 8,
+            0,
+            76 + MediaQuery.paddingOf(context).bottom,
+          ),
           itemCount:
               messages.length +
               (widget.isTyping ? 1 : 0) +

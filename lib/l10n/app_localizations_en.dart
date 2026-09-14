@@ -345,7 +345,7 @@ class AppL10nEn extends AppL10n {
   String get appearance => 'Appearance';
 
   @override
-  String get wallpaper => 'Wallpaper';
+  String get wallpaper => 'Chat wallpaper';
 
   @override
   String get wallpaperSubtitle => 'Glass refracts whatever sits behind it.';

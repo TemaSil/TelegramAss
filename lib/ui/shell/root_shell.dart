@@ -69,10 +69,9 @@ class _RootShellState extends State<RootShell> {
     final unread = state.totalUnread;
 
     return GlassScaffold(
-      background: GlassWallpaper(
-        variant: state.wallpaper,
-        animate: !state.reduceTransparency,
-      ),
+      // The chat list, contacts, calls and settings use the system background,
+      // as they do on iOS; a wallpaper belongs to a conversation.
+      background: const GlassWallpaper(variant: GlassWallpaper.none),
       settings: GlassTokens.chrome(context),
       statusBarStyle: GlassStatusBarStyle.auto,
       appBarHeight: 52,
@@ -108,16 +107,26 @@ class _RootShellState extends State<RootShell> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _index,
-        children: [
-          ChatsBody(controller: _titleControllers[0]),
-          ContactsBody(controller: _titleControllers[1]),
-          CallsBody(controller: _titleControllers[2]),
-          SettingsBody(controller: _titleControllers[3]),
-        ],
-      ),
+      // Only the selected tab is built. An IndexedStack keeps the others
+      // mounted, and every glass surface they contain registers with the
+      // scaffold's shared glass layer — which paints them all on top of each
+      // other. Scroll positions survive anyway: each tab keeps its own
+      // controller in this state.
+      body: _bodyFor(_index),
     );
+  }
+
+  Widget _bodyFor(int index) {
+    switch (index) {
+      case 1:
+        return ContactsBody(controller: _titleControllers[1]);
+      case 2:
+        return CallsBody(controller: _titleControllers[2]);
+      case 3:
+        return SettingsBody(controller: _titleControllers[3]);
+      default:
+        return ChatsBody(controller: _titleControllers[0]);
+    }
   }
 
   Widget _appBarFor(int index) {

@@ -4,6 +4,18 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Development signing key, deliberately committed.
+//
+// Gradle invents a fresh debug keystore on every machine, so each CI build was
+// signed with a different certificate and Android refused to install it over
+// the previous one — you had to uninstall first. A fixed key makes every build
+// an ordinary update.
+//
+// This is a DEVELOPMENT key with a known password: it must not be used to
+// publish anything. A store release needs its own private keystore, kept in
+// repository secrets.
+val devKeystore = rootProject.file("keystore/dev.jks")
+
 android {
     namespace = "com.telegramyou.telegram_liquid"
     compileSdk = flutter.compileSdkVersion
@@ -31,11 +43,23 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("dev") {
+            storeFile = devKeystore
+            storePassword = "devdevdev"
+            keyAlias = "dev"
+            keyPassword = "devdevdev"
+        }
+    }
+
     buildTypes {
+        // Both variants use the same fixed key, so a debug build and a release
+        // build can replace one another without an uninstall.
+        debug {
+            signingConfig = signingConfigs.getByName("dev")
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("dev")
         }
     }
 }

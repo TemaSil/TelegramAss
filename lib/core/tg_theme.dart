@@ -36,10 +36,17 @@ class TgColors {
   static const tertiaryLabel = CupertinoColors.tertiaryLabel;
   static const separator = CupertinoColors.separator;
 
-  /// Incoming bubble fill — a translucent slate that lets the wallpaper through.
+  /// iMessage bubbles: a solid blue for what you send, a neutral grey for what
+  /// you receive. Solid, not glass — glass belongs to the chrome, and a
+  /// translucent bubble makes message text fight the wallpaper behind it.
+  static const outgoingBubble = CupertinoDynamicColor.withBrightness(
+    color: Color(0xFF007AFF),
+    darkColor: Color(0xFF0B84FF),
+  );
+
   static const incomingBubble = CupertinoDynamicColor.withBrightness(
-    color: Color(0xF2FFFFFF),
-    darkColor: Color(0xD92C2C2E),
+    color: Color(0xFFE9E9EB),
+    darkColor: Color(0xFF26252A),
   );
 
   /// Avatar gradients, picked deterministically from a chat id.

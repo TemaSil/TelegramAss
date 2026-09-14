@@ -38,6 +38,7 @@ class ChatRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
     return GlassMenu(
+      autoAdjustToScreen: true,
       menuWidth: 250,
       menuBorderRadius: 28,
       quality: GlassQuality.premium,

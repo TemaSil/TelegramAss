@@ -112,9 +112,11 @@ class SettingsBody extends StatelessWidget {
                   leading: const Icon(TgIcons.nightMode),
                   title: Text(l10n.autoNightMode),
                   subtitle: Text(l10n.autoNightModeSubtitle),
-                  trailing: CupertinoSwitch(
+                  trailing: GlassSwitch(
                     value: state.autoNightMode,
                     onChanged: state.setAutoNightMode,
+                    settings: GlassTokens.chrome(context),
+                    activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
                 GlassListTile(
@@ -133,18 +135,22 @@ class SettingsBody extends StatelessWidget {
                           : TgIcons.lightMode,
                     ),
                     title: Text(l10n.darkMode),
-                    trailing: CupertinoSwitch(
+                    trailing: GlassSwitch(
                       value: state.darkMode,
                       onChanged: state.setDarkMode,
+                      settings: GlassTokens.chrome(context),
+                      activeColor: TgColors.accent.resolveFrom(context),
                     ),
                   ),
                 GlassListTile(
                   leading: const Icon(TgIcons.transparency),
                   title: Text(l10n.reduceTransparency),
                   subtitle: Text(l10n.reduceTransparencySubtitle),
-                  trailing: CupertinoSwitch(
+                  trailing: GlassSwitch(
                     value: state.reduceTransparency,
                     onChanged: state.setReduceTransparency,
+                    settings: GlassTokens.chrome(context),
+                    activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
               ],
@@ -236,9 +242,11 @@ class SettingsBody extends StatelessWidget {
                 GlassListTile(
                   leading: const Icon(TgIcons.receipts),
                   title: Text(l10n.readReceipts),
-                  trailing: CupertinoSwitch(
+                  trailing: GlassSwitch(
                     value: state.readReceipts,
                     onChanged: state.setReadReceipts,
+                    settings: GlassTokens.chrome(context),
+                    activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
                 GlassListTile(

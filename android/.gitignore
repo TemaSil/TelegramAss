@@ -11,4 +11,5 @@ GeneratedPluginRegistrant.java
 # See https://flutter.dev/to/reference-keystore
 key.properties
 **/*.keystore
-**/*.jks
+**/# *.jks — the development keystore in android/keystore is committed
+#         on purpose; see android/app/build.gradle.kts.

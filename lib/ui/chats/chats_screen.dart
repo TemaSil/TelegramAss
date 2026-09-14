@@ -85,6 +85,7 @@ class _EditMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
     return GlassMenu(
+      autoAdjustToScreen: true,
       menuWidth: 250,
       menuBorderRadius: 30,
       quality: GlassQuality.premium,
@@ -259,50 +260,16 @@ class _ChatsBodyState extends State<ChatsBody> {
   }
 }
 
-/// Folder selector — a scrollable segmented control with live unread counts.
+/// Folder tabs.
+///
+/// Telegram's folder strip scrolls, which no Cupertino segmented control does,
+/// and the glass one mis-measured segments whose labels carry a count — the
+/// indicator drifted off its label. This is the plain iOS reading: a scrolling
+/// row of labels, the selected one in a pill, the unread count beside it.
 class _FolderBar extends StatelessWidget {
   const _FolderBar({required this.state});
 
   final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppL10n.of(context);
-    final folders = state.folders;
-    final selected = folders.indexWhere(
-      (folder) => folder.id == state.activeFolder,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-      child: GlassSegmentedControl.scrollable(
-        selectedIndex: selected < 0 ? 0 : selected,
-        onSegmentSelected: (index) {
-          HapticFeedback.selectionClick();
-          state.setFolder(folders[index].id);
-        },
-        height: 40,
-        settings: GlassTokens.chrome(context),
-        quality: GlassQuality.premium,
-        indicatorColor: TgColors.accent
-            .resolveFrom(context)
-            .withValues(alpha: 0.22),
-        selectedTextStyle: TextStyle(
-          fontSize: 14.5,
-          fontWeight: FontWeight.w600,
-          color: TgColors.label.resolveFrom(context),
-        ),
-        unselectedTextStyle: TextStyle(
-          fontSize: 14.5,
-          color: TgColors.secondaryLabel.resolveFrom(context),
-        ),
-        segments: [
-          for (final folder in folders)
-            GlassSegment(label: _labelFor(folder, state, l10n), id: folder.id),
-        ],
-      ),
-    );
-  }
 
   /// Folder names come from the backend as ids; the built-in set is
   /// translated, anything else (a server-side folder) keeps its own name.
@@ -325,10 +292,74 @@ class _FolderBar extends StatelessWidget {
     }
   }
 
-  static String _labelFor(TgFolder folder, AppState state, AppL10n l10n) {
-    final unread = state.unreadInFolder(folder.id);
-    final title = folderTitle(folder, l10n);
-    return unread > 0 ? '$title  $unread' : title;
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    final folders = state.folders;
+
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: folders.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 4),
+        itemBuilder: (context, index) {
+          final folder = folders[index];
+          final selected = folder.id == state.activeFolder;
+          final unread = state.unreadInFolder(folder.id);
+          final accent = TgColors.accent.resolveFrom(context);
+
+          return CupertinoButton(
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              state.setFolder(folder.id);
+            },
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: selected
+                    ? accent.withValues(alpha: 0.18)
+                    : const Color(0x00000000),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    folderTitle(folder, l10n),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      color: selected
+                          ? accent
+                          : TgColors.secondaryLabel.resolveFrom(context),
+                    ),
+                  ),
+                  if (unread > 0) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      '$unread',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? accent
+                            : TgColors.tertiaryLabel.resolveFrom(context),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 

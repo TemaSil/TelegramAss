@@ -344,7 +344,7 @@ class AppL10nRu extends AppL10n {
   String get appearance => 'Оформление';
 
   @override
-  String get wallpaper => 'Обои';
+  String get wallpaper => 'Обои чата';
 
   @override
   String get wallpaperSubtitle => 'Стекло преломляет то, что за ним.';

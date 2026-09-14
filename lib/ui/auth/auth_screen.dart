@@ -85,7 +85,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final stage = state.stage;
 
     return GlassScaffold(
-      background: const GlassWallpaper(variant: 'aurora'),
+      background: const GlassWallpaper(variant: GlassWallpaper.none),
       settings: GlassTokens.chrome(context),
       statusBarStyle: GlassStatusBarStyle.light,
       body: SafeArea(

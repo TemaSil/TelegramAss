@@ -44,6 +44,13 @@ class TdlibTelegramClient implements TelegramClient {
 
   /// TDLib hands out files by id and downloads them asynchronously, so these
   /// remember what a finished download belongs to.
+  /// Supergroup/basic-group id → the chat that shows its member count, and
+  /// the counts themselves once TDLib reports them. A `chat` object carries
+  /// neither the member count nor a user's last-seen time; both arrive
+  /// separately.
+  final _chatOfGroup = <int, int>{};
+  final _chatOfBasicGroup = <int, int>{};
+
   final _chatOfFile = <int, int>{};
   final _messageOfFile = <int, (int chatId, int messageId)>{};
 
@@ -242,6 +249,21 @@ class TdlibTelegramClient implements TelegramClient {
         _onUser(update['user'] as Map<String, dynamic>);
       case 'updateFile':
         _onFile(update['file'] as Map<String, dynamic>);
+      case 'updateSupergroupFullInfo':
+        _onGroupFullInfo(
+          _chatOfGroup[(update['supergroup_id'] as num?)?.toInt()],
+          update['supergroup_full_info'] as Map<String, dynamic>?,
+        );
+      case 'updateBasicGroupFullInfo':
+        _onBasicGroupFullInfo(
+          _chatOfBasicGroup[(update['basic_group_id'] as num?)?.toInt()],
+          update['basic_group_full_info'] as Map<String, dynamic>?,
+        );
+      case 'updateUserStatus':
+        _onUserStatus(
+          (update['user_id'] as num?)?.toInt(),
+          update['status'] as Map<String, dynamic>?,
+        );
       case 'updateConnectionState':
         final state =
             (update['state'] as Map<String, dynamic>?)?['@type'] as String?;
@@ -377,6 +399,67 @@ class TdlibTelegramClient implements TelegramClient {
     }
   }
 
+  void _onGroupFullInfo(int? chatId, Map<String, dynamic>? info) {
+    if (chatId == null || info == null) return;
+    final count = (info['member_count'] as num?)?.toInt();
+    if (count == null) return;
+    final chat = _chatIndex[chatId];
+    if (chat == null) return;
+    _chatIndex[chatId] = chat.copyWith(memberCount: count);
+    _chatsController.add(currentChats);
+  }
+
+  void _onBasicGroupFullInfo(int? chatId, Map<String, dynamic>? info) {
+    if (chatId == null || info == null) return;
+    final members = (info['members'] as List?)?.length;
+    if (members == null) return;
+    final chat = _chatIndex[chatId];
+    if (chat == null) return;
+    _chatIndex[chatId] = chat.copyWith(memberCount: members);
+    _chatsController.add(currentChats);
+  }
+
+  /// Private chats carry the user's id as the chat id, which is what lets a
+  /// status update find its row.
+  void _onUserStatus(int? userId, Map<String, dynamic>? status) {
+    if (userId == null) return;
+    final chat = _chatIndex[userId];
+    if (chat == null) return;
+    _chatIndex[userId] = chat.copyWith(
+      isOnline: status?['@type'] == 'userStatusOnline',
+      subtitle: _lastSeenFrom(status),
+    );
+    _chatsController.add(currentChats);
+  }
+
+  /// TDLib reports presence in buckets rather than a timestamp, except for
+  /// `userStatusOffline`, which carries when the user was last online.
+  static String? _lastSeenFrom(Map<String, dynamic>? status) {
+    switch (status?['@type'] as String?) {
+      case 'userStatusOnline':
+        return 'online';
+      case 'userStatusRecently':
+        return 'last seen recently';
+      case 'userStatusLastWeek':
+        return 'last seen within a week';
+      case 'userStatusLastMonth':
+        return 'last seen within a month';
+      case 'userStatusEmpty':
+        return 'last seen a long time ago';
+      case 'userStatusOffline':
+        final was = (status?['was_online'] as num?)?.toInt();
+        if (was == null || was == 0) return null;
+        final at = DateTime.fromMillisecondsSinceEpoch(was * 1000);
+        final diff = DateTime.now().difference(at);
+        if (diff.inMinutes < 1) return 'last seen just now';
+        if (diff.inHours < 1) return 'last seen ${diff.inMinutes} min ago';
+        if (diff.inDays < 1) return 'last seen ${diff.inHours} h ago';
+        return 'last seen ${diff.inDays} d ago';
+      default:
+        return null;
+    }
+  }
+
   void _onChat(Map<String, dynamic> json) {
     final id = (json['id'] as num).toInt();
     final type = json['type'] as Map<String, dynamic>?;
@@ -393,6 +476,21 @@ class TdlibTelegramClient implements TelegramClient {
     final photoFileId = (photo?['id'] as num?)?.toInt();
     if (photoPath == null && photoFileId != null) {
       _chatOfFile[photoFileId] = id;
+    }
+
+    final typeName = type?['@type'] as String?;
+    if (typeName == 'chatTypeSupergroup') {
+      final groupId = (type?['supergroup_id'] as num?)?.toInt();
+      if (groupId != null) {
+        _chatOfGroup[groupId] = id;
+        _send({'@type': 'getSupergroupFullInfo', 'supergroup_id': groupId});
+      }
+    } else if (typeName == 'chatTypeBasicGroup') {
+      final groupId = (type?['basic_group_id'] as num?)?.toInt();
+      if (groupId != null) {
+        _chatOfBasicGroup[groupId] = id;
+        _send({'@type': 'getBasicGroupFullInfo', 'basic_group_id': groupId});
+      }
     }
 
     _chatIndex[id] = TgChat(
@@ -488,8 +586,18 @@ class TdlibTelegramClient implements TelegramClient {
         ? null
         : (sizes.last as Map<String, dynamic>)['photo']
               as Map<String, dynamic>?;
-    final mediaPath = _resolveFile(largest, priority: 16);
-    final mediaFileId = (largest?['id'] as num?)?.toInt();
+    // Stickers are a file too. Only the static WebP ones can be shown as an
+    // image; animated formats fall back to the emoji they stand for.
+    final sticker = content?['sticker'] as Map<String, dynamic>?;
+    final stickerFormat =
+        (sticker?['format'] as Map<String, dynamic>?)?['@type'] as String?;
+    final isStaticSticker = stickerFormat == 'stickerFormatWebp';
+    final stickerFile = isStaticSticker
+        ? (sticker?['sticker'] as Map<String, dynamic>?)
+        : null;
+
+    final mediaPath = _resolveFile(largest ?? stickerFile, priority: 16);
+    final mediaFileId = ((largest ?? stickerFile)?['id'] as num?)?.toInt();
     if (mediaPath == null && mediaFileId != null) {
       _messageOfFile[mediaFileId] = (chatId, messageId);
     }
@@ -497,7 +605,9 @@ class TdlibTelegramClient implements TelegramClient {
     return TgMessage(
       id: messageId,
       chatId: chatId,
-      text: _textOf(content),
+      text: sticker == null
+          ? _textOf(content)
+          : (sticker['emoji'] as String? ?? ''),
       date: DateTime.fromMillisecondsSinceEpoch(
         ((json['date'] as num?) ?? 0).toInt() * 1000,
       ),

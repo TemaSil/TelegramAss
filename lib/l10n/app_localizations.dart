@@ -718,7 +718,7 @@ abstract class AppL10n {
   /// No description provided for @wallpaper.
   ///
   /// In en, this message translates to:
-  /// **'Wallpaper'**
+  /// **'Chat wallpaper'**
   String get wallpaper;
 
   /// No description provided for @wallpaperSubtitle.

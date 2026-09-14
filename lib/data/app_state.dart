@@ -45,6 +45,9 @@ class AppState extends ChangeNotifier {
   bool _darkMode = true;
   double _glassIntensity = 1.0;
   int _messageFontSize = 16;
+
+  /// Applies to open conversations only; the tab screens use the system
+  /// background, as they do on iOS.
   String _wallpaper = 'aurora';
 
   /// 'system', 'en' or 'ru'.

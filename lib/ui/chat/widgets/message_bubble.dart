@@ -10,6 +10,8 @@ import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../chats/widgets/chat_row.dart' show MessageStatusTicks;
 import 'attachment_image.dart';
+import 'bubble_shape.dart';
+import 'photo_viewer.dart';
 import '../../../core/tg_icons.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -63,6 +65,7 @@ class MessageBubble extends StatelessWidget {
       child: Align(
         alignment: outgoing ? Alignment.centerRight : Alignment.centerLeft,
         child: GlassMenu(
+          autoAdjustToScreen: true,
           menuWidth: 240,
           menuBorderRadius: 26,
           quality: GlassQuality.premium,
@@ -130,25 +133,25 @@ class MessageBubble extends StatelessWidget {
   Widget _bubble(BuildContext context) {
     final l10n = AppL10n.of(context);
     final outgoing = message.isOutgoing;
-    // A grouped run keeps square-ish inner corners; the last bubble of the
-    // run gets the full radius on every corner.
-    final radius = GlassTokens.bubbleRadius;
+    final fill = outgoing
+        ? TgColors.outgoingBubble.resolveFrom(context)
+        : TgColors.incomingBubble.resolveFrom(context);
 
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.sizeOf(context).width * 0.78,
       ),
-      child: GlassContainer(
+      child: Container(
         padding: EdgeInsets.fromLTRB(
           12,
           message.kind == TgMessageKind.photo ? 4 : 8,
           12,
           7,
         ),
-        shape: LiquidRoundedRectangle(borderRadius: showTail ? radius : 12),
-        settings: outgoing
-            ? GlassTokens.outgoingBubble(context)
-            : GlassTokens.incomingBubble(context),
+        decoration: ShapeDecoration(
+          color: fill,
+          shape: BubbleShape(fromRight: outgoing, withTail: showTail),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -206,10 +209,24 @@ class MessageBubble extends StatelessWidget {
               child: Stack(
                 children: [
                   if (message.localPath != null)
-                    AttachmentImage(
-                      path: message.localPath!,
-                      width: 220,
-                      height: 150,
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).push(
+                        CupertinoPageRoute<void>(
+                          fullscreenDialog: true,
+                          builder: (_) => PhotoViewerScreen(
+                            path: message.localPath!,
+                            heroTag: 'photo-${message.id}',
+                          ),
+                        ),
+                      ),
+                      child: Hero(
+                        tag: 'photo-${message.id}',
+                        child: AttachmentImage(
+                          path: message.localPath!,
+                          width: 220,
+                          height: 150,
+                        ),
+                      ),
                     )
                   else
                     _PhotoPlaceholder(seed: message.mediaSeed ?? message.id),
@@ -259,6 +276,21 @@ class MessageBubble extends StatelessWidget {
         );
 
       case TgMessageKind.sticker:
+        if (message.localPath != null) {
+          return AttachmentImage(
+            path: message.localPath!,
+            width: 140,
+            height: 140,
+            fit: BoxFit.contain,
+          );
+        }
+        // Animated stickers are not decoded yet; show the emoji they stand for
+        // rather than an empty bubble.
+        return Text(
+          message.text.isEmpty ? '🎨' : message.text,
+          style: const TextStyle(fontSize: 54),
+        );
+
       case TgMessageKind.service:
       case TgMessageKind.text:
         return Text(
