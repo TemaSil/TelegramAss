@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,19 +36,50 @@ jobs:
       - name: Test
         run: flutter test
 
-      # Demo mode by default. To produce a build that talks to real Telegram
-      # servers, add TELEGRAM_API_ID / TELEGRAM_API_HASH as repository secrets
-      # and pass them through with --dart-define, and bundle libtdjson.so.
-      - name: Build debug APK
-        run: flutter build apk --debug
+      # Credentials are optional: with no secrets set the APK ships the demo
+      # backend, which is what keeps pull requests buildable by anyone.
+      - name: Build APKs
+        env:
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          DEFINES=""
+          if [ -n "$TELEGRAM_API_ID" ] && [ -n "$TELEGRAM_API_HASH" ]; then
+            echo "Building against the live Telegram API."
+            DEFINES="--dart-define=TELEGRAM_API_ID=$TELEGRAM_API_ID --dart-define=TELEGRAM_API_HASH=$TELEGRAM_API_HASH"
+          else
+            echo "No API credentials configured — building in demo mode."
+          fi
+          flutter build apk --debug $DEFINES
+          flutter build apk --release $DEFINES
 
-      - name: Build release APK
-        run: flutter build apk --release
+      - name: Name the artifacts
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-debug.apk \
+             dist/telegram-liquid-${{ github.run_number }}-debug.apk
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             dist/telegram-liquid-${{ github.run_number }}-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: telegram-liquid-apk
-          path: |
-            build/app/outputs/flutter-apk/app-debug.apk
-            build/app/outputs/flutter-apk/app-release.apk
+          path: dist/*.apk
           if-no-files-found: error
+
+      # A release gives a plain download link that works without a GitHub
+      # login, which an Actions artifact does not.
+      - name: Publish release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          body: |
+            Automated build of `${{ github.sha }}`.
+
+            `telegram-liquid-${{ github.run_number }}-release.apk` is the one to
+            install on a phone. Demo mode unless the repository has
+            `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` secrets set.
+          files: dist/*.apk
+          fail_on_unmatched_files: true
