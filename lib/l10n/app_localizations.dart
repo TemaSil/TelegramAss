@@ -942,6 +942,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Bots'**
   String get folderBots;
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from the gallery'**
+  String get chooseFromGallery;
+
+  /// No description provided for @attachmentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not attach that file'**
+  String get attachmentFailed;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

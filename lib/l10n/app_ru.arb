@@ -140,5 +140,8 @@
   "folderGroups": "Группы",
   "folderChannels": "Каналы",
   "folderUnread": "Непрочитанные",
-  "folderBots": "Боты"
+  "folderBots": "Боты",
+  "camera": "Камера",
+  "chooseFromGallery": "Выбрать из галереи",
+  "attachmentFailed": "Не удалось приложить файл"
 }

@@ -1,6 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Required by the live TDLib backend. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Attachments: the gallery on Android 13+, older storage below that,
+         and the camera for taking a photo in place. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
     <application
         android:label="Telegram Liquid"
         android:name="${applicationName}"

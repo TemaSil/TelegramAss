@@ -569,14 +569,14 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
-  Future<void> sendPhoto(int chatId, {String? caption}) async {
-    // Wiring a real file picker is out of scope here; the request shape is
-    // what a picker would fill in with `inputFileLocal`.
+  Future<void> sendPhoto(int chatId, {String? path, String? caption}) async {
+    if (path == null) return;
     _send({
       '@type': 'sendMessage',
       'chat_id': chatId,
       'input_message_content': {
         '@type': 'inputMessagePhoto',
+        'photo': {'@type': 'inputFileLocal', 'path': path},
         if (caption != null)
           'caption': {'@type': 'formattedText', 'text': caption},
       },
@@ -596,13 +596,19 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
-  Future<void> sendFile(int chatId, String name, String size) async {
+  Future<void> sendFile(
+    int chatId,
+    String name,
+    String size, {
+    String? path,
+  }) async {
+    if (path == null) return;
     _send({
       '@type': 'sendMessage',
       'chat_id': chatId,
       'input_message_content': {
         '@type': 'inputMessageDocument',
-        'document': {'@type': 'inputFileLocal', 'path': name},
+        'document': {'@type': 'inputFileLocal', 'path': path},
       },
     });
   }

@@ -1,5 +1,7 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../app.dart';
@@ -124,7 +126,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _openAttachments() async {
-    final client = AppScope.read(context).client;
     await GlassModalSheet.show<void>(
       context: context,
       halfSize: 0.42,
@@ -133,13 +134,15 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (sheetContext) => _AttachmentSheet(
         onPhoto: () {
           Navigator.of(sheetContext).pop();
-          client.sendPhoto(widget.chatId);
-          _scrollToBottom();
+          _pickPhoto(ImageSource.gallery);
+        },
+        onCamera: () {
+          Navigator.of(sheetContext).pop();
+          _pickPhoto(ImageSource.camera);
         },
         onFile: () {
           Navigator.of(sheetContext).pop();
-          client.sendFile(widget.chatId, 'liquid-glass-spec.pdf', '2.4 MB');
-          _scrollToBottom();
+          _pickFile();
         },
         onLocation: () {
           Navigator.of(sheetContext).pop();
@@ -151,6 +154,60 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       ),
     );
+  }
+
+  /// Picks an image and sends it. A cancelled picker is not an error.
+  Future<void> _pickPhoto(ImageSource source) async {
+    final XFile? picked;
+    try {
+      picked = await ImagePicker().pickImage(source: source, imageQuality: 88);
+    } on PlatformException catch (error) {
+      if (mounted) _reportPickFailure(error.message);
+      return;
+    }
+    if (picked == null || !mounted) return;
+    AppScope.read(context).client.sendPhoto(widget.chatId, path: picked.path);
+    _scrollToBottom();
+  }
+
+  Future<void> _pickFile() async {
+    final List<PlatformFile> picked;
+    try {
+      picked = await FilePicker.pickFiles();
+    } on PlatformException catch (error) {
+      if (mounted) _reportPickFailure(error.message);
+      return;
+    }
+    if (picked.isEmpty || !mounted) return;
+
+    final file = picked.first;
+    // Native pickers usually report the size; fall back to reading it.
+    final bytes = file.lengthSync() ?? await file.length();
+    if (!mounted) return;
+
+    AppScope.read(context).client.sendFile(
+      widget.chatId,
+      file.name,
+      bytes == null ? '' : _humanSize(bytes),
+      path: file.path,
+    );
+    _scrollToBottom();
+  }
+
+  void _reportPickFailure(String? detail) {
+    GlassToast.show(
+      context,
+      message: detail ?? AppL10n.of(context).attachmentFailed,
+      type: GlassToastType.error,
+    );
+  }
+
+  static String _humanSize(int bytes) {
+    if (bytes >= 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    return '$bytes B';
   }
 
   Future<void> _openChatInfo(TgChat chat) async {
@@ -975,11 +1032,13 @@ class _MediaSheet extends StatelessWidget {
 class _AttachmentSheet extends StatelessWidget {
   const _AttachmentSheet({
     required this.onPhoto,
+    required this.onCamera,
     required this.onFile,
     required this.onLocation,
   });
 
   final VoidCallback onPhoto;
+  final VoidCallback onCamera;
   final VoidCallback onFile;
   final VoidCallback onLocation;
 
@@ -1010,6 +1069,11 @@ class _AttachmentSheet extends StatelessWidget {
                 onTap: onPhoto,
               ),
               GlassButtonGroupItem(
+                icon: const Icon(TgIcons.camera),
+                label: l10n.camera,
+                onTap: onCamera,
+              ),
+              GlassButtonGroupItem(
                 icon: const Icon(TgIcons.document),
                 label: l10n.file,
                 onTap: onFile,
@@ -1029,7 +1093,7 @@ class _AttachmentSheet extends StatelessWidget {
               GlassListTile(
                 leading: const Icon(TgIcons.media),
                 title: Text(l10n.cameraRoll),
-                subtitle: Text(l10n.cameraRollSubtitle(248)),
+                subtitle: Text(l10n.chooseFromGallery),
                 trailing: const Icon(TgIcons.forward, size: 16),
                 onTap: onPhoto,
               ),

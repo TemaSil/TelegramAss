@@ -57,11 +57,12 @@ abstract class TelegramClient {
 
   Future<void> sendText(int chatId, String text, {TgMessage? replyTo});
 
-  Future<void> sendPhoto(int chatId, {String? caption});
+  /// [path] is a file on this device, from the picker.
+  Future<void> sendPhoto(int chatId, {String? path, String? caption});
 
   Future<void> sendVoice(int chatId, int seconds);
 
-  Future<void> sendFile(int chatId, String name, String size);
+  Future<void> sendFile(int chatId, String name, String size, {String? path});
 
   Future<void> deleteMessage(int chatId, int messageId);
 

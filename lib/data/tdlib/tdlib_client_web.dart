@@ -101,13 +101,18 @@ class TdlibTelegramClient implements TelegramClient {
   Future<void> sendText(int chatId, String text, {TgMessage? replyTo}) async {}
 
   @override
-  Future<void> sendPhoto(int chatId, {String? caption}) async {}
+  Future<void> sendPhoto(int chatId, {String? path, String? caption}) async {}
 
   @override
   Future<void> sendVoice(int chatId, int seconds) async {}
 
   @override
-  Future<void> sendFile(int chatId, String name, String size) async {}
+  Future<void> sendFile(
+    int chatId,
+    String name,
+    String size, {
+    String? path,
+  }) async {}
 
   @override
   Future<void> deleteMessage(int chatId, int messageId) async {}

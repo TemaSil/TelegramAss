@@ -353,7 +353,7 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
-  Future<void> sendPhoto(int chatId, {String? caption}) async {
+  Future<void> sendPhoto(int chatId, {String? path, String? caption}) async {
     final message = TgMessage(
       id: _nextMessageId++,
       chatId: chatId,
@@ -364,6 +364,7 @@ class DemoTelegramClient implements TelegramClient {
       status: TgMessageStatus.sending,
       mediaSeed: _random.nextInt(1 << 20),
       uploadProgress: 0,
+      localPath: path,
     );
     _append(chatId, message);
     _simulateUpload(chatId, message.id);
@@ -386,7 +387,12 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
-  Future<void> sendFile(int chatId, String name, String size) async {
+  Future<void> sendFile(
+    int chatId,
+    String name,
+    String size, {
+    String? path,
+  }) async {
     final message = TgMessage(
       id: _nextMessageId++,
       chatId: chatId,
@@ -398,6 +404,7 @@ class DemoTelegramClient implements TelegramClient {
       fileName: name,
       fileSize: size,
       uploadProgress: 0,
+      localPath: path,
     );
     _append(chatId, message);
     _simulateUpload(chatId, message.id);

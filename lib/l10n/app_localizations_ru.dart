@@ -462,4 +462,13 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get folderBots => 'Боты';
+
+  @override
+  String get camera => 'Камера';
+
+  @override
+  String get chooseFromGallery => 'Выбрать из галереи';
+
+  @override
+  String get attachmentFailed => 'Не удалось приложить файл';
 }

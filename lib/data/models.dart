@@ -184,6 +184,7 @@ class TgMessage {
     this.fileName,
     this.fileSize,
     this.uploadProgress,
+    this.localPath,
   });
 
   final int id;
@@ -208,6 +209,10 @@ class TgMessage {
 
   /// 0..1 while an outgoing attachment is uploading, null when complete.
   final double? uploadProgress;
+
+  /// Where the attachment came from on this device. Set for anything the user
+  /// picked, so the bubble can show the real image instead of a placeholder.
+  final String? localPath;
 
   TgMessage copyWith({
     String? text,
@@ -235,6 +240,7 @@ class TgMessage {
       fileName: fileName,
       fileSize: fileSize,
       uploadProgress: uploadProgress,
+      localPath: localPath,
     );
   }
 }

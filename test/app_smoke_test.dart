@@ -136,6 +136,41 @@ void main() {
     expect(state.client.searchMessages(chat.id, 'nothing-matches'), isEmpty);
   });
 
+  test('a picked photo keeps the path it was picked from', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final chat = state.chats.first;
+    await state.client.sendPhoto(chat.id, path: '/tmp/holiday.jpg');
+
+    final sent = state.client.currentMessagesOf(chat.id).last;
+    expect(sent.kind, TgMessageKind.photo);
+    expect(sent.localPath, '/tmp/holiday.jpg');
+    expect(sent.isOutgoing, isTrue);
+  });
+
+  test('a picked document carries its name, size and path', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final chat = state.chats.first;
+    await state.client.sendFile(
+      chat.id,
+      'spec.pdf',
+      '2.4 MB',
+      path: '/tmp/spec.pdf',
+    );
+
+    final sent = state.client.currentMessagesOf(chat.id).last;
+    expect(sent.kind, TgMessageKind.file);
+    expect(sent.fileName, 'spec.pdf');
+    expect(sent.fileSize, '2.4 MB');
+    expect(sent.localPath, '/tmp/spec.pdf');
+
+    await settle();
+    expect(state.chatById(chat.id)?.lastMessage, contains('spec.pdf'));
+  });
+
   test('reactions toggle on and off', () async {
     final state = await signedIn();
     addTearDown(state.dispose);

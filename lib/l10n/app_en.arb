@@ -217,5 +217,8 @@
   "folderGroups": "Groups",
   "folderChannels": "Channels",
   "folderUnread": "Unread",
-  "folderBots": "Bots"
+  "folderBots": "Bots",
+  "camera": "Camera",
+  "chooseFromGallery": "Choose from the gallery",
+  "attachmentFailed": "Could not attach that file"
 }

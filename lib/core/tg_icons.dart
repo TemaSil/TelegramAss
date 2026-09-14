@@ -60,6 +60,7 @@ class TgIcons {
   static const play = SFSymbols.play_fill;
   static const file = SFSymbols.document_fill;
   static const photo = SFSymbols.photo;
+  static const camera = SFSymbols.camera;
   static const media = SFSymbols.photo_on_rectangle;
   static const document = SFSymbols.document;
   static const location = SFSymbols.location;

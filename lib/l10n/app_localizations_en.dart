@@ -462,4 +462,13 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get folderBots => 'Bots';
+
+  @override
+  String get camera => 'Camera';
+
+  @override
+  String get chooseFromGallery => 'Choose from the gallery';
+
+  @override
+  String get attachmentFailed => 'Could not attach that file';
 }

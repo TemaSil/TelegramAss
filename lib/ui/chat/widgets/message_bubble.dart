@@ -9,6 +9,7 @@ import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../chats/widgets/chat_row.dart' show MessageStatusTicks;
+import 'attachment_image.dart';
 import '../../../core/tg_icons.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -204,7 +205,14 @@ class MessageBubble extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               child: Stack(
                 children: [
-                  _PhotoPlaceholder(seed: message.mediaSeed ?? message.id),
+                  if (message.localPath != null)
+                    AttachmentImage(
+                      path: message.localPath!,
+                      width: 220,
+                      height: 150,
+                    )
+                  else
+                    _PhotoPlaceholder(seed: message.mediaSeed ?? message.id),
                   if (message.uploadProgress != null)
                     Positioned.fill(
                       child: ColoredBox(
