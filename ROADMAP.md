@@ -55,7 +55,7 @@ SOCKS5 proxy support; and an in-app diagnostics log.
 | Multi-select and multi-forward, with attribution | done |
 | Video — poster, then full-screen playback with a scrubber | done |
 | Stickers | partial — static WebP and animated TGS play; WebM video stickers fall back to their emoji |
-| Custom emoji | partial — the fallback emoji renders, the custom image does not |
+| Custom emoji | partial — WebP and TGS emoji are drawn; WebM ones keep the fallback |
 | In-chat search | partial — local text, but results jump to the message |
 | Shared media grid | done — real photos, tapping opens the viewer |
 | Polls, locations, contacts, dice | partial — shown and readable, not interactive |
@@ -136,13 +136,12 @@ Need the base first:
 
 ## Where to go next
 
-1. **Custom emoji.** Still the most visible thing left in ordinary text: the
-   fallback emoji renders, the custom image does not.
-2. **Group and channel administration** — permissions, invite links and
+1. **Group and channel administration** — permissions, invite links and
    joining; member lists and leaving are in.
-3. **Voting in polls, and albums** — polls, locations and contacts are
+2. **Voting in polls, and albums** — polls, locations and contacts are
    readable now; acting on them is not.
-4. **WebM video stickers**, now that a video player is in the app.
+3. **WebM video stickers and emoji**, now that a video player is in the app.
+4. **Forum topics**, which a busy account will notice.
 5. Then the rest of the mod toggles, which are a pleasant layer now that the
    base holds.
 

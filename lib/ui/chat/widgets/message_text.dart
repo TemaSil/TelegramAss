@@ -4,7 +4,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../data/custom_emoji.dart';
 import '../../../data/models.dart';
+import 'animated_sticker.dart';
+import 'attachment_image.dart';
 
 /// Renders message text with the formatting TDLib reports.
 ///
@@ -50,9 +53,25 @@ class _MessageTextState extends State<MessageText> {
 
   @override
   Widget build(BuildContext context) {
-    return Text.rich(
-      TextSpan(children: _buildSpans(context)),
-      style: widget.style,
+    // Custom emoji arrive after the message does, so the text rebuilds when
+    // the registry gets one. With no custom emoji in this message the listener
+    // costs a rebuild that changes nothing, so it is skipped.
+    final hasCustomEmoji = widget.entities.any(
+      (entity) => entity.kind == TgEntityKind.customEmoji,
+    );
+    if (!hasCustomEmoji) {
+      return Text.rich(
+        TextSpan(children: _buildSpans(context)),
+        style: widget.style,
+      );
+    }
+
+    return ListenableBuilder(
+      listenable: TgCustomEmoji.instance,
+      builder: (context, _) => Text.rich(
+        TextSpan(children: _buildSpans(context)),
+        style: widget.style,
+      ),
     );
   }
 
@@ -169,10 +188,25 @@ class _MessageTextState extends State<MessageText> {
         );
 
       case TgEntityKind.customEmoji:
-        // The covered characters are the emoji Telegram falls back to when the
-        // custom one cannot be drawn, so showing them plainly is correct until
-        // custom emoji are downloaded and rendered.
-        return TextSpan(text: slice);
+        final id = entity.customEmojiId;
+        final path = id == null ? null : TgCustomEmoji.instance.pathFor(id);
+        // The covered characters are the emoji Telegram itself falls back to,
+        // so they stand in until the sticker is on disk — and stay for the
+        // formats we cannot draw.
+        if (path == null) return TextSpan(text: slice);
+
+        final size = (widget.style.fontSize ?? 16) * 1.35;
+        return WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: path.endsWith('.tgs')
+              ? AnimatedSticker(path: path, size: size, fallbackEmoji: slice)
+              : AttachmentImage(
+                  path: path,
+                  width: size,
+                  height: size,
+                  fit: BoxFit.contain,
+                ),
+        );
     }
   }
 }

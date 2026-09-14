@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'custom_emoji.dart';
 import 'demo_client.dart';
 import 'diagnostics.dart';
 import 'notifications.dart';
@@ -151,6 +152,7 @@ class AppState extends ChangeNotifier {
     state._attach();
     if (state._proxy != null) await client.applyProxy(state._proxy);
 
+    TgCustomEmoji.instance.attach(client);
     TgNotifications.instance.setEnabled(state._notifications);
     // Not awaited: it asks for a runtime permission, and the chat list should
     // not sit behind that dialog.

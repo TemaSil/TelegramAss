@@ -537,6 +537,9 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<String?> customEmojiFile(String customEmojiId) async => null;
+
+  @override
   Future<List<TgUser>> chatMembers(int chatId) async => contacts;
 
   @override

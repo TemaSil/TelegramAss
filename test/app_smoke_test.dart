@@ -266,4 +266,20 @@ void main() {
     // Which is exactly why the count is captured before the screen opens.
     expect(unread, greaterThan(0));
   });
+
+  test('a custom emoji keeps its id and its fallback characters', () {
+    // The characters a custom-emoji entity covers are the standard emoji
+    // Telegram itself falls back to, so text stays readable whether or not
+    // the sticker has been downloaded.
+    const entity = TgTextEntity(
+      kind: TgEntityKind.customEmoji,
+      offset: 6,
+      length: 2,
+      customEmojiId: '5368324170671202286',
+    );
+
+    const text = 'hello 🎉 world';
+    expect(text.substring(entity.offset, entity.end), '🎉');
+    expect(entity.customEmojiId, isNotNull);
+  });
 }

@@ -189,11 +189,16 @@ class TgTextEntity {
     required this.offset,
     required this.length,
     this.url,
+    this.customEmojiId,
   });
 
   final TgEntityKind kind;
   final int offset;
   final int length;
+
+  /// For a `customEmoji` entity: the sticker to draw in place of the
+  /// characters it covers. TDLib reports it as an int64 string.
+  final String? customEmojiId;
 
   /// Where a link points. For `link` entities TDLib either gives an explicit
   /// url or the covered text is the url itself.

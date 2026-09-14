@@ -118,6 +118,13 @@ abstract class TelegramClient {
     bool asCopy = false,
   }) async {}
 
+  /// The sticker file behind a custom emoji, fetching it when needed.
+  ///
+  /// Returns null when it is not on disk yet; the text falls back to the
+  /// standard emoji the entity covers and picks the image up on the next
+  /// build.
+  Future<String?> customEmojiFile(String customEmojiId) async => null;
+
   /// People in a group or channel, as far as the account may see them.
   Future<List<TgUser>> chatMembers(int chatId) async => const [];
 

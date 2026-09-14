@@ -70,6 +70,12 @@ class TdlibTelegramClient implements TelegramClient {
   /// Everyone TDLib has told us about, by user id.
   final _userIndex = <int, TgUser>{};
 
+  /// Custom emoji stickers on disk, and the ones already asked for, so a long
+  /// message does not ask for the same emoji once per occurrence.
+  final _customEmojiPaths = <String, String>{};
+  final _customEmojiAsked = <String>{};
+  final _customEmojiOfFile = <int, String>{};
+
   /// The account's own folders, filled in by updateChatFolders.
   List<TgFolder> _folders = const [];
 
@@ -444,6 +450,13 @@ class TdlibTelegramClient implements TelegramClient {
         );
         _controllerFor(previewChatId).add(currentMessagesOf(previewChatId));
       }
+    }
+
+    final emojiId = _customEmojiOfFile.remove(id);
+    if (emojiId != null) {
+      _customEmojiPaths[emojiId] = path;
+      // Nothing to push: the text listens to the registry, which polls this
+      // through customEmojiFile on the next build.
     }
 
     final playable = _playablePathOfFile.remove(id);
@@ -943,6 +956,9 @@ class TdlibTelegramClient implements TelegramClient {
           offset: ((item['offset'] as num?) ?? 0).toInt(),
           length: ((item['length'] as num?) ?? 0).toInt(),
           url: (item['type'] as Map<String, dynamic>?)?['url'] as String?,
+          customEmojiId:
+              (item['type'] as Map<String, dynamic>?)?['custom_emoji_id']
+                  as String?,
         ),
       );
     }
@@ -1420,6 +1436,42 @@ class TdlibTelegramClient implements TelegramClient {
       'send_copy': asCopy,
       'remove_caption': false,
     });
+  }
+
+  @override
+  Future<String?> customEmojiFile(String customEmojiId) async {
+    final cached = _customEmojiPaths[customEmojiId];
+    if (cached != null) return cached;
+
+    // One request per id is wasteful but simple, and TDLib caches the answer;
+    // the paths map means it happens once per emoji per session.
+    if (!_customEmojiAsked.add(customEmojiId)) return null;
+
+    final response = await _request({
+      '@type': 'getCustomEmojiStickers',
+      'custom_emoji_ids': [customEmojiId],
+    });
+    final stickers = (response['stickers'] as List?)
+        ?.cast<Map<String, dynamic>>();
+    if (stickers == null || stickers.isEmpty) return null;
+
+    final sticker = stickers.first;
+    final format =
+        (sticker['format'] as Map<String, dynamic>?)?['@type'] as String?;
+    // WebM emoji would want a video decoder; those keep the fallback.
+    if (format != 'stickerFormatWebp' && format != 'stickerFormatTgs') {
+      return null;
+    }
+
+    final file = sticker['sticker'] as Map<String, dynamic>?;
+    final path = _resolveFile(file, priority: 20);
+    final fileId = (file?['id'] as num?)?.toInt();
+    if (path == null) {
+      if (fileId != null) _customEmojiOfFile[fileId] = customEmojiId;
+      return null;
+    }
+    _customEmojiPaths[customEmojiId] = path;
+    return path;
   }
 
   @override
