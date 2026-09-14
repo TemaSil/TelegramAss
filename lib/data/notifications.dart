@@ -35,6 +35,11 @@ class TgNotifications {
   bool _enabled = true;
   bool _started = false;
 
+  /// True once the plugin initialized. Everything that talks to it checks
+  /// this: on the web, in tests, or after a refused permission there is no
+  /// plugin behind the calls at all.
+  bool _ready = false;
+
   /// Called when the user taps a notification, with the chat it belongs to.
   void Function(int chatId)? onOpenChat;
 
@@ -42,12 +47,20 @@ class TgNotifications {
   /// notification is dismissed — the user has just read it.
   void setOpenChat(int? chatId) {
     _openChatId = chatId;
-    if (chatId != null) _plugin.cancel(id: chatId.hashCode);
+    if (chatId == null || !_ready) return;
+    // Unawaited, and the plugin can still refuse: a dismissal that fails is
+    // not worth an unhandled error on the way into a chat.
+    _plugin.cancel(id: chatId.hashCode).catchError((Object error) {
+      TgDiagnostics.instance.warn('Could not clear notification: $error');
+    });
   }
 
   void setEnabled(bool value) {
     _enabled = value;
-    if (!value) _plugin.cancelAll();
+    if (value || !_ready) return;
+    _plugin.cancelAll().catchError((Object error) {
+      TgDiagnostics.instance.warn('Could not clear notifications: $error');
+    });
   }
 
   /// Wires everything up. Safe to call when the platform cannot support it —
@@ -81,6 +94,7 @@ class TgNotifications {
       return;
     }
 
+    _ready = true;
     _listen(client);
     TgDiagnostics.instance.info('Notifications ready.');
   }
@@ -121,7 +135,7 @@ class TgNotifications {
   }
 
   Future<void> _announce(TgMessage message) async {
-    if (!_enabled) return;
+    if (!_enabled || !_ready) return;
     if (message.isOutgoing) return;
     if (message.chatId == _openChatId) return;
     if (message.kind == TgMessageKind.service) return;
