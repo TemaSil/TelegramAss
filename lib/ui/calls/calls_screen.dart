@@ -8,6 +8,7 @@ import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../common/tg_avatar.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Nav bar for the Calls tab.
 class CallsAppBar extends StatelessWidget {
@@ -21,7 +22,7 @@ class CallsAppBar extends StatelessWidget {
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      title: Text('Calls', style: TgText.navTitle(context)),
+      title: Text(AppL10n.of(context).calls, style: TgText.navTitle(context)),
       actions: [
         GlassIconButton(
           icon: const Icon(TgIcons.newCall, size: 20),
@@ -30,7 +31,7 @@ class CallsAppBar extends StatelessWidget {
           quality: GlassQuality.premium,
           onPressed: () => GlassToast.show(
             context,
-            message: 'Placing calls needs the live TDLib backend',
+            message: AppL10n.of(context).newCallHint,
             type: GlassToastType.info,
           ),
         ),
@@ -55,6 +56,7 @@ class _CallsBodyState extends State<CallsBody> {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
+    final l10n = AppL10n.of(context);
     final calls = _filter == 1
         ? state.calls.where((call) => call.isMissed).toList()
         : state.calls;
@@ -69,7 +71,7 @@ class _CallsBodyState extends State<CallsBody> {
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: topPad + 52)),
         GlassLargeTitle(
-          text: 'Calls',
+          text: l10n.calls,
           controller: widget.controller,
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
         ),
@@ -94,9 +96,9 @@ class _CallsBodyState extends State<CallsBody> {
                 fontSize: 14.5,
                 color: TgColors.secondaryLabel.resolveFrom(context),
               ),
-              segments: const [
-                GlassSegment(label: 'All', id: 'all'),
-                GlassSegment(label: 'Missed', id: 'missed'),
+              segments: [
+                GlassSegment(label: l10n.all, id: 'all'),
+                GlassSegment(label: l10n.missed, id: 'missed'),
               ],
             ),
           ),
@@ -106,7 +108,7 @@ class _CallsBodyState extends State<CallsBody> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 56),
               child: Center(
-                child: Text('No calls here', style: TgText.rowPreview(context)),
+                child: Text(l10n.noCalls, style: TgText.rowPreview(context)),
               ),
             ),
           )
@@ -116,7 +118,7 @@ class _CallsBodyState extends State<CallsBody> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GlassGroupedSection(
                 header: Text(
-                  _filter == 1 ? 'Missed' : 'Recent',
+                  _filter == 1 ? l10n.missed : l10n.recent,
                   style: TgText.sectionHeader(context),
                 ),
                 settings: GlassTokens.panel(context),
@@ -138,6 +140,7 @@ class _CallTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     final tint = call.isMissed
         ? TgColors.destructive.resolveFrom(context)
         : TgColors.secondaryLabel.resolveFrom(context);
@@ -168,9 +171,9 @@ class _CallTile extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             call.isMissed
-                ? 'Missed'
+                ? l10n.missed
                 : (call.duration == null
-                      ? 'Cancelled'
+                      ? l10n.callCancelled
                       : TgFormat.duration(call.duration!)),
           ),
         ],
@@ -189,7 +192,7 @@ class _CallTile extends StatelessWidget {
       ),
       onTap: () => GlassToast.show(
         context,
-        message: 'Calling ${call.peerName}…',
+        message: l10n.callingName(call.peerName),
         type: GlassToastType.info,
         icon: const Icon(TgIcons.callsActive, size: 17),
       ),

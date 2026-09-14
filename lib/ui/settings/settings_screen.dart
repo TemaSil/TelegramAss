@@ -9,6 +9,7 @@ import '../common/tg_avatar.dart';
 import '../common/wallpaper.dart';
 import '../common/wallpaper_picker.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Nav bar for the Settings tab.
 class SettingsAppBar extends StatelessWidget {
@@ -18,11 +19,12 @@ class SettingsAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return GlassAppBar(
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      title: Text('Settings', style: TgText.navTitle(context)),
+      title: Text(l10n.settings, style: TgText.navTitle(context)),
       actions: [
         GlassPopover(
           popoverWidth: 250,
@@ -42,13 +44,9 @@ class SettingsAppBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('About this build', style: TgText.rowTitle(context)),
+                Text(l10n.aboutTitle, style: TgText.rowTitle(context)),
                 const SizedBox(height: 8),
-                Text(
-                  'A Flutter Telegram client rendered with the iOS 26 Liquid '
-                  'Glass material. Glass quality adapts to the device.',
-                  style: TgText.rowPreview(context),
-                ),
+                Text(l10n.aboutBody, style: TgText.rowPreview(context)),
               ],
             ),
           ),
@@ -67,6 +65,7 @@ class SettingsBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
+    final l10n = AppL10n.of(context);
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     final topPad = MediaQuery.paddingOf(context).top;
 
@@ -78,7 +77,7 @@ class SettingsBody extends StatelessWidget {
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: topPad + 52)),
         GlassLargeTitle(
-          text: 'Settings',
+          text: l10n.settings,
           controller: controller,
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
         ),
@@ -92,18 +91,21 @@ class SettingsBody extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: GlassGroupedSection(
-              header: Text('Appearance', style: TgText.sectionHeader(context)),
+              header: Text(
+                l10n.appearance,
+                style: TgText.sectionHeader(context),
+              ),
               settings: GlassTokens.panel(context),
               quality: GlassQuality.premium,
               children: [
                 GlassListTile(
                   leading: const Icon(TgIcons.wallpaper),
-                  title: const Text('Wallpaper'),
+                  title: Text(l10n.wallpaper),
                   trailing: SizedBox(
                     width: 150,
                     child: GlassPicker(
                       value: GlassWallpaper.labels[state.wallpaper],
-                      placeholder: 'Choose',
+                      placeholder: l10n.choose,
                       settings: GlassTokens.chrome(context),
                       onTap: () => showWallpaperPicker(context, state),
                     ),
@@ -111,13 +113,25 @@ class SettingsBody extends StatelessWidget {
                 ),
                 GlassListTile(
                   leading: const Icon(TgIcons.nightMode),
-                  title: const Text('Auto night mode'),
-                  subtitle: const Text('Follow the system appearance'),
+                  title: Text(l10n.autoNightMode),
+                  subtitle: Text(l10n.autoNightModeSubtitle),
                   trailing: GlassSwitch(
                     value: state.autoNightMode,
                     onChanged: state.setAutoNightMode,
                     settings: GlassTokens.chrome(context),
                     activeColor: TgColors.accent.resolveFrom(context),
+                  ),
+                ),
+                GlassListTile(
+                  leading: const Icon(TgIcons.language),
+                  title: Text(l10n.language),
+                  trailing: SizedBox(
+                    width: 150,
+                    child: GlassPicker(
+                      value: _languageLabel(state.language, l10n),
+                      settings: GlassTokens.chrome(context),
+                      onTap: () => _pickLanguage(context, state, l10n),
+                    ),
                   ),
                 ),
                 if (!state.autoNightMode)
@@ -127,7 +141,7 @@ class SettingsBody extends StatelessWidget {
                           ? TgIcons.nightModeFilled
                           : TgIcons.lightMode,
                     ),
-                    title: const Text('Dark mode'),
+                    title: Text(l10n.darkMode),
                     trailing: GlassSwitch(
                       value: state.darkMode,
                       onChanged: state.setDarkMode,
@@ -137,8 +151,8 @@ class SettingsBody extends StatelessWidget {
                   ),
                 GlassListTile(
                   leading: const Icon(TgIcons.transparency),
-                  title: const Text('Reduce transparency'),
-                  subtitle: const Text('Stops the wallpaper animation'),
+                  title: Text(l10n.reduceTransparency),
+                  subtitle: Text(l10n.reduceTransparencySubtitle),
                   trailing: GlassSwitch(
                     value: state.reduceTransparency,
                     onChanged: state.setReduceTransparency,
@@ -172,7 +186,10 @@ class SettingsBody extends StatelessWidget {
                         color: TgColors.accent.resolveFrom(context),
                       ),
                       const SizedBox(width: 10),
-                      Text('Glass intensity', style: TgText.rowTitle(context)),
+                      Text(
+                        l10n.glassIntensity,
+                        style: TgText.rowTitle(context),
+                      ),
                       const Spacer(),
                       Text(
                         '${(state.glassIntensity * 100).round()}%',
@@ -199,7 +216,7 @@ class SettingsBody extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Message text size',
+                        l10n.messageTextSize,
                         style: TgText.rowTitle(context),
                       ),
                       const Spacer(),
@@ -215,7 +232,7 @@ class SettingsBody extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'The quick brown fox jumps over the lazy dog',
+                    l10n.textSizeSample,
                     style: TgText.body(context)
                         .copyWith(fontSize: state.messageFontSize.toDouble()),
                   ),
@@ -228,13 +245,13 @@ class SettingsBody extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: GlassGroupedSection(
-              header: Text('Privacy', style: TgText.sectionHeader(context)),
+              header: Text(l10n.privacy, style: TgText.sectionHeader(context)),
               settings: GlassTokens.panel(context),
               quality: GlassQuality.premium,
               children: [
                 GlassListTile(
                   leading: const Icon(TgIcons.receipts),
-                  title: const Text('Read receipts'),
+                  title: Text(l10n.readReceipts),
                   trailing: GlassSwitch(
                     value: state.readReceipts,
                     onChanged: state.setReadReceipts,
@@ -244,13 +261,13 @@ class SettingsBody extends StatelessWidget {
                 ),
                 GlassListTile(
                   leading: const Icon(TgIcons.privacy),
-                  title: const Text('Two-step verification'),
+                  title: Text(l10n.twoStepVerification),
                   trailing: const Icon(TgIcons.forward, size: 16),
                   onTap: () {},
                 ),
                 GlassListTile(
                   leading: const Icon(TgIcons.sessions),
-                  title: const Text('Active sessions'),
+                  title: Text(l10n.activeSessions),
                   trailing: GlassBadge(
                     count: 3,
                     settings: GlassTokens.chrome(context),
@@ -266,13 +283,9 @@ class SettingsBody extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
             child: GlassGroupedSection(
-              header: Text('Backend', style: TgText.sectionHeader(context)),
+              header: Text(l10n.backend, style: TgText.sectionHeader(context)),
               footer: Text(
-                state.client.isLive
-                    ? 'Connected through the official TDLib JSON interface.'
-                    : 'Demo data. Pass --dart-define=TELEGRAM_API_ID and '
-                          'TELEGRAM_API_HASH, and bundle libtdjson.so, to talk to '
-                          'real Telegram servers.',
+                state.client.isLive ? l10n.backendLive : l10n.backendDemo,
                 style: TgText.timestamp(context),
               ),
               settings: GlassTokens.panel(context),
@@ -282,7 +295,7 @@ class SettingsBody extends StatelessWidget {
                   leading: Icon(
                     state.client.isLive ? TgIcons.channel : TgIcons.demo,
                   ),
-                  title: const Text('Mode'),
+                  title: Text(l10n.mode),
                   trailing: Text(
                     state.client.backendName,
                     style: TgText.rowPreview(context),
@@ -291,7 +304,7 @@ class SettingsBody extends StatelessWidget {
                 GlassListTile(
                   leading: const Icon(TgIcons.logOut),
                   title: Text(
-                    'Log out',
+                    l10n.logOut,
                     style: TextStyle(
                       color: TgColors.destructive.resolveFrom(context),
                     ),
@@ -307,20 +320,57 @@ class SettingsBody extends StatelessWidget {
     );
   }
 
+  static String _languageLabel(String code, AppL10n l10n) {
+    switch (code) {
+      case 'en':
+        return 'English';
+      case 'ru':
+        return 'Русский';
+      default:
+        return l10n.languageSystem;
+    }
+  }
+
+  Future<void> _pickLanguage(
+    BuildContext context,
+    AppState state,
+    AppL10n l10n,
+  ) async {
+    await showGlassActionSheet<void>(
+      context: context,
+      title: l10n.language,
+      settings: GlassTokens.menu(context),
+      quality: GlassQuality.premium,
+      actions: [
+        for (final code in const ['system', 'en', 'ru'])
+          GlassActionSheetAction(
+            label: _languageLabel(code, l10n),
+            icon: Icon(
+              state.language == code ? TgIcons.selected : TgIcons.unselected,
+            ),
+            onPressed: () {
+              state.setLanguage(code);
+              Navigator.of(context).pop();
+            },
+          ),
+      ],
+    );
+  }
+
   Future<void> _confirmLogOut(BuildContext context, AppState state) async {
     await GlassDialog.show<void>(
       context: context,
-      title: 'Log out?',
-      message: 'You will need to sign in again to read your chats.',
+      title: AppL10n.of(context).logOutTitle,
+      message: AppL10n.of(context).logOutMessage,
       settings: GlassTokens.menu(context),
       quality: GlassQuality.premium,
       actions: [
         GlassDialogAction(
-          label: 'Cancel',
+          label: AppL10n.of(context).cancel,
           onPressed: () => Navigator.of(context).pop(),
         ),
         GlassDialogAction(
-          label: 'Log out',
+          label: AppL10n.of(context).logOut,
           isDestructive: true,
           onPressed: () {
             Navigator.of(context).pop();
@@ -406,7 +456,7 @@ class _ProfileCard extends StatelessWidget {
             quality: GlassQuality.premium,
             onPressed: () => GlassToast.show(
               context,
-              message: 'Profile editing needs the live backend',
+              message: AppL10n.of(context).profileEditHint,
               type: GlassToastType.info,
             ),
           ),

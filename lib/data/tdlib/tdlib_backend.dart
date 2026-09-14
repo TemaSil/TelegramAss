@@ -5,5 +5,4 @@
 /// backend. Native builds get the real client.
 library;
 
-export 'tdlib_client.dart'
-    if (dart.library.js_interop) 'tdlib_client_web.dart';
+export 'tdlib_client.dart' if (dart.library.js_interop) 'tdlib_client_web.dart';

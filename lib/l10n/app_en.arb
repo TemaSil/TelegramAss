@@ -1,0 +1,221 @@
+{
+  "@@locale": "en",
+  "appName": "Telegram Liquid",
+  "signInSubtitle": "Sign in with your phone number to continue",
+  "enterCodeTitle": "Enter the code",
+  "enterCodeSubtitle": "We sent a code to your Telegram app",
+  "passwordTitle": "One more step",
+  "passwordSubtitle": "This account is protected by a cloud password",
+  "phoneNumber": "Phone number",
+  "phoneHint": "+7 900 000 00 00",
+  "confirmationCode": "Confirmation code",
+  "codeHint": "• • • • •",
+  "twoStepVerification": "Two-step verification",
+  "cloudPasswordHelper": "Your cloud password protects this account",
+  "password": "Password",
+  "sendCode": "Send code",
+  "continueAction": "Continue",
+  "demoAnyPhone": "Demo mode — any phone number works",
+  "demoCodeHint": "Demo mode — the code is 12345",
+  "demoPasswordHint": "Demo mode — the password is \"telegram\"",
+  "chats": "Chats",
+  "chatsWithCount": "Chats ({count})",
+  "@chatsWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contacts": "Contacts",
+  "calls": "Calls",
+  "settings": "Settings",
+  "searchChats": "Search chats and messages",
+  "searchContacts": "Search contacts",
+  "searchInChat": "Search in chat",
+  "searchInChatHint": "Type to search this conversation",
+  "noMatches": "No matches",
+  "nothingFound": "Nothing found",
+  "tryAnotherSearch": "Try a different search term",
+  "noChatsInFolder": "No chats in this folder",
+  "pickAnotherFolder": "Pick another folder above",
+  "edit": "Edit",
+  "chatList": "Chat list",
+  "markAllAsRead": "Mark all as read",
+  "markAsRead": "Mark as read",
+  "pinToTop": "Pin to top",
+  "unpin": "Unpin",
+  "mute": "Mute",
+  "unmute": "Unmute",
+  "deleteChat": "Delete chat",
+  "deleteChatMessage": "This conversation will be removed from the list.",
+  "chatDeleted": "{title} deleted",
+  "@chatDeleted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "newMessageHint": "New message — pick a contact from the Contacts tab",
+  "reply": "Reply",
+  "copy": "Copy",
+  "forward": "Forward",
+  "forwardTo": "Forward to",
+  "forwardedTo": "Forwarded to {title}",
+  "@forwardedTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "delete": "Delete",
+  "message": "Message",
+  "editMessage": "Edit message",
+  "replyToSender": "Reply to {name}",
+  "@replyToSender": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "edited": "edited",
+  "typing": "typing…",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "statusSending": "Sending…",
+  "statusSent": "Sent",
+  "statusDelivered": "Delivered",
+  "statusRead": "Read",
+  "statusFailed": "Not delivered",
+  "send": "Send",
+  "photo": "Photo",
+  "file": "File",
+  "location": "Location",
+  "recent": "Recent",
+  "cameraRoll": "Camera roll",
+  "cameraRollSubtitle": "{count} items",
+  "@cameraRollSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "documents": "Documents",
+  "browseFiles": "Browse files",
+  "locationNotWired": "Location sharing is not wired up yet",
+  "chatInfo": "Chat info",
+  "clearHistory": "Clear history",
+  "clearHistoryTitle": "Clear history?",
+  "clearHistoryMessage": "All messages in this chat will be removed on this device.",
+  "clear": "Clear",
+  "cancel": "Cancel",
+  "call": "Call",
+  "video": "Video",
+  "search": "Search",
+  "info": "Info",
+  "notifications": "Notifications",
+  "mediaLinksDocs": "Media, links and docs",
+  "chatWallpaper": "Chat wallpaper",
+  "noMediaYet": "No media in this chat yet",
+  "photosCount": "{count} photos",
+  "@photosCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "presenceOnline": "online",
+  "presenceLastSeen": "last seen recently",
+  "presenceBot": "bot",
+  "presenceSaved": "your cloud storage",
+  "membersCount": "{count} members",
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subscribersCount": "{count} subscribers",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "contactsCount": "{count} contacts",
+  "@contactsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "onlineCount": "{count} online",
+  "@onlineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addContactHint": "Adding contacts needs the live TDLib backend",
+  "all": "All",
+  "missed": "Missed",
+  "noCalls": "No calls here",
+  "callCancelled": "Cancelled",
+  "callingName": "Calling {name}…",
+  "@callingName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "newCallHint": "Placing calls needs the live TDLib backend",
+  "appearance": "Appearance",
+  "wallpaper": "Wallpaper",
+  "wallpaperSubtitle": "Glass refracts whatever sits behind it.",
+  "choose": "Choose",
+  "autoNightMode": "Auto night mode",
+  "autoNightModeSubtitle": "Follow the system appearance",
+  "darkMode": "Dark mode",
+  "reduceTransparency": "Reduce transparency",
+  "reduceTransparencySubtitle": "Stops the wallpaper animation",
+  "glassIntensity": "Glass intensity",
+  "messageTextSize": "Message text size",
+  "textSizeSample": "The quick brown fox jumps over the lazy dog",
+  "language": "Language",
+  "languageSystem": "System",
+  "privacy": "Privacy",
+  "readReceipts": "Read receipts",
+  "activeSessions": "Active sessions",
+  "backend": "Backend",
+  "mode": "Mode",
+  "backendLive": "Connected through the official TDLib JSON interface.",
+  "backendDemo": "Demo data. Pass --dart-define=TELEGRAM_API_ID and TELEGRAM_API_HASH, and bundle libtdjson.so, to talk to real Telegram servers.",
+  "logOut": "Log out",
+  "logOutTitle": "Log out?",
+  "logOutMessage": "You will need to sign in again to read your chats.",
+  "aboutTitle": "About this build",
+  "aboutBody": "A Flutter Telegram client rendered with the iOS 26 Liquid Glass material. Glass quality adapts to the device.",
+  "profileEditHint": "Profile editing needs the live backend",
+  "myStory": "My Story",
+  "replyToStory": "Reply to story",
+  "errorInvalidPhone": "Enter a valid phone number",
+  "errorInvalidCode": "Invalid code — use 12345 in demo mode",
+  "errorInvalidPassword": "Wrong password — use \"telegram\" in demo mode",
+  "draft": "Draft",
+  "folderAll": "All Chats",
+  "folderPersonal": "Personal",
+  "folderGroups": "Groups",
+  "folderChannels": "Channels",
+  "folderUnread": "Unread",
+  "folderBots": "Bots"
+}

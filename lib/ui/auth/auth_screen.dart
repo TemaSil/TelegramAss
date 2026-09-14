@@ -8,6 +8,7 @@ import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../common/wallpaper.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Phone → code → two-factor password, each step a glass card that
 /// materialises over the wallpaper.
@@ -69,6 +70,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
+    final l10n = AppL10n.of(context);
     final stage = state.stage;
 
     return GlassScaffold(
@@ -94,7 +96,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _titleFor(stage),
+                        _titleFor(stage, l10n),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 22,
@@ -105,12 +107,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _subtitleFor(stage),
+                        _subtitleFor(stage, l10n),
                         textAlign: TextAlign.center,
                         style: TgText.rowPreview(context),
                       ),
                       const SizedBox(height: 22),
-                      _field(stage),
+                      _field(stage, l10n),
                       if (_error != null) ...[
                         const SizedBox(height: 12),
                         Text(
@@ -141,8 +143,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                   )
                                 : Text(
                                     stage == TgAuthStage.phone
-                                        ? 'Send code'
-                                        : 'Continue',
+                                        ? l10n.sendCode
+                                        : l10n.continueAction,
                                     style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w600,
@@ -167,14 +169,14 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _field(TgAuthStage stage) {
+  Widget _field(TgAuthStage stage, AppL10n l10n) {
     switch (stage) {
       case TgAuthStage.code:
         return GlassFormField(
-          label: 'Confirmation code',
+          label: l10n.confirmationCode,
           child: GlassTextField(
             controller: _codeController,
-            placeholder: '• • • • •',
+            placeholder: l10n.codeHint,
             keyboardType: TextInputType.number,
             autofocus: true,
             textStyle: const TextStyle(fontSize: 22, letterSpacing: 6),
@@ -188,11 +190,11 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       case TgAuthStage.password:
         return GlassFormField(
-          label: 'Two-step verification',
-          helperText: 'Your cloud password protects this account',
+          label: l10n.twoStepVerification,
+          helperText: l10n.cloudPasswordHelper,
           child: GlassPasswordField(
             controller: _passwordController,
-            placeholder: 'Password',
+            placeholder: l10n.password,
             autofocus: true,
             settings: GlassTokens.chrome(context),
             onSubmitted: (_) => _submit(),
@@ -202,10 +204,10 @@ class _AuthScreenState extends State<AuthScreen> {
       case TgAuthStage.phone:
       case TgAuthStage.ready:
         return GlassFormField(
-          label: 'Phone number',
+          label: l10n.phoneNumber,
           child: GlassTextField(
             controller: _phoneController,
-            placeholder: '+7 900 000 00 00',
+            placeholder: l10n.phoneHint,
             keyboardType: TextInputType.phone,
             prefixIcon: const Icon(TgIcons.calls, size: 19),
             settings: GlassTokens.chrome(context),
@@ -215,25 +217,25 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  static String _titleFor(TgAuthStage stage) {
+  static String _titleFor(TgAuthStage stage, AppL10n l10n) {
     switch (stage) {
       case TgAuthStage.code:
-        return 'Enter the code';
+        return l10n.enterCodeTitle;
       case TgAuthStage.password:
-        return 'One more step';
+        return l10n.passwordTitle;
       default:
-        return 'Telegram Liquid';
+        return l10n.appName;
     }
   }
 
-  static String _subtitleFor(TgAuthStage stage) {
+  static String _subtitleFor(TgAuthStage stage, AppL10n l10n) {
     switch (stage) {
       case TgAuthStage.code:
-        return 'We sent a code to your Telegram app';
+        return l10n.enterCodeSubtitle;
       case TgAuthStage.password:
-        return 'This account is protected by a cloud password';
+        return l10n.passwordSubtitle;
       default:
-        return 'Sign in with your phone number to continue';
+        return l10n.signInSubtitle;
     }
   }
 }
@@ -266,10 +268,11 @@ class _DemoHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     final text = switch (stage) {
-      TgAuthStage.code => 'Demo mode — the code is 12345',
-      TgAuthStage.password => 'Demo mode — the password is "telegram"',
-      _ => 'Demo mode — any phone number works',
+      TgAuthStage.code => l10n.demoCodeHint,
+      TgAuthStage.password => l10n.demoPasswordHint,
+      _ => l10n.demoAnyPhone,
     };
 
     return GlassChip(

@@ -7,6 +7,7 @@ import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../common/tg_avatar.dart';
 import '../../../core/tg_icons.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// One conversation in the chat list.
 ///
@@ -35,6 +36,7 @@ class ChatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return GlassMenu(
       menuWidth: 250,
       menuBorderRadius: 28,
@@ -49,24 +51,24 @@ class ChatRow extends StatelessWidget {
       ),
       items: [
         GlassMenuItem(
-          title: chat.isPinned ? 'Unpin' : 'Pin to top',
+          title: chat.isPinned ? l10n.unpin : l10n.pinToTop,
           icon: const Icon(TgIcons.pin),
           onTap: onPin,
         ),
         GlassMenuItem(
-          title: chat.isMuted ? 'Unmute' : 'Mute',
+          title: chat.isMuted ? l10n.unmute : l10n.mute,
           icon: Icon(chat.isMuted ? TgIcons.unmute : TgIcons.mute),
           onTap: onMute,
         ),
         if (chat.unreadCount > 0)
           GlassMenuItem(
-            title: 'Mark as read',
+            title: l10n.markAsRead,
             icon: const Icon(TgIcons.markRead),
             onTap: onMarkRead,
           ),
         const GlassMenuDivider(),
         GlassMenuItem(
-          title: 'Delete chat',
+          title: l10n.deleteChat,
           icon: const Icon(TgIcons.delete),
           isDestructive: true,
           onTap: onDelete,
@@ -164,7 +166,7 @@ class ChatRow extends StatelessWidget {
   Widget _preview(BuildContext context) {
     if (isTyping) {
       return Text(
-        'typing…',
+        AppL10n.of(context).typing,
         maxLines: 1,
         style: TgText.rowPreview(context).copyWith(
           color: TgColors.accent.resolveFrom(context),
@@ -178,7 +180,7 @@ class ChatRow extends StatelessWidget {
         TextSpan(
           children: [
             TextSpan(
-              text: 'Draft: ',
+              text: '${AppL10n.of(context).draft}: ',
               style: TextStyle(
                 color: TgColors.destructive.resolveFrom(context),
               ),

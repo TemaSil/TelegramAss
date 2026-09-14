@@ -12,6 +12,9 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_cupertino_symbols: ^1.0.3
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.3
   liquid_glass_widgets: ^1.4.4
   path_provider: ^2.1.6
   shared_preferences: ^2.5.5
@@ -24,6 +27,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
 # Generates the Android launcher icons from assets/app_icon.png.
 flutter_launcher_icons:

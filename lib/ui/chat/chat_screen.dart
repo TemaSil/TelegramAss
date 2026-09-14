@@ -14,6 +14,7 @@ import 'widgets/bubble_entrance.dart';
 import 'widgets/composer_bar.dart';
 import 'widgets/message_bubble.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// One conversation.
 class ChatScreen extends StatefulWidget {
@@ -144,7 +145,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Navigator.of(sheetContext).pop();
           GlassToast.show(
             context,
-            message: 'Location sharing is not wired up yet',
+            message: AppL10n.of(context).locationNotWired,
             type: GlassToastType.info,
           );
         },
@@ -202,7 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
           state.client.sendText(chat.id, message.text);
           GlassToast.show(
             context,
-            message: 'Forwarded to ${chat.title}',
+            message: AppL10n.of(context).forwardedTo(chat.title),
             type: GlassToastType.success,
           );
         },
@@ -228,17 +229,17 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _confirmClearHistory() async {
     await GlassDialog.show<void>(
       context: context,
-      title: 'Clear history?',
-      message: 'All messages in this chat will be removed on this device.',
+      title: AppL10n.of(context).clearHistoryTitle,
+      message: AppL10n.of(context).clearHistoryMessage,
       settings: GlassTokens.menu(context),
       quality: GlassQuality.premium,
       actions: [
         GlassDialogAction(
-          label: 'Cancel',
+          label: AppL10n.of(context).cancel,
           onPressed: () => Navigator.of(context).pop(),
         ),
         GlassDialogAction(
-          label: 'Clear',
+          label: AppL10n.of(context).clear,
           isDestructive: true,
           onPressed: () {
             Navigator.of(context).pop();
@@ -343,6 +344,7 @@ class _ChatAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return GlassAppBar(
       toolbarHeight: 56,
       centerTitle: false,
@@ -378,7 +380,7 @@ class _ChatAppBar extends StatelessWidget {
                   style: TgText.navTitle(context),
                 ),
                 Text(
-                  isTyping ? 'typing…' : chat.presence,
+                  isTyping ? l10n.typing : chat.presence,
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: 12.5,
@@ -408,23 +410,23 @@ class _ChatAppBar extends StatelessWidget {
           ),
           items: [
             GlassMenuItem(
-              title: 'Chat info',
+              title: l10n.chatInfo,
               icon: const Icon(TgIcons.info),
               onTap: onInfo,
             ),
             GlassMenuItem(
-              title: chat.isMuted ? 'Unmute' : 'Mute',
+              title: chat.isMuted ? l10n.unmute : l10n.mute,
               icon: Icon(chat.isMuted ? TgIcons.unmute : TgIcons.mute),
               onTap: onToggleMute,
             ),
             GlassMenuItem(
-              title: 'Search in chat',
+              title: l10n.searchInChat,
               icon: const Icon(TgIcons.search),
               onTap: onSearch,
             ),
             const GlassMenuDivider(),
             GlassMenuItem(
-              title: 'Clear history',
+              title: l10n.clearHistory,
               icon: const Icon(TgIcons.delete),
               isDestructive: true,
               onTap: onClearHistory,
@@ -596,7 +598,7 @@ class _MessageListState extends State<_MessageList>
                 ),
                 if (isLastOutgoing)
                   DeliveryFootnote(
-                    label: _statusLabel(message.status),
+                    label: _statusLabel(message.status, AppL10n.of(context)),
                     color: TgColors.tertiaryLabel.resolveFrom(context),
                   ),
               ],
@@ -607,18 +609,18 @@ class _MessageListState extends State<_MessageList>
     );
   }
 
-  static String _statusLabel(TgMessageStatus status) {
+  static String _statusLabel(TgMessageStatus status, AppL10n l10n) {
     switch (status) {
       case TgMessageStatus.sending:
-        return 'Sending…';
+        return l10n.statusSending;
       case TgMessageStatus.failed:
-        return 'Not delivered';
+        return l10n.statusFailed;
       case TgMessageStatus.sent:
-        return 'Sent';
+        return l10n.statusSent;
       case TgMessageStatus.delivered:
-        return 'Delivered';
+        return l10n.statusDelivered;
       case TgMessageStatus.read:
-        return 'Read';
+        return l10n.statusRead;
     }
   }
 
@@ -809,6 +811,7 @@ class _SearchSheetState extends State<_SearchSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
@@ -816,7 +819,7 @@ class _SearchSheetState extends State<_SearchSheet> {
         children: [
           GlassSearchBar(
             controller: _controller,
-            placeholder: 'Search in chat',
+            placeholder: l10n.searchInChat,
             autofocus: true,
             settings: GlassTokens.chrome(context),
             onChanged: (query) => setState(() {
@@ -830,8 +833,8 @@ class _SearchSheetState extends State<_SearchSheet> {
                 ? Center(
                     child: Text(
                       _controller.text.isEmpty
-                          ? 'Type to search this conversation'
-                          : 'No matches',
+                          ? l10n.searchInChatHint
+                          : l10n.noMatches,
                       style: TgText.rowPreview(context),
                     ),
                   )
@@ -872,13 +875,14 @@ class _ForwardSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Forward to',
+            l10n.forwardTo,
             textAlign: TextAlign.center,
             style: TgText.rowTitle(context),
           ),
@@ -916,12 +920,10 @@ class _MediaSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     if (photos.isEmpty) {
       return Center(
-        child: Text(
-          'No media in this chat yet',
-          style: TgText.rowPreview(context),
-        ),
+        child: Text(l10n.noMediaYet, style: TgText.rowPreview(context)),
       );
     }
 
@@ -931,7 +933,7 @@ class _MediaSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '${photos.length} photos',
+            l10n.photosCount(photos.length),
             textAlign: TextAlign.center,
             style: TgText.rowTitle(context),
           ),
@@ -983,6 +985,7 @@ class _AttachmentSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       child: Column(
@@ -990,7 +993,7 @@ class _AttachmentSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Send',
+            l10n.send,
             textAlign: TextAlign.center,
             style: TgText.rowTitle(context),
           ),
@@ -1003,37 +1006,37 @@ class _AttachmentSheet extends StatelessWidget {
             items: [
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.photo),
-                label: 'Photo',
+                label: l10n.photo,
                 onTap: onPhoto,
               ),
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.document),
-                label: 'File',
+                label: l10n.file,
                 onTap: onFile,
               ),
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.location),
-                label: 'Location',
+                label: l10n.location,
                 onTap: onLocation,
               ),
             ],
           ),
           const SizedBox(height: 18),
           GlassGroupedSection(
-            header: const Text('Recent'),
+            header: Text(l10n.recent),
             settings: GlassTokens.panel(context),
             children: [
               GlassListTile(
                 leading: const Icon(TgIcons.media),
-                title: const Text('Camera roll'),
-                subtitle: const Text('248 items'),
+                title: Text(l10n.cameraRoll),
+                subtitle: Text(l10n.cameraRollSubtitle(248)),
                 trailing: const Icon(TgIcons.forward, size: 16),
                 onTap: onPhoto,
               ),
               GlassListTile(
                 leading: const Icon(TgIcons.folder),
-                title: const Text('Documents'),
-                subtitle: const Text('Browse files'),
+                title: Text(l10n.documents),
+                subtitle: Text(l10n.browseFiles),
                 trailing: const Icon(TgIcons.forward, size: 16),
                 onTap: onFile,
               ),
@@ -1060,6 +1063,7 @@ class _ChatInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       child: Column(
@@ -1099,29 +1103,29 @@ class _ChatInfoSheet extends StatelessWidget {
             items: [
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.calls),
-                label: 'Call',
+                label: l10n.call,
                 onTap: () {},
               ),
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.video),
-                label: 'Video',
+                label: l10n.video,
                 onTap: () {},
               ),
               GlassButtonGroupItem(
                 icon: const Icon(TgIcons.search),
-                label: 'Search',
+                label: l10n.search,
                 onTap: onSearch,
               ),
             ],
           ),
           const SizedBox(height: 20),
           GlassGroupedSection(
-            header: const Text('Info'),
+            header: Text(l10n.info),
             settings: GlassTokens.panel(context),
             children: [
               GlassListTile(
                 leading: const Icon(TgIcons.unmute),
-                title: const Text('Notifications'),
+                title: Text(l10n.notifications),
                 trailing: Text(
                   chat.isMuted ? 'Off' : 'On',
                   style: TgText.rowPreview(context),
@@ -1129,13 +1133,13 @@ class _ChatInfoSheet extends StatelessWidget {
               ),
               GlassListTile(
                 leading: const Icon(TgIcons.media),
-                title: const Text('Media, links and docs'),
+                title: Text(l10n.mediaLinksDocs),
                 trailing: const Icon(TgIcons.forward, size: 16),
                 onTap: onMedia,
               ),
               GlassListTile(
                 leading: const Icon(TgIcons.wallpaper),
-                title: const Text('Chat wallpaper'),
+                title: Text(l10n.chatWallpaper),
                 trailing: const Icon(TgIcons.forward, size: 16),
                 onTap: onWallpaper,
               ),

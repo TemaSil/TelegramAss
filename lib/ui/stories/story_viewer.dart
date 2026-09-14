@@ -6,6 +6,7 @@ import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../common/tg_avatar.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Full-screen story viewer.
 ///
@@ -339,7 +340,7 @@ class _ReplyBar extends StatelessWidget {
         children: [
           Expanded(
             child: GlassTextField(
-              placeholder: 'Reply to story',
+              placeholder: AppL10n.of(context).replyToStory,
               height: 46,
               shape: const LiquidRoundedRectangle(borderRadius: 23),
               settings: GlassTokens.composer(context),

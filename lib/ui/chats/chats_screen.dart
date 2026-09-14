@@ -12,6 +12,7 @@ import '../stories/story_viewer.dart';
 import 'widgets/chat_row.dart';
 import 'widgets/story_rail.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Nav bar for the Chats tab: an Edit menu on the left, a filter pull-down
 /// and a compose button on the right.
@@ -23,12 +24,13 @@ class ChatsAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
+    final l10n = AppL10n.of(context);
 
     return GlassAppBar(
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      title: Text('Chats', style: TgText.navTitle(context)),
+      title: Text(l10n.chats, style: TgText.navTitle(context)),
       leading: _EditMenu(state: state),
       actions: [
         GlassPullDownButton(
@@ -38,7 +40,7 @@ class ChatsAppBar extends StatelessWidget {
           // The callback reports the item title, which is also the folder name.
           onSelected: (title) {
             final folder = state.folders.firstWhere(
-              (folder) => folder.title == title,
+              (folder) => _FolderBar.folderTitle(folder, l10n) == title,
               orElse: () => state.folders.first,
             );
             state.setFolder(folder.id);
@@ -46,7 +48,7 @@ class ChatsAppBar extends StatelessWidget {
           items: [
             for (final folder in state.folders)
               GlassMenuItem(
-                title: folder.title,
+                title: _FolderBar.folderTitle(folder, l10n),
                 icon: Icon(
                   folder.id == state.activeFolder
                       ? TgIcons.selected
@@ -64,7 +66,7 @@ class ChatsAppBar extends StatelessWidget {
           quality: GlassQuality.premium,
           onPressed: () => GlassToast.show(
             context,
-            message: 'New message — pick a contact from the Contacts tab',
+            message: l10n.newMessageHint,
             type: GlassToastType.info,
             icon: const Icon(TgIcons.compose, size: 18),
           ),
@@ -81,6 +83,7 @@ class _EditMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return GlassMenu(
       menuWidth: 250,
       menuBorderRadius: 30,
@@ -89,27 +92,32 @@ class _EditMenu extends StatelessWidget {
       menuAlignment: GlassMenuAlignment.bottomLeft,
       triggerBuilder: (context, toggleMenu) => GlassButton.custom(
         onTap: toggleMenu,
-        width: 68,
+        // Sized to the label: "Изменить" does not fit a fixed 68pt pill.
+        width: null,
         height: 44,
         shape: const LiquidRoundedRectangle(borderRadius: 22),
         settings: GlassTokens.chrome(context),
         quality: GlassQuality.premium,
         useOwnLayer: true,
-        child: Center(
-          child: Text(
-            'Edit',
-            style: TextStyle(
-              fontSize: 17,
-              letterSpacing: -0.1,
-              color: TgColors.label.resolveFrom(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              l10n.edit,
+              style: TextStyle(
+                fontSize: 17,
+                letterSpacing: -0.1,
+                color: TgColors.label.resolveFrom(context),
+              ),
             ),
           ),
         ),
       ),
       items: [
-        const GlassMenuLabel(title: 'Chat list'),
+        GlassMenuLabel(title: l10n.chatList),
         GlassMenuItem(
-          title: 'Mark all as read',
+          title: l10n.markAllAsRead,
           icon: const Icon(TgIcons.markRead),
           onTap: () {
             for (final chat in state.chats) {
@@ -154,12 +162,12 @@ class _ChatsBodyState extends State<ChatsBody> {
     await showGlassActionSheet<void>(
       context: context,
       title: chat.title,
-      message: 'This conversation will be removed from the list.',
+      message: AppL10n.of(context).deleteChatMessage,
       settings: GlassTokens.menu(context),
       quality: GlassQuality.premium,
       actions: [
         GlassActionSheetAction(
-          label: 'Delete chat',
+          label: AppL10n.of(context).deleteChat,
           style: GlassActionSheetStyle.destructive,
           icon: const Icon(TgIcons.delete),
           onPressed: () {
@@ -167,7 +175,7 @@ class _ChatsBodyState extends State<ChatsBody> {
             AppScope.read(context).client.deleteChat(chat.id);
             GlassToast.show(
               context,
-              message: '${chat.title} deleted',
+              message: AppL10n.of(context).chatDeleted(chat.title),
               type: GlassToastType.success,
             );
           },
@@ -179,6 +187,7 @@ class _ChatsBodyState extends State<ChatsBody> {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
+    final l10n = AppL10n.of(context);
     final chats = state.visibleChats;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     final topPad = MediaQuery.paddingOf(context).top;
@@ -191,12 +200,12 @@ class _ChatsBodyState extends State<ChatsBody> {
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: topPad + 52)),
         GlassLargeTitle(
-          text: 'Chats',
+          text: l10n.chats,
           controller: widget.controller,
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           searchBar: GlassSearchBar(
             controller: _searchController,
-            placeholder: 'Search chats and messages',
+            placeholder: l10n.searchChats,
             settings: GlassTokens.chrome(context),
             onChanged: state.setSearchQuery,
             onCancel: () {
@@ -259,6 +268,7 @@ class _FolderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     final folders = state.folders;
     final selected = folders.indexWhere(
       (folder) => folder.id == state.activeFolder,
@@ -289,15 +299,37 @@ class _FolderBar extends StatelessWidget {
         ),
         segments: [
           for (final folder in folders)
-            GlassSegment(label: _labelFor(folder, state), id: folder.id),
+            GlassSegment(label: _labelFor(folder, state, l10n), id: folder.id),
         ],
       ),
     );
   }
 
-  static String _labelFor(TgFolder folder, AppState state) {
+  /// Folder names come from the backend as ids; the built-in set is
+  /// translated, anything else (a server-side folder) keeps its own name.
+  static String folderTitle(TgFolder folder, AppL10n l10n) {
+    switch (folder.id) {
+      case 'all':
+        return l10n.folderAll;
+      case 'personal':
+        return l10n.folderPersonal;
+      case 'groups':
+        return l10n.folderGroups;
+      case 'channels':
+        return l10n.folderChannels;
+      case 'unread':
+        return l10n.folderUnread;
+      case 'bots':
+        return l10n.folderBots;
+      default:
+        return folder.title;
+    }
+  }
+
+  static String _labelFor(TgFolder folder, AppState state, AppL10n l10n) {
     final unread = state.unreadInFolder(folder.id);
-    return unread > 0 ? '${folder.title}  $unread' : folder.title;
+    final title = folderTitle(folder, l10n);
+    return unread > 0 ? '$title  $unread' : title;
   }
 }
 
@@ -308,6 +340,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
       child: GlassCard(
@@ -324,14 +357,12 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              query.isEmpty ? 'No chats in this folder' : 'Nothing found',
+              query.isEmpty ? l10n.noChatsInFolder : l10n.nothingFound,
               style: TgText.rowTitle(context),
             ),
             const SizedBox(height: 6),
             Text(
-              query.isEmpty
-                  ? 'Pick another folder above'
-                  : 'Try a different search term',
+              query.isEmpty ? l10n.pickAnotherFolder : l10n.tryAnotherSearch,
               textAlign: TextAlign.center,
               style: TgText.rowPreview(context),
             ),

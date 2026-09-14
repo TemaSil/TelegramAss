@@ -11,6 +11,7 @@ import '../common/wallpaper.dart';
 import '../contacts/contacts_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// The four-tab shell.
 ///
@@ -64,6 +65,7 @@ class _RootShellState extends State<RootShell> {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
+    final l10n = AppL10n.of(context);
     final unread = state.totalUnread;
 
     return GlassScaffold(
@@ -87,22 +89,22 @@ class _RootShellState extends State<RootShell> {
           GlassTab(
             icon: const Icon(TgIcons.chats),
             activeIcon: const Icon(TgIcons.chatsActive),
-            label: unread > 0 ? 'Chats ($unread)' : 'Chats',
+            label: unread > 0 ? l10n.chatsWithCount(unread) : l10n.chats,
           ),
-          const GlassTab(
-            icon: Icon(TgIcons.contacts),
-            activeIcon: Icon(TgIcons.contactsActive),
-            label: 'Contacts',
+          GlassTab(
+            icon: const Icon(TgIcons.contacts),
+            activeIcon: const Icon(TgIcons.contactsActive),
+            label: l10n.contacts,
           ),
-          const GlassTab(
-            icon: Icon(TgIcons.calls),
-            activeIcon: Icon(TgIcons.callsActive),
-            label: 'Calls',
+          GlassTab(
+            icon: const Icon(TgIcons.calls),
+            activeIcon: const Icon(TgIcons.callsActive),
+            label: l10n.calls,
           ),
-          const GlassTab(
-            icon: Icon(TgIcons.settings),
-            activeIcon: Icon(TgIcons.settingsActive),
-            label: 'Settings',
+          GlassTab(
+            icon: const Icon(TgIcons.settings),
+            activeIcon: const Icon(TgIcons.settingsActive),
+            label: l10n.settings,
           ),
         ],
       ),

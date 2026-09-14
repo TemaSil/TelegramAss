@@ -1,4 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+import 'l10n/app_localizations.dart';
 
 import 'core/glass_preferences.dart';
 import 'core/tg_theme.dart';
@@ -32,8 +35,19 @@ class TelegramLiquidApp extends StatelessWidget {
               reduceTransparency: state.reduceTransparency,
             ),
             child: CupertinoApp(
-              title: 'Telegram Liquid',
+              onGenerateTitle: (context) => AppL10n.of(context).appName,
               debugShowCheckedModeBanner: false,
+              // 'system' leaves the choice to the platform resolver.
+              locale: state.language == 'system'
+                  ? null
+                  : Locale(state.language),
+              supportedLocales: AppL10n.supportedLocales,
+              localizationsDelegates: const [
+                AppL10n.delegate,
+                GlobalCupertinoLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+              ],
               theme: CupertinoThemeData(
                 brightness: brightness,
                 primaryColor: TgColors.accent,

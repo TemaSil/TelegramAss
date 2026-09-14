@@ -6,6 +6,7 @@ import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../../core/tg_icons.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Bottom composer: attachment button, growing text area, send / voice button.
 ///
@@ -58,6 +59,7 @@ class _ComposerBarState extends State<ComposerBar> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     final banner = widget.editing ?? widget.replyTo;
 
@@ -92,8 +94,8 @@ class _ComposerBarState extends State<ComposerBar> {
                 child: GlassTextArea(
                   controller: widget.controller,
                   placeholder: widget.editing != null
-                      ? 'Edit message'
-                      : 'Message',
+                      ? l10n.editMessage
+                      : l10n.message,
                   minLines: 1,
                   maxLines: 5,
                   minHeight: 46,
@@ -151,6 +153,7 @@ class _Banner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
     final accent = TgColors.accent.resolveFrom(context);
 
     return Padding(
@@ -175,8 +178,10 @@ class _Banner extends StatelessWidget {
                 children: [
                   Text(
                     isEdit
-                        ? 'Edit message'
-                        : 'Reply to ${message.senderName ?? 'message'}',
+                        ? l10n.editMessage
+                        : l10n.replyToSender(
+                            message.senderName ?? l10n.message,
+                          ),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

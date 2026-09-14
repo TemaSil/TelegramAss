@@ -8,6 +8,7 @@ import '../../data/models.dart';
 import '../chat/chat_screen.dart';
 import '../common/tg_avatar.dart';
 import '../../core/tg_icons.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Nav bar for the Contacts tab.
 class ContactsAppBar extends StatelessWidget {
@@ -21,7 +22,10 @@ class ContactsAppBar extends StatelessWidget {
       toolbarHeight: 52,
       largeTitleController: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      title: Text('Contacts', style: TgText.navTitle(context)),
+      title: Text(
+        AppL10n.of(context).contacts,
+        style: TgText.navTitle(context),
+      ),
       actions: [
         GlassIconButton(
           icon: const Icon(TgIcons.addContact, size: 20),
@@ -30,7 +34,7 @@ class ContactsAppBar extends StatelessWidget {
           quality: GlassQuality.premium,
           onPressed: () => GlassToast.show(
             context,
-            message: 'Adding contacts needs the live TDLib backend',
+            message: AppL10n.of(context).addContactHint,
             type: GlassToastType.info,
           ),
         ),
@@ -88,6 +92,7 @@ class _ContactsBodyState extends State<ContactsBody> {
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
+    final l10n = AppL10n.of(context);
     final groups = _grouped(state.contacts);
     final online = state.contacts.where((user) => user.isOnline).length;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
@@ -101,12 +106,12 @@ class _ContactsBodyState extends State<ContactsBody> {
       slivers: [
         SliverToBoxAdapter(child: SizedBox(height: topPad + 52)),
         GlassLargeTitle(
-          text: 'Contacts',
+          text: l10n.contacts,
           controller: widget.controller,
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
           searchBar: GlassSearchBar(
             controller: _searchController,
-            placeholder: 'Search contacts',
+            placeholder: l10n.searchContacts,
             settings: GlassTokens.chrome(context),
             onChanged: (value) => setState(() => _query = value),
             onCancel: () {
@@ -121,7 +126,7 @@ class _ContactsBodyState extends State<ContactsBody> {
             child: Row(
               children: [
                 GlassChip(
-                  label: '${state.contacts.length} contacts',
+                  label: l10n.contactsCount(state.contacts.length),
                   icon: const Icon(TgIcons.contacts, size: 15),
                   settings: GlassTokens.chrome(context),
                   labelStyle: TgText.rowPreview(context),
@@ -179,7 +184,7 @@ class _ContactsBodyState extends State<ContactsBody> {
                       ),
                       subtitle: Text(
                         user.isOnline
-                            ? 'online'
+                            ? l10n.presenceOnline
                             : (user.lastSeen ?? user.username ?? ''),
                       ),
                       trailing: const Icon(TgIcons.forward, size: 16),
@@ -198,7 +203,10 @@ class _ContactsBodyState extends State<ContactsBody> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 56),
               child: Center(
-                child: Text('Nothing found', style: TgText.rowPreview(context)),
+                child: Text(
+                  l10n.nothingFound,
+                  style: TgText.rowPreview(context),
+                ),
               ),
             ),
           ),

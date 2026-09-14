@@ -10,6 +10,7 @@ import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../chats/widgets/chat_row.dart' show MessageStatusTicks;
 import '../../../core/tg_icons.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// A single message.
 ///
@@ -49,6 +50,7 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final outgoing = message.isOutgoing;
+    final l10n = AppL10n.of(context);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -91,29 +93,29 @@ class MessageBubble extends StatelessWidget {
               ),
             ),
             GlassMenuItem(
-              title: 'Reply',
+              title: l10n.reply,
               icon: const Icon(TgIcons.reply),
               onTap: () => onReply(message),
             ),
             GlassMenuItem(
-              title: 'Copy',
+              title: l10n.copy,
               icon: const Icon(TgIcons.copy),
               onTap: () => Clipboard.setData(ClipboardData(text: message.text)),
             ),
             if (message.isOutgoing && message.kind == TgMessageKind.text)
               GlassMenuItem(
-                title: 'Edit',
+                title: l10n.editMessage,
                 icon: const Icon(TgIcons.edit),
                 onTap: () => onEdit(message),
               ),
             GlassMenuItem(
-              title: 'Forward',
+              title: l10n.forward,
               icon: const Icon(TgIcons.forwardMessage),
               onTap: () => onForward(message),
             ),
             const GlassMenuDivider(),
             GlassMenuItem(
-              title: 'Delete',
+              title: l10n.delete,
               icon: const Icon(TgIcons.delete),
               isDestructive: true,
               onTap: () => onDelete(message),
@@ -125,6 +127,7 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _bubble(BuildContext context) {
+    final l10n = AppL10n.of(context);
     final outgoing = message.isOutgoing;
     // A grouped run keeps square-ish inner corners; the last bubble of the
     // run gets the full radius on every corner.
@@ -165,7 +168,7 @@ class MessageBubble extends StatelessWidget {
               ),
             if (message.replyToText != null)
               _ReplyQuote(
-                sender: message.replyToSender ?? 'Message',
+                sender: message.replyToSender ?? l10n.message,
                 text: message.replyToText!,
                 outgoing: outgoing,
               ),
@@ -186,6 +189,7 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _content(BuildContext context) {
+    final l10n = AppL10n.of(context);
     final textColor = message.isOutgoing
         ? CupertinoColors.white
         : TgColors.label.resolveFrom(context);
@@ -240,7 +244,7 @@ class MessageBubble extends StatelessWidget {
 
       case TgMessageKind.file:
         return _FileContent(
-          name: message.fileName ?? 'Document',
+          name: message.fileName ?? l10n.documents,
           size: message.fileSize ?? '',
           progress: message.uploadProgress,
           tint: textColor,

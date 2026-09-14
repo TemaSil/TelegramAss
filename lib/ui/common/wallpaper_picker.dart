@@ -5,14 +5,16 @@ import '../../core/glass_tokens.dart';
 import '../../core/tg_icons.dart';
 import '../../data/app_state.dart';
 import 'wallpaper.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Shared wallpaper chooser — reachable from Settings and from a chat's info
 /// sheet, the way Telegram offers it in both places.
 Future<void> showWallpaperPicker(BuildContext context, AppState state) {
+  final l10n = AppL10n.of(context);
   return showGlassActionSheet<void>(
     context: context,
-    title: 'Wallpaper',
-    message: 'Glass refracts whatever sits behind it.',
+    title: l10n.wallpaper,
+    message: l10n.wallpaperSubtitle,
     settings: GlassTokens.menu(context),
     quality: GlassQuality.premium,
     actions: [

@@ -45,6 +45,9 @@ class AppState extends ChangeNotifier {
   int _messageFontSize = 16;
   String _wallpaper = 'aurora';
 
+  /// 'system', 'en' or 'ru'.
+  String _language = 'system';
+
   List<TgChat> get chats => _chats;
   TgAuthStage get stage => _stage;
   String get activeFolder => _activeFolder;
@@ -65,6 +68,8 @@ class AppState extends ChangeNotifier {
   double get glassIntensity => _glassIntensity;
   int get messageFontSize => _messageFontSize;
   String get wallpaper => _wallpaper;
+
+  String get language => _language;
 
   int get totalUnread => _chats.fold(
     0,
@@ -122,6 +127,7 @@ class AppState extends ChangeNotifier {
   static const _kGlassIntensity = 'glass_intensity';
   static const _kMessageFontSize = 'message_font_size';
   static const _kWallpaper = 'wallpaper';
+  static const _kLanguage = 'language';
 
   void _restore() {
     final prefs = _prefs;
@@ -134,6 +140,7 @@ class AppState extends ChangeNotifier {
     _glassIntensity = prefs.getDouble(_kGlassIntensity) ?? _glassIntensity;
     _messageFontSize = prefs.getInt(_kMessageFontSize) ?? _messageFontSize;
     _wallpaper = prefs.getString(_kWallpaper) ?? _wallpaper;
+    _language = prefs.getString(_kLanguage) ?? _language;
   }
 
   void _attach() {
@@ -272,6 +279,12 @@ class AppState extends ChangeNotifier {
   void setWallpaper(String value) {
     _wallpaper = value;
     _prefs?.setString(_kWallpaper, value);
+    notifyListeners();
+  }
+
+  void setLanguage(String value) {
+    _language = value;
+    _prefs?.setString(_kLanguage, value);
     notifyListeners();
   }
 
