@@ -838,10 +838,27 @@ class DemoTelegramClient implements TelegramClient {
       _Line(false, 'the glass blur is finally right', sender: 'Pavel'),
     ]);
 
-    _messages[1] = _thread(1, const [
-      _Line(true, 'Shader reference links'),
-      _Line(true, 'https://developer.apple.com/design/'),
-    ]);
+    _messages[1] = _thread(1, const [_Line(true, 'Shader reference links')]);
+    _messages[1]!.add(
+      TgMessage(
+        id: _nextMessageId++,
+        chatId: 1,
+        text: 'https://developer.apple.com/design/',
+        date: _ago(const Duration(minutes: 40)),
+        isOutgoing: true,
+        entities: const [
+          TgTextEntity(kind: TgEntityKind.link, offset: 0, length: 34),
+        ],
+        linkPreview: const TgLinkPreview(
+          url: 'https://developer.apple.com/design/',
+          siteName: 'Apple Developer',
+          title: 'Human Interface Guidelines',
+          description:
+              'Design apps that feel at home on every Apple platform, with '
+              'guidance on layout, materials, motion and typography.',
+        ),
+      ),
+    );
 
     _messages[3] = _thread(3, const [
       _Line(true, 'Ready for the Friday release?'),

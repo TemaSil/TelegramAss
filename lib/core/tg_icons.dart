@@ -26,6 +26,7 @@ class TgIcons {
   // Navigation and chrome
   static const back = SFSymbols.chevron_left;
   static const forward = SFSymbols.chevron_right;
+  static const chevronDown = SFSymbols.chevron_down;
   static const more = SFSymbols.ellipsis;
   static const close = SFSymbols.xmark;
   static const compose = SFSymbols.square_and_pencil;

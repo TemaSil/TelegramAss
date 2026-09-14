@@ -383,6 +383,9 @@ class AppL10nRu extends AppL10n {
   String get languageSystem => 'Системный';
 
   @override
+  String get unreadMessages => 'Непрочитанные сообщения';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

@@ -55,6 +55,10 @@ class TdlibTelegramClient implements TelegramClient {
   final _chatOfFile = <int, int>{};
   final _messageOfFile = <int, (int chatId, int messageId)>{};
 
+  /// Link-preview images are tracked apart from the message's own media, so a
+  /// resolved thumbnail cannot be mistaken for a photo attachment.
+  final _previewOfFile = <int, (int chatId, int messageId)>{};
+
   TdJsonBindings? _bindings;
   Isolate? _receiveIsolate;
   ReceivePort? _receivePort;
@@ -392,6 +396,20 @@ class TdlibTelegramClient implements TelegramClient {
       }
     }
 
+    final preview = _previewOfFile.remove(id);
+    if (preview != null) {
+      final (previewChatId, previewMessageId) = preview;
+      final list = _messages[previewChatId];
+      final index = list?.indexWhere((m) => m.id == previewMessageId) ?? -1;
+      final existing = index == -1 ? null : list![index].linkPreview;
+      if (list != null && existing != null) {
+        list[index] = list[index].copyWith(
+          linkPreview: existing.withImage(path),
+        );
+        _controllerFor(previewChatId).add(currentMessagesOf(previewChatId));
+      }
+    }
+
     final message = _messageOfFile.remove(id);
     if (message != null) {
       final (messageChatId, messageId) = message;
@@ -612,6 +630,12 @@ class TdlibTelegramClient implements TelegramClient {
     final document = content?['document'] as Map<String, dynamic>?;
     final audio = content?['audio'] as Map<String, dynamic>?;
 
+    final linkPreview = _linkPreviewFrom(
+      content?['link_preview'] ?? content?['web_page'],
+      chatId,
+      messageId,
+    );
+
     final previewFile = largest ?? stickerFile ?? videoThumb;
     final mediaPath = _resolveFile(previewFile, priority: 16);
     final mediaFileId = (previewFile?['id'] as num?)?.toInt();
@@ -636,6 +660,7 @@ class TdlibTelegramClient implements TelegramClient {
       reactions: _reactionsFrom(json['interaction_info']),
       entities: _entitiesOf(content),
       localPath: mediaPath,
+      linkPreview: linkPreview,
       voiceSeconds:
           ((content?['voice_note'] as Map<String, dynamic>?)?['duration']
                   as num?)
@@ -653,6 +678,36 @@ class TdlibTelegramClient implements TelegramClient {
                 as Map<String, dynamic>?)?['size']
             as int?,
       ),
+    );
+  }
+
+  /// Unfurls the card TDLib attaches to a text message. Older builds call it
+  /// `web_page`, newer ones `link_preview`; both carry the same fields.
+  TgLinkPreview? _linkPreviewFrom(dynamic raw, int chatId, int messageId) {
+    final page = raw as Map<String, dynamic>?;
+    final url = page?['url'] as String?;
+    if (page == null || url == null || url.isEmpty) return null;
+
+    // Prefer the smallest size that is still legible: a preview is a thumbnail,
+    // and the full-size photo is not worth the bytes.
+    final sizes = (page['photo'] as Map<String, dynamic>?)?['sizes'] as List?;
+    final thumb = sizes == null || sizes.isEmpty
+        ? null
+        : (sizes.first as Map<String, dynamic>)['photo']
+              as Map<String, dynamic>?;
+    final path = _resolveFile(thumb, priority: 8);
+    final fileId = (thumb?['id'] as num?)?.toInt();
+    if (path == null && fileId != null) {
+      _previewOfFile[fileId] = (chatId, messageId);
+    }
+
+    final description = page['description'] as Map<String, dynamic>?;
+    return TgLinkPreview(
+      url: url,
+      siteName: (page['site_name'] as String?)?.trim(),
+      title: (page['title'] as String?)?.trim(),
+      description: (description?['text'] as String?)?.trim(),
+      imagePath: path,
     );
   }
 

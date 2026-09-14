@@ -384,6 +384,9 @@ class AppL10nEn extends AppL10n {
   String get languageSystem => 'System';
 
   @override
+  String get unreadMessages => 'Unread messages';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

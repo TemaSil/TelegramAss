@@ -793,6 +793,12 @@ abstract class AppL10n {
   /// **'System'**
   String get languageSystem;
 
+  /// No description provided for @unreadMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread messages'**
+  String get unreadMessages;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:

@@ -139,9 +139,7 @@ class TgNotifications {
       // busy group cannot bury the rest of the shade.
       id: message.chatId.hashCode,
       title: chat.title,
-      body: message.senderName == null
-          ? body
-          : '${message.senderName}: $body',
+      body: message.senderName == null ? body : '${message.senderName}: $body',
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,

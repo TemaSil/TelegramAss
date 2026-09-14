@@ -116,6 +116,7 @@
   "textSizeSample": "Съешь ещё этих мягких французских булок",
   "language": "Язык",
   "languageSystem": "Системный",
+  "unreadMessages": "Непрочитанные сообщения",
   "privacy": "Конфиденциальность",
   "messageNotifications": "Уведомления о сообщениях",
   "messageNotificationsSubtitle": "Держит соединение, чтобы сообщения приходили при закрытом приложении",

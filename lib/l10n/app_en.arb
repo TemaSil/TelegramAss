@@ -193,6 +193,7 @@
   "textSizeSample": "The quick brown fox jumps over the lazy dog",
   "language": "Language",
   "languageSystem": "System",
+  "unreadMessages": "Unread messages",
   "privacy": "Privacy",
   "messageNotifications": "Message notifications",
   "messageNotificationsSubtitle": "Keeps the connection alive so messages arrive while the app is closed",

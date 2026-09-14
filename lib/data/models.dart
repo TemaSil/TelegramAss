@@ -210,6 +210,33 @@ class TgReaction {
   );
 }
 
+/// The card Telegram unfurls under a link.
+class TgLinkPreview {
+  const TgLinkPreview({
+    required this.url,
+    this.siteName,
+    this.title,
+    this.description,
+    this.imagePath,
+  });
+
+  final String url;
+  final String? siteName;
+  final String? title;
+  final String? description;
+
+  /// Local path of the preview image, once TDLib has fetched it.
+  final String? imagePath;
+
+  TgLinkPreview withImage(String path) => TgLinkPreview(
+    url: url,
+    siteName: siteName,
+    title: title,
+    description: description,
+    imagePath: path,
+  );
+}
+
 class TgMessage {
   const TgMessage({
     required this.id,
@@ -234,6 +261,7 @@ class TgMessage {
     this.fileSize,
     this.uploadProgress,
     this.localPath,
+    this.linkPreview,
   });
 
   final int id;
@@ -270,6 +298,9 @@ class TgMessage {
   /// picked, so the bubble can show the real image instead of a placeholder.
   final String? localPath;
 
+  /// Unfurled link card, for text messages that carry one.
+  final TgLinkPreview? linkPreview;
+
   TgMessage copyWith({
     String? text,
     TgMessageStatus? status,
@@ -277,6 +308,7 @@ class TgMessage {
     bool? isEdited,
     double? uploadProgress,
     String? localPath,
+    TgLinkPreview? linkPreview,
   }) {
     return TgMessage(
       id: id,
@@ -301,6 +333,7 @@ class TgMessage {
       fileSize: fileSize,
       uploadProgress: uploadProgress,
       localPath: localPath ?? this.localPath,
+      linkPreview: linkPreview ?? this.linkPreview,
     );
   }
 }

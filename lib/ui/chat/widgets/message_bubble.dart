@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
@@ -318,7 +319,7 @@ class MessageBubble extends StatelessWidget {
 
       case TgMessageKind.service:
       case TgMessageKind.text:
-        return MessageText(
+        final text = MessageText(
           text: message.text,
           entities: message.entities,
           linkColor: message.isOutgoing
@@ -330,6 +331,22 @@ class MessageBubble extends StatelessWidget {
             letterSpacing: -0.2,
             color: textColor,
           ),
+        );
+
+        final preview = message.linkPreview;
+        if (preview == null) return text;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            text,
+            const SizedBox(height: 6),
+            _LinkPreviewCard(
+              preview: preview,
+              isOutgoing: message.isOutgoing,
+              fontSize: fontSize,
+            ),
+          ],
         );
     }
   }
@@ -783,6 +800,120 @@ class _FileContent extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The card Telegram draws under a link: an accent rule, the site, the title
+/// and a couple of lines of description, with the thumbnail when there is one.
+class _LinkPreviewCard extends StatelessWidget {
+  const _LinkPreviewCard({
+    required this.preview,
+    required this.isOutgoing,
+    required this.fontSize,
+  });
+
+  final TgLinkPreview preview;
+  final bool isOutgoing;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    // On an outgoing bubble the accent is the bubble itself, so the rule and
+    // the site name go white rather than fighting the blue behind them.
+    final accent = isOutgoing
+        ? CupertinoColors.white
+        : TgColors.accent.resolveFrom(context);
+    final body = isOutgoing
+        ? CupertinoColors.white.withValues(alpha: 0.92)
+        : TgColors.label.resolveFrom(context);
+    final secondary = isOutgoing
+        ? CupertinoColors.white.withValues(alpha: 0.75)
+        : TgColors.secondaryLabel.resolveFrom(context);
+
+    final title = preview.title;
+    final description = preview.description;
+    final siteName = preview.siteName;
+    final imagePath = preview.imagePath;
+
+    return GestureDetector(
+      onTap: () {
+        final uri = Uri.tryParse(preview.url);
+        if (uri != null) {
+          launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 240),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 3,
+              constraints: const BoxConstraints(minHeight: 34),
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (siteName != null && siteName.isNotEmpty)
+                    Text(
+                      siteName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: fontSize - 2,
+                        fontWeight: FontWeight.w600,
+                        color: accent,
+                      ),
+                    ),
+                  if (title != null && title.isNotEmpty)
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: fontSize - 1,
+                        fontWeight: FontWeight.w600,
+                        color: body,
+                      ),
+                    ),
+                  if (description != null && description.isNotEmpty)
+                    Text(
+                      description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: fontSize - 2,
+                        height: 1.25,
+                        color: secondary,
+                      ),
+                    ),
+                  if (imagePath != null) ...[
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: AttachmentImage(
+                        path: imagePath,
+                        width: 226,
+                        height: 118,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

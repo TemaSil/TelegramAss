@@ -44,6 +44,15 @@ class _ChatScreenState extends State<ChatScreen> {
   TgMessage? _editing;
   bool _loadingMore = false;
 
+  /// Id of the first message the user has not read, fixed when the chat opens
+  /// so the divider does not jump as the badge clears behind it.
+  int? _unreadAnchorId;
+  bool _unreadAnchorResolved = false;
+
+  /// Drives the jump-to-latest button, which only shows once the thread is
+  /// scrolled away from the newest message.
+  bool _showJumpToLatest = false;
+
   @override
   void initState() {
     super.initState();
@@ -54,10 +63,12 @@ class _ChatScreenState extends State<ChatScreen> {
     // Restore the draft the last visit left behind.
     final draft = AppScope.read(context).chatById(widget.chatId)?.draft;
     if (draft != null && draft.isNotEmpty) _composerController.text = draft;
+    _resolveUnreadAnchor();
     client.messagesOf(widget.chatId).listen((messages) {
       if (!mounted) return;
       final wasAtBottom = _isNearBottom;
       setState(() => _messages = messages);
+      _resolveUnreadAnchor();
       if (wasAtBottom) _scrollToBottom();
     });
     client.openChat(widget.chatId);
@@ -103,7 +114,27 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  /// Places the "unread messages" divider once, from the badge the chat list
+  /// was showing. TDLib clears that count the moment the chat opens, so it is
+  /// read before anything else and never recomputed.
+  void _resolveUnreadAnchor() {
+    if (_unreadAnchorResolved) return;
+    final unread = AppScope.read(context).chatById(widget.chatId)?.unreadCount;
+    if (unread == null) return;
+    _unreadAnchorResolved = true;
+    if (unread <= 0) return;
+
+    final incoming = _messages.where((m) => !m.isOutgoing).toList();
+    if (incoming.isEmpty) return;
+    final index = incoming.length - unread;
+    _unreadAnchorId = incoming[index < 0 ? 0 : index].id;
+  }
+
   Future<void> _onScroll() async {
+    final shouldShow = !_isNearBottom;
+    if (shouldShow != _showJumpToLatest && mounted) {
+      setState(() => _showJumpToLatest = shouldShow);
+    }
     if (_loadingMore || !_scrollController.hasClients) return;
     if (_scrollController.position.pixels > 80) return;
     setState(() => _loadingMore = true);
@@ -363,28 +394,42 @@ class _ChatScreenState extends State<ChatScreen> {
           _scrollToBottom();
         },
       ),
-      body: _MessageList(
-        chat: chat,
-        messages: _messages,
-        settled: _settled,
-        scrollController: _scrollController,
-        fontSize: state.messageFontSize.toDouble(),
-        isTyping: isTyping,
-        loadingMore: _loadingMore,
-        onReply: (message) => setState(() {
-          _editing = null;
-          _replyTo = message;
-        }),
-        onEdit: (message) => setState(() {
-          _replyTo = null;
-          _editing = message;
-          _composerController.text = message.text;
-        }),
-        onDelete: (message) =>
-            state.client.deleteMessage(widget.chatId, message.id),
-        onForward: _forward,
-        onReact: (message, emoji) =>
-            state.client.toggleReaction(widget.chatId, message.id, emoji),
+      body: Stack(
+        children: [
+          _MessageList(
+            chat: chat,
+            messages: _messages,
+            settled: _settled,
+            scrollController: _scrollController,
+            fontSize: state.messageFontSize.toDouble(),
+            isTyping: isTyping,
+            loadingMore: _loadingMore,
+            unreadAnchorId: _unreadAnchorId,
+            onReply: (message) => setState(() {
+              _editing = null;
+              _replyTo = message;
+            }),
+            onEdit: (message) => setState(() {
+              _replyTo = null;
+              _editing = message;
+              _composerController.text = message.text;
+            }),
+            onDelete: (message) =>
+                state.client.deleteMessage(widget.chatId, message.id),
+            onForward: _forward,
+            onReact: (message, emoji) =>
+                state.client.toggleReaction(widget.chatId, message.id, emoji),
+          ),
+          Positioned(
+            right: 14,
+            bottom: 14,
+            child: _JumpToLatest(
+              visible: _showJumpToLatest,
+              unreadCount: chat.unreadCount,
+              onPressed: _scrollToBottom,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -516,6 +561,7 @@ class _MessageList extends StatefulWidget {
     required this.fontSize,
     required this.isTyping,
     required this.loadingMore,
+    required this.unreadAnchorId,
     required this.onReply,
     required this.onEdit,
     required this.onDelete,
@@ -530,6 +576,9 @@ class _MessageList extends StatefulWidget {
   final double fontSize;
   final bool isTyping;
   final bool loadingMore;
+
+  /// First message the user had not read when the chat opened, or null.
+  final int? unreadAnchorId;
   final ValueChanged<TgMessage> onReply;
   final ValueChanged<TgMessage> onEdit;
   final ValueChanged<TgMessage> onDelete;
@@ -646,6 +695,8 @@ class _MessageListState extends State<_MessageList>
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (needsSeparator) _DaySeparator(date: message.date),
+                if (message.id == widget.unreadAnchorId)
+                  const _UnreadSeparator(),
                 _RevealRow(
                   reveal: _reveal,
                   extent: _revealExtent,
@@ -740,6 +791,73 @@ class _RevealRow extends StatelessWidget {
         );
       },
       child: child,
+    );
+  }
+}
+
+/// The "unread messages" rule, as the official clients draw it: a full-width
+/// line rather than the day separator's pill, so the two never read alike.
+class _UnreadSeparator extends StatelessWidget {
+  const _UnreadSeparator();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = TgColors.accent.resolveFrom(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 10, 0, 4),
+      child: Container(
+        height: 26,
+        color: color.withValues(alpha: 0.14),
+        alignment: Alignment.center,
+        child: Text(
+          AppL10n.of(context).unreadMessages,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Floating "back to the newest message" button, carrying the unread badge.
+class _JumpToLatest extends StatelessWidget {
+  const _JumpToLatest({
+    required this.visible,
+    required this.unreadCount,
+    required this.onPressed,
+  });
+
+  final bool visible;
+  final int unreadCount;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedScale(
+        scale: visible ? 1 : 0.7,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutBack,
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: const Duration(milliseconds: 180),
+          child: GlassBadge(
+            count: unreadCount,
+            settings: GlassTokens.chrome(context),
+            child: GlassIconButton(
+              icon: const Icon(TgIcons.chevronDown, size: 20),
+              size: 44,
+              settings: GlassTokens.chrome(context),
+              quality: GlassQuality.premium,
+              onPressed: onPressed,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
