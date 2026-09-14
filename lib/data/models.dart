@@ -65,6 +65,7 @@ class TgChat {
     this.subtitle,
     this.hasStory = false,
     this.draft,
+    this.photoPath,
   });
 
   final int id;
@@ -83,6 +84,9 @@ class TgChat {
   final String? subtitle;
   final bool hasStory;
   final String? draft;
+
+  /// Local path of the downloaded chat photo, once TDLib has it on disk.
+  final String? photoPath;
 
   String get initials {
     final parts = title.trim().split(RegExp(r'\s+'));
@@ -116,6 +120,7 @@ class TgChat {
     bool? isMuted,
     bool? isPinned,
     String? draft,
+    String? photoPath,
   }) {
     return TgChat(
       id: id,
@@ -134,6 +139,7 @@ class TgChat {
       subtitle: subtitle,
       hasStory: hasStory,
       draft: draft ?? this.draft,
+      photoPath: photoPath ?? this.photoPath,
     );
   }
 
@@ -220,6 +226,7 @@ class TgMessage {
     List<TgReaction>? reactions,
     bool? isEdited,
     double? uploadProgress,
+    String? localPath,
   }) {
     return TgMessage(
       id: id,
@@ -240,7 +247,7 @@ class TgMessage {
       fileName: fileName,
       fileSize: fileSize,
       uploadProgress: uploadProgress,
-      localPath: localPath,
+      localPath: localPath ?? this.localPath,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../../core/tg_theme.dart';
+import '../chat/widgets/attachment_image.dart';
 
 /// Gradient monogram avatar with optional story ring and presence dot.
 class TgAvatar extends StatelessWidget {
@@ -13,6 +14,7 @@ class TgAvatar extends StatelessWidget {
     this.hasStory = false,
     this.storySeen = false,
     this.icon,
+    this.photoPath,
   });
 
   final int seed;
@@ -24,6 +26,9 @@ class TgAvatar extends StatelessWidget {
 
   /// Replaces the monogram — used for Saved Messages and bots.
   final IconData? icon;
+
+  /// Downloaded profile photo. Falls back to the monogram while absent.
+  final String? photoPath;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +55,10 @@ class TgAvatar extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: icon != null
+      clipBehavior: Clip.antiAlias,
+      child: photoPath != null
+          ? AttachmentImage(path: photoPath!, width: size, height: size)
+          : icon != null
           ? Icon(icon, size: size * 0.46, color: CupertinoColors.white)
           : Text(
               initials,

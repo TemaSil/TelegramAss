@@ -424,6 +424,7 @@ class _ChatAppBar extends StatelessWidget {
               initials: chat.initials,
               size: 36,
               isOnline: chat.isOnline,
+              photoPath: chat.photoPath,
             ),
             const SizedBox(width: 10),
             Column(
@@ -954,6 +955,7 @@ class _ForwardSheet extends StatelessWidget {
                     seed: chat.id,
                     initials: chat.initials,
                     size: 38,
+                    photoPath: chat.photoPath,
                   ),
                   title: Text(chat.title, maxLines: 1),
                   subtitle: Text(chat.presence, maxLines: 1),
@@ -1140,6 +1142,7 @@ class _ChatInfoSheet extends StatelessWidget {
               initials: chat.initials,
               size: 84,
               isOnline: chat.isOnline,
+              photoPath: chat.photoPath,
             ),
           ),
           const SizedBox(height: 12),

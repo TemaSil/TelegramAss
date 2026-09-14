@@ -89,6 +89,7 @@ class ChatRow extends StatelessWidget {
             isOnline: chat.isOnline,
             hasStory: chat.hasStory,
             icon: _iconFor(chat.kind),
+            photoPath: chat.photoPath,
           ),
           const SizedBox(width: 13),
           Expanded(

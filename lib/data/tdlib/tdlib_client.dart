@@ -41,6 +41,11 @@ class TdlibTelegramClient implements TelegramClient {
   final _chatIndex = <int, TgChat>{};
   final _pending = <int, Completer<Map<String, dynamic>>>{};
 
+  /// TDLib hands out files by id and downloads them asynchronously, so these
+  /// remember what a finished download belongs to.
+  final _chatOfFile = <int, int>{};
+  final _messageOfFile = <int, (int chatId, int messageId)>{};
+
   TdJsonBindings? _bindings;
   Isolate? _receiveIsolate;
   ReceivePort? _receivePort;
@@ -191,6 +196,8 @@ class TdlibTelegramClient implements TelegramClient {
         _onChatAction(update);
       case 'updateUser':
         _onUser(update['user'] as Map<String, dynamic>);
+      case 'updateFile':
+        _onFile(update['file'] as Map<String, dynamic>);
     }
   }
 
@@ -261,6 +268,59 @@ class TdlibTelegramClient implements TelegramClient {
     _chatsController.add(currentChats);
   }
 
+  /// Returns the file's local path when it is already on disk, and asks TDLib
+  /// to fetch it otherwise. Returns null until the download reports back.
+  String? _resolveFile(Map<String, dynamic>? file, {required int priority}) {
+    if (file == null) return null;
+    final local = file['local'] as Map<String, dynamic>?;
+    final path = local?['path'] as String?;
+    if ((local?['is_downloading_completed'] as bool?) == true &&
+        path != null &&
+        path.isNotEmpty) {
+      return path;
+    }
+
+    final id = (file['id'] as num?)?.toInt();
+    if (id == null) return null;
+    _send({
+      '@type': 'downloadFile',
+      'file_id': id,
+      'priority': priority,
+      'synchronous': false,
+    });
+    return null;
+  }
+
+  void _onFile(Map<String, dynamic> file) {
+    final local = file['local'] as Map<String, dynamic>?;
+    if ((local?['is_downloading_completed'] as bool?) != true) return;
+    final path = local?['path'] as String?;
+    if (path == null || path.isEmpty) return;
+
+    final id = (file['id'] as num?)?.toInt();
+    if (id == null) return;
+
+    final chatId = _chatOfFile.remove(id);
+    if (chatId != null) {
+      final chat = _chatIndex[chatId];
+      if (chat != null) {
+        _chatIndex[chatId] = chat.copyWith(photoPath: path);
+        _chatsController.add(currentChats);
+      }
+    }
+
+    final message = _messageOfFile.remove(id);
+    if (message != null) {
+      final (messageChatId, messageId) = message;
+      final list = _messages[messageChatId];
+      final index = list?.indexWhere((m) => m.id == messageId) ?? -1;
+      if (list != null && index != -1) {
+        list[index] = list[index].copyWith(localPath: path);
+        _controllerFor(messageChatId).add(currentMessagesOf(messageChatId));
+      }
+    }
+  }
+
   void _onChat(Map<String, dynamic> json) {
     final id = (json['id'] as num).toInt();
     final type = json['type'] as Map<String, dynamic>?;
@@ -268,6 +328,16 @@ class TdlibTelegramClient implements TelegramClient {
     final pinned =
         positions != null &&
         positions.any((p) => (p as Map)['is_pinned'] == true);
+
+    // Avatars are small; give them a high priority so the list fills in fast.
+    final photo =
+        (json['photo'] as Map<String, dynamic>?)?['small']
+            as Map<String, dynamic>?;
+    final photoPath = _resolveFile(photo, priority: 32);
+    final photoFileId = (photo?['id'] as num?)?.toInt();
+    if (photoPath == null && photoFileId != null) {
+      _chatOfFile[photoFileId] = id;
+    }
 
     _chatIndex[id] = TgChat(
       id: id,
@@ -351,9 +421,26 @@ class TdlibTelegramClient implements TelegramClient {
     final content = json['content'] as Map<String, dynamic>?;
     final type = content?['@type'] as String?;
     final sender = json['sender_id'] as Map<String, dynamic>?;
+    final chatId = (json['chat_id'] as num).toInt();
+    final messageId = (json['id'] as num).toInt();
+
+    // Photos arrive as a list of sizes; the largest one the list carries is
+    // what a bubble should eventually show.
+    final sizes =
+        (content?['photo'] as Map<String, dynamic>?)?['sizes'] as List?;
+    final largest = sizes == null || sizes.isEmpty
+        ? null
+        : (sizes.last as Map<String, dynamic>)['photo']
+              as Map<String, dynamic>?;
+    final mediaPath = _resolveFile(largest, priority: 16);
+    final mediaFileId = (largest?['id'] as num?)?.toInt();
+    if (mediaPath == null && mediaFileId != null) {
+      _messageOfFile[mediaFileId] = (chatId, messageId);
+    }
+
     return TgMessage(
-      id: (json['id'] as num).toInt(),
-      chatId: (json['chat_id'] as num).toInt(),
+      id: messageId,
+      chatId: chatId,
       text: _textOf(content),
       date: DateTime.fromMillisecondsSinceEpoch(
         ((json['date'] as num?) ?? 0).toInt() * 1000,
@@ -364,6 +451,7 @@ class TdlibTelegramClient implements TelegramClient {
       senderId: (sender?['user_id'] as num?)?.toInt(),
       isEdited: ((json['edit_date'] as num?) ?? 0) > 0,
       reactions: _reactionsFrom(json['interaction_info']),
+      localPath: mediaPath,
     );
   }
 
