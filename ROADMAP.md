@@ -57,7 +57,7 @@ SOCKS5 proxy support; and an in-app diagnostics log.
 | Stickers | partial — static WebP and animated TGS play; WebM video stickers fall back to their emoji |
 | Custom emoji | partial — the fallback emoji renders, the custom image does not |
 | In-chat search | partial — local text, but results jump to the message |
-| Shared media grid | partial — placeholders, not real files |
+| Shared media grid | done — real photos, tapping opens the viewer |
 | Polls, locations, contacts, albums | missing |
 | Scheduled and silent send | missing |
 | Threads and channel comments | missing |

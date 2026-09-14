@@ -16,7 +16,9 @@ import '../common/wallpaper_picker.dart';
 import 'widgets/attachment_sheet.dart';
 import 'widgets/bubble_entrance.dart';
 import 'widgets/composer_bar.dart';
+import 'widgets/attachment_image.dart';
 import 'widgets/message_bubble.dart';
+import 'widgets/photo_viewer.dart';
 import '../../core/tg_icons.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -1612,20 +1614,46 @@ class _MediaSheet extends StatelessWidget {
               ),
               itemCount: photos.length,
               itemBuilder: (context, index) {
+                final photo = photos[index];
+                final path = photo.localPath;
                 final colors = TgColors.avatarGradient(
-                  photos[index].mediaSeed ?? photos[index].id,
+                  photo.mediaSeed ?? photo.id,
                 );
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: colors,
-                      ),
-                    ),
-                    child: const SizedBox.expand(),
+
+                return GestureDetector(
+                  onTap: path == null
+                      ? null
+                      : () => Navigator.of(context).push(
+                          CupertinoPageRoute<void>(
+                            fullscreenDialog: true,
+                            builder: (_) => PhotoViewerScreen(
+                              path: path,
+                              heroTag: 'media-${photo.id}',
+                            ),
+                          ),
+                        ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    // The real photo once TDLib has it; the gradient the
+                    // bubble uses as a placeholder until then.
+                    child: path != null
+                        ? Hero(
+                            tag: 'media-${photo.id}',
+                            child: AttachmentImage(
+                              path: path,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: colors,
+                              ),
+                            ),
+                            child: const SizedBox.expand(),
+                          ),
                   ),
                 );
               },
