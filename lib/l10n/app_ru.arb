@@ -150,5 +150,19 @@
   "diagnosticsCopied": "Лог скопирован",
   "connecting": "Подключаемся к Telegram…",
   "demoBanner": "Работают демо-данные — код на реальный номер не придёт.",
-  "openDiagnostics": "Почему?"
+  "openDiagnostics": "Почему?",
+  "proxy": "Прокси",
+  "proxyHint": "Пригодится, если Telegram недоступен напрямую.",
+  "proxyServer": "Сервер",
+  "proxyPort": "Порт",
+  "proxySecret": "Секрет",
+  "proxyUsername": "Логин",
+  "proxyPassword": "Пароль",
+  "proxyUse": "Использовать прокси",
+  "proxyEnabled": "Прокси включён",
+  "proxyDisabled": "Прокси выключен",
+  "proxyInvalid": "Укажите сервер и порт",
+  "save": "Сохранить",
+  "connection": "Соединение",
+  "proxyOff": "Выключен"
 }

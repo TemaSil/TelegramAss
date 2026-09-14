@@ -494,4 +494,46 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get openDiagnostics => 'Why?';
+
+  @override
+  String get proxy => 'Proxy';
+
+  @override
+  String get proxyHint => 'Use a proxy when Telegram is unreachable directly.';
+
+  @override
+  String get proxyServer => 'Server';
+
+  @override
+  String get proxyPort => 'Port';
+
+  @override
+  String get proxySecret => 'Secret';
+
+  @override
+  String get proxyUsername => 'Username';
+
+  @override
+  String get proxyPassword => 'Password';
+
+  @override
+  String get proxyUse => 'Use proxy';
+
+  @override
+  String get proxyEnabled => 'Proxy enabled';
+
+  @override
+  String get proxyDisabled => 'Proxy disabled';
+
+  @override
+  String get proxyInvalid => 'Enter a server and a port';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get connection => 'Connection';
+
+  @override
+  String get proxyOff => 'Off';
 }

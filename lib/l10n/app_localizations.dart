@@ -1002,6 +1002,90 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Why?'**
   String get openDiagnostics;
+
+  /// No description provided for @proxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy'**
+  String get proxy;
+
+  /// No description provided for @proxyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a proxy when Telegram is unreachable directly.'**
+  String get proxyHint;
+
+  /// No description provided for @proxyServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get proxyServer;
+
+  /// No description provided for @proxyPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get proxyPort;
+
+  /// No description provided for @proxySecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret'**
+  String get proxySecret;
+
+  /// No description provided for @proxyUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get proxyUsername;
+
+  /// No description provided for @proxyPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get proxyPassword;
+
+  /// No description provided for @proxyUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use proxy'**
+  String get proxyUse;
+
+  /// No description provided for @proxyEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy enabled'**
+  String get proxyEnabled;
+
+  /// No description provided for @proxyDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy disabled'**
+  String get proxyDisabled;
+
+  /// No description provided for @proxyInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a server and a port'**
+  String get proxyInvalid;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get connection;
+
+  /// No description provided for @proxyOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get proxyOff;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

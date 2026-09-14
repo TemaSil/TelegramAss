@@ -9,6 +9,7 @@ import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../../data/diagnostics.dart';
 import '../common/wallpaper.dart';
+import '../settings/proxy_sheet.dart';
 import 'diagnostics_sheet.dart';
 import '../../core/tg_icons.dart';
 import '../../l10n/app_localizations.dart';
@@ -136,34 +137,26 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                       const SizedBox(height: 20),
                       SizedBox(
-                        height: 54,
-                        child: GlassButton.custom(
-                          onTap: _submit,
-                          enabled: !_busy && _canSubmit(state, stage),
-                          shape: const LiquidRoundedRectangle(borderRadius: 27),
-                          settings: GlassTokens.chrome(context),
-                          quality: GlassQuality.premium,
-                          useOwnLayer: true,
-                          glowColor: TgColors.accent.resolveFrom(context),
-                          child: Center(
-                            child: _busy
-                                ? const GlassProgressIndicator.circular(
-                                    size: 22,
-                                    strokeWidth: 2.5,
-                                  )
-                                : Text(
-                                    stage == TgAuthStage.phone
-                                        ? l10n.sendCode
-                                        : l10n.continueAction,
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600,
-                                      color: TgColors.accent.resolveFrom(
-                                        context,
-                                      ),
-                                    ),
+                        height: 50,
+                        child: CupertinoButton.filled(
+                          onPressed: _busy || !_canSubmit(state, stage)
+                              ? null
+                              : _submit,
+                          borderRadius: BorderRadius.circular(12),
+                          padding: EdgeInsets.zero,
+                          child: _busy
+                              ? const CupertinoActivityIndicator(
+                                  color: CupertinoColors.white,
+                                )
+                              : Text(
+                                  stage == TgAuthStage.phone
+                                      ? l10n.sendCode
+                                      : l10n.continueAction,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w600,
                                   ),
-                          ),
+                                ),
                         ),
                       ),
                     ],
@@ -179,53 +172,74 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  /// Stock iOS controls: a login form is not a place for invented widgets.
+  /// The glass is the card they sit on, not the field itself.
   Widget _field(TgAuthStage stage, AppL10n l10n) {
     switch (stage) {
       case TgAuthStage.code:
-        return GlassFormField(
+        return _LabelledField(
           label: l10n.confirmationCode,
-          child: GlassTextField(
+          child: CupertinoTextField(
             controller: _codeController,
             placeholder: l10n.codeHint,
             keyboardType: TextInputType.number,
             autofocus: true,
-            textStyle: const TextStyle(fontSize: 22, letterSpacing: 6),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 22, letterSpacing: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: _fieldDecoration(context),
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(6),
             ],
-            settings: GlassTokens.chrome(context),
             onSubmitted: (_) => _submit(),
           ),
         );
+
       case TgAuthStage.password:
-        return GlassFormField(
+        return _LabelledField(
           label: l10n.twoStepVerification,
-          helperText: l10n.cloudPasswordHelper,
-          child: GlassPasswordField(
+          helper: l10n.cloudPasswordHelper,
+          child: CupertinoTextField(
             controller: _passwordController,
             placeholder: l10n.password,
+            obscureText: true,
             autofocus: true,
-            settings: GlassTokens.chrome(context),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: _fieldDecoration(context),
             onSubmitted: (_) => _submit(),
           ),
         );
+
       case TgAuthStage.splash:
       case TgAuthStage.phone:
       case TgAuthStage.ready:
-        return GlassFormField(
+        return _LabelledField(
           label: l10n.phoneNumber,
-          child: GlassTextField(
+          child: CupertinoTextField(
             controller: _phoneController,
             placeholder: l10n.phoneHint,
             keyboardType: TextInputType.phone,
-            prefixIcon: const Icon(TgIcons.calls, size: 19),
-            settings: GlassTokens.chrome(context),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: _fieldDecoration(context),
+            prefix: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Icon(
+                TgIcons.calls,
+                size: 18,
+                color: TgColors.secondaryLabel.resolveFrom(context),
+              ),
+            ),
             onSubmitted: (_) => _submit(),
           ),
         );
     }
   }
+
+  static BoxDecoration _fieldDecoration(BuildContext context) => BoxDecoration(
+    color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+    borderRadius: BorderRadius.circular(10),
+  );
 
   static String _titleFor(TgAuthStage stage, AppL10n l10n) {
     switch (stage) {
@@ -247,6 +261,32 @@ class _AuthScreenState extends State<AuthScreen> {
       default:
         return l10n.signInSubtitle;
     }
+  }
+}
+
+/// The iOS form idiom: a small caption above the control, helper text below.
+class _LabelledField extends StatelessWidget {
+  const _LabelledField({required this.label, required this.child, this.helper});
+
+  final String label;
+  final Widget child;
+  final String? helper;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: TgText.sectionHeader(context)),
+        const SizedBox(height: 7),
+        child,
+        if (helper != null) ...[
+          const SizedBox(height: 6),
+          Text(helper!, style: TgText.timestamp(context)),
+        ],
+      ],
+    );
   }
 }
 
@@ -310,41 +350,69 @@ class _StatusBar extends StatelessWidget {
       isProblem = false;
     }
 
+    final color = isProblem
+        ? TgColors.destructive.resolveFrom(context)
+        : TgColors.secondaryLabel.resolveFrom(context);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GlassChip(
-          label: text,
-          icon: Icon(
-            isProblem ? TgIcons.failed : TgIcons.info,
-            size: 15,
-            color: isProblem ? TgColors.destructive.resolveFrom(context) : null,
-          ),
-          settings: GlassTokens.chrome(context),
-          labelStyle: TextStyle(
-            fontSize: 13,
-            color: isProblem
-                ? TgColors.destructive.resolveFrom(context)
-                : TgColors.secondaryLabel.resolveFrom(context),
-          ),
-        ),
-        const SizedBox(height: 10),
-        GestureDetector(
-          onTap: () => showDiagnosticsSheet(context),
-          behavior: HitTestBehavior.opaque,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Text(
-              l10n.diagnostics,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: TgColors.accent.resolveFrom(context),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isProblem ? TgIcons.failed : TgIcons.info,
+              size: 14,
+              color: color,
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, height: 1.3, color: color),
               ),
             ),
-          ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _LinkButton(
+              label: l10n.diagnostics,
+              onPressed: () => showDiagnosticsSheet(context),
+            ),
+            _LinkButton(
+              label: l10n.proxy,
+              onPressed: () => showProxySheet(context, state),
+            ),
+          ],
         ),
       ],
+    );
+  }
+}
+
+class _LinkButton extends StatelessWidget {
+  const _LinkButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      onPressed: onPressed,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      minimumSize: Size.zero,
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: TgColors.accent.resolveFrom(context),
+        ),
+      ),
     );
   }
 }

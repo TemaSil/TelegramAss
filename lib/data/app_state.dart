@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,6 +50,8 @@ class AppState extends ChangeNotifier {
   /// 'system', 'en' or 'ru'.
   String _language = 'system';
 
+  TgProxy? _proxy;
+
   List<TgChat> get chats => _chats;
   TgAuthStage get stage => _stage;
   String get activeFolder => _activeFolder;
@@ -71,6 +74,8 @@ class AppState extends ChangeNotifier {
   String get wallpaper => _wallpaper;
 
   String get language => _language;
+
+  TgProxy? get proxy => _proxy;
 
   int get totalUnread => _chats.fold(
     0,
@@ -129,6 +134,7 @@ class AppState extends ChangeNotifier {
     final state = AppState._(client, prefs);
     state._restore();
     state._attach();
+    if (state._proxy != null) await client.applyProxy(state._proxy);
     return state;
   }
 
@@ -142,6 +148,7 @@ class AppState extends ChangeNotifier {
   static const _kMessageFontSize = 'message_font_size';
   static const _kWallpaper = 'wallpaper';
   static const _kLanguage = 'language';
+  static const _kProxy = 'proxy';
 
   void _restore() {
     final prefs = _prefs;
@@ -155,6 +162,17 @@ class AppState extends ChangeNotifier {
     _messageFontSize = prefs.getInt(_kMessageFontSize) ?? _messageFontSize;
     _wallpaper = prefs.getString(_kWallpaper) ?? _wallpaper;
     _language = prefs.getString(_kLanguage) ?? _language;
+
+    final storedProxy = prefs.getString(_kProxy);
+    if (storedProxy != null && storedProxy.isNotEmpty) {
+      try {
+        _proxy = TgProxy.fromJson(
+          jsonDecode(storedProxy) as Map<String, dynamic>,
+        );
+      } on FormatException {
+        _proxy = null;
+      }
+    }
   }
 
   void _attach() {
@@ -293,6 +311,18 @@ class AppState extends ChangeNotifier {
   void setWallpaper(String value) {
     _wallpaper = value;
     _prefs?.setString(_kWallpaper, value);
+    notifyListeners();
+  }
+
+  /// Stores the proxy and hands it to the backend straight away.
+  void setProxy(TgProxy? value) {
+    _proxy = value;
+    if (value == null) {
+      _prefs?.remove(_kProxy);
+    } else {
+      _prefs?.setString(_kProxy, jsonEncode(value.toJson()));
+    }
+    client.applyProxy(value);
     notifyListeners();
   }
 

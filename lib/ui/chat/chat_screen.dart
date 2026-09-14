@@ -875,11 +875,10 @@ class _SearchSheetState extends State<_SearchSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassSearchBar(
+          CupertinoSearchTextField(
             controller: _controller,
             placeholder: l10n.searchInChat,
             autofocus: true,
-            settings: GlassTokens.chrome(context),
             onChanged: (query) => setState(() {
               _results = AppScope.read(context).client
                   .searchMessages(widget.chatId, query);

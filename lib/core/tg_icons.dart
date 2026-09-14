@@ -85,6 +85,7 @@ class TgIcons {
   static const glass = SFSymbols.sparkles;
   static const textSize = SFSymbols.textformat_size;
   static const language = SFSymbols.globe;
+  static const proxy = SFSymbols.network;
   static const privacy = SFSymbols.lock;
   static const receipts = SFSymbols.checkmark_seal_fill;
   static const sessions = SFSymbols.iphone_gen3;

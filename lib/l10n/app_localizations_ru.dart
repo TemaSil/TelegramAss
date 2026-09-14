@@ -494,4 +494,46 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get openDiagnostics => 'Почему?';
+
+  @override
+  String get proxy => 'Прокси';
+
+  @override
+  String get proxyHint => 'Пригодится, если Telegram недоступен напрямую.';
+
+  @override
+  String get proxyServer => 'Сервер';
+
+  @override
+  String get proxyPort => 'Порт';
+
+  @override
+  String get proxySecret => 'Секрет';
+
+  @override
+  String get proxyUsername => 'Логин';
+
+  @override
+  String get proxyPassword => 'Пароль';
+
+  @override
+  String get proxyUse => 'Использовать прокси';
+
+  @override
+  String get proxyEnabled => 'Прокси включён';
+
+  @override
+  String get proxyDisabled => 'Прокси выключен';
+
+  @override
+  String get proxyInvalid => 'Укажите сервер и порт';
+
+  @override
+  String get save => 'Сохранить';
+
+  @override
+  String get connection => 'Соединение';
+
+  @override
+  String get proxyOff => 'Выключен';
 }

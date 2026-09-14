@@ -307,3 +307,80 @@ class TgAuthResult {
   final TgAuthStage stage;
   final String? error;
 }
+
+/// Connection proxy.
+///
+/// TDLib talks MTProto over raw TCP to Telegram's data centres. Where that is
+/// filtered, the connection sits in `connectionStateConnecting` forever and no
+/// login code is ever sent — which is indistinguishable from a broken app
+/// unless the client can route through a proxy, as the official ones do.
+class TgProxy {
+  const TgProxy({
+    required this.type,
+    required this.server,
+    required this.port,
+    this.secret = '',
+    this.username = '',
+    this.password = '',
+    this.enabled = true,
+  });
+
+  /// 'mtproto' or 'socks5'.
+  final String type;
+  final String server;
+  final int port;
+
+  /// MTProto only.
+  final String secret;
+
+  /// SOCKS5 only.
+  final String username;
+  final String password;
+
+  final bool enabled;
+
+  bool get isValid => server.trim().isNotEmpty && port > 0 && port < 65536;
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'server': server,
+    'port': port,
+    'secret': secret,
+    'username': username,
+    'password': password,
+    'enabled': enabled,
+  };
+
+  static TgProxy? fromJson(Map<String, dynamic> json) {
+    final server = json['server'] as String?;
+    final port = (json['port'] as num?)?.toInt();
+    if (server == null || port == null) return null;
+    return TgProxy(
+      type: (json['type'] as String?) ?? 'mtproto',
+      server: server,
+      port: port,
+      secret: (json['secret'] as String?) ?? '',
+      username: (json['username'] as String?) ?? '',
+      password: (json['password'] as String?) ?? '',
+      enabled: (json['enabled'] as bool?) ?? true,
+    );
+  }
+
+  TgProxy copyWith({
+    String? type,
+    String? server,
+    int? port,
+    String? secret,
+    String? username,
+    String? password,
+    bool? enabled,
+  }) => TgProxy(
+    type: type ?? this.type,
+    server: server ?? this.server,
+    port: port ?? this.port,
+    secret: secret ?? this.secret,
+    username: username ?? this.username,
+    password: password ?? this.password,
+    enabled: enabled ?? this.enabled,
+  );
+}

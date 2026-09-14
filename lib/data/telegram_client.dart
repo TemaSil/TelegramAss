@@ -39,6 +39,9 @@ abstract class TelegramClient {
 
   Future<void> logOut();
 
+  /// Routes the connection through [proxy], or direct when null.
+  Future<void> applyProxy(TgProxy? proxy) async {}
+
   /// The signed-in account.
   TgUser? get me;
 

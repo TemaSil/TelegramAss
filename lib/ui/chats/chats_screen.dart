@@ -203,12 +203,11 @@ class _ChatsBodyState extends State<ChatsBody> {
           text: l10n.chats,
           controller: widget.controller,
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          searchBar: GlassSearchBar(
+          searchBar: CupertinoSearchTextField(
             controller: _searchController,
             placeholder: l10n.searchChats,
-            settings: GlassTokens.chrome(context),
             onChanged: state.setSearchQuery,
-            onCancel: () {
+            onSuffixTap: () {
               _searchController.clear();
               state.setSearchQuery('');
             },

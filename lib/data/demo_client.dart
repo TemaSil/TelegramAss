@@ -169,6 +169,9 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> applyProxy(TgProxy? proxy) async {}
+
+  @override
   Future<void> logOut() async {
     _ambientTimer?.cancel();
     _me = null;

@@ -109,12 +109,11 @@ class _ContactsBodyState extends State<ContactsBody> {
           text: l10n.contacts,
           controller: widget.controller,
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          searchBar: GlassSearchBar(
+          searchBar: CupertinoSearchTextField(
             controller: _searchController,
             placeholder: l10n.searchContacts,
-            settings: GlassTokens.chrome(context),
             onChanged: (value) => setState(() => _query = value),
-            onCancel: () {
+            onSuffixTap: () {
               _searchController.clear();
               setState(() => _query = '');
             },

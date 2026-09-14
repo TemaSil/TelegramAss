@@ -8,6 +8,7 @@ import '../../data/app_state.dart';
 import '../common/tg_avatar.dart';
 import '../common/wallpaper.dart';
 import '../common/wallpaper_picker.dart';
+import 'proxy_sheet.dart';
 import '../../core/tg_icons.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -101,38 +102,28 @@ class SettingsBody extends StatelessWidget {
                 GlassListTile(
                   leading: const Icon(TgIcons.wallpaper),
                   title: Text(l10n.wallpaper),
-                  trailing: SizedBox(
-                    width: 150,
-                    child: GlassPicker(
-                      value: GlassWallpaper.labels[state.wallpaper],
-                      placeholder: l10n.choose,
-                      settings: GlassTokens.chrome(context),
-                      onTap: () => showWallpaperPicker(context, state),
-                    ),
+                  trailing: _ValueChevron(
+                    value:
+                        GlassWallpaper.labels[state.wallpaper] ?? l10n.choose,
                   ),
+                  onTap: () => showWallpaperPicker(context, state),
                 ),
                 GlassListTile(
                   leading: const Icon(TgIcons.nightMode),
                   title: Text(l10n.autoNightMode),
                   subtitle: Text(l10n.autoNightModeSubtitle),
-                  trailing: GlassSwitch(
+                  trailing: CupertinoSwitch(
                     value: state.autoNightMode,
                     onChanged: state.setAutoNightMode,
-                    settings: GlassTokens.chrome(context),
-                    activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
                 GlassListTile(
                   leading: const Icon(TgIcons.language),
                   title: Text(l10n.language),
-                  trailing: SizedBox(
-                    width: 150,
-                    child: GlassPicker(
-                      value: _languageLabel(state.language, l10n),
-                      settings: GlassTokens.chrome(context),
-                      onTap: () => _pickLanguage(context, state, l10n),
-                    ),
+                  trailing: _ValueChevron(
+                    value: _languageLabel(state.language, l10n),
                   ),
+                  onTap: () => _pickLanguage(context, state, l10n),
                 ),
                 if (!state.autoNightMode)
                   GlassListTile(
@@ -142,22 +133,18 @@ class SettingsBody extends StatelessWidget {
                           : TgIcons.lightMode,
                     ),
                     title: Text(l10n.darkMode),
-                    trailing: GlassSwitch(
+                    trailing: CupertinoSwitch(
                       value: state.darkMode,
                       onChanged: state.setDarkMode,
-                      settings: GlassTokens.chrome(context),
-                      activeColor: TgColors.accent.resolveFrom(context),
                     ),
                   ),
                 GlassListTile(
                   leading: const Icon(TgIcons.transparency),
                   title: Text(l10n.reduceTransparency),
                   subtitle: Text(l10n.reduceTransparencySubtitle),
-                  trailing: GlassSwitch(
+                  trailing: CupertinoSwitch(
                     value: state.reduceTransparency,
                     onChanged: state.setReduceTransparency,
-                    settings: GlassTokens.chrome(context),
-                    activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
               ],
@@ -198,13 +185,10 @@ class SettingsBody extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  GlassSlider(
+                  CupertinoSlider(
                     value: state.glassIntensity,
                     min: 0.2,
-                    max: 1.0,
                     onChanged: state.setGlassIntensity,
-                    settings: GlassTokens.chrome(context),
-                    activeColor: TgColors.accent.resolveFrom(context),
                   ),
                   const GlassDivider(height: 22),
                   Row(
@@ -252,11 +236,9 @@ class SettingsBody extends StatelessWidget {
                 GlassListTile(
                   leading: const Icon(TgIcons.receipts),
                   title: Text(l10n.readReceipts),
-                  trailing: GlassSwitch(
+                  trailing: CupertinoSwitch(
                     value: state.readReceipts,
                     onChanged: state.setReadReceipts,
-                    settings: GlassTokens.chrome(context),
-                    activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
                 GlassListTile(
@@ -274,6 +256,31 @@ class SettingsBody extends StatelessWidget {
                     child: const Icon(TgIcons.forward, size: 16),
                   ),
                   onTap: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: GlassGroupedSection(
+              header: Text(
+                l10n.connection,
+                style: TgText.sectionHeader(context),
+              ),
+              settings: GlassTokens.panel(context),
+              quality: GlassQuality.premium,
+              children: [
+                GlassListTile(
+                  leading: const Icon(TgIcons.proxy),
+                  title: Text(l10n.proxy),
+                  trailing: _ValueChevron(
+                    value: state.proxy == null || !state.proxy!.enabled
+                        ? l10n.proxyOff
+                        : '${state.proxy!.server}:${state.proxy!.port}',
+                  ),
+                  onTap: () => showProxySheet(context, state),
                 ),
               ],
             ),
@@ -377,6 +384,26 @@ class SettingsBody extends StatelessWidget {
             state.client.logOut();
           },
         ),
+      ],
+    );
+  }
+}
+
+/// The iOS settings idiom for a row that opens a chooser: the current value
+/// in grey, then a chevron.
+class _ValueChevron extends StatelessWidget {
+  const _ValueChevron({required this.value});
+
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(value, style: TgText.rowPreview(context)),
+        const SizedBox(width: 6),
+        const Icon(TgIcons.forward, size: 16),
       ],
     );
   }

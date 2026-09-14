@@ -78,28 +78,13 @@ class _CallsBodyState extends State<CallsBody> {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-            child: GlassSegmentedControl(
-              selectedIndex: _filter,
-              onSegmentSelected: (index) => setState(() => _filter = index),
-              height: 40,
-              settings: GlassTokens.chrome(context),
-              quality: GlassQuality.premium,
-              indicatorColor: TgColors.accent
-                  .resolveFrom(context)
-                  .withValues(alpha: 0.22),
-              selectedTextStyle: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: TgColors.label.resolveFrom(context),
+            child: SizedBox(
+              width: double.infinity,
+              child: CupertinoSlidingSegmentedControl<int>(
+                groupValue: _filter,
+                onValueChanged: (value) => setState(() => _filter = value ?? 0),
+                children: {0: Text(l10n.all), 1: Text(l10n.missed)},
               ),
-              unselectedTextStyle: TextStyle(
-                fontSize: 14.5,
-                color: TgColors.secondaryLabel.resolveFrom(context),
-              ),
-              segments: [
-                GlassSegment(label: l10n.all, id: 'all'),
-                GlassSegment(label: l10n.missed, id: 'missed'),
-              ],
             ),
           ),
         ),

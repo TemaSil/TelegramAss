@@ -74,6 +74,9 @@ class TdlibTelegramClient implements TelegramClient {
   Future<void> logOut() async {}
 
   @override
+  Future<void> applyProxy(TgProxy? proxy) async {}
+
+  @override
   Stream<List<TgChat>> get chats => const Stream.empty();
 
   @override

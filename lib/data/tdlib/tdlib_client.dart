@@ -59,6 +59,7 @@ class TdlibTelegramClient implements TelegramClient {
   /// visible instead of looking like a dead button.
   String? _authorizationState;
   String? _connectionState;
+  TgProxy? _proxy;
 
   /// True when the native library was found and the client is usable.
   bool get isAvailable => _bindings != null;
@@ -269,6 +270,9 @@ class TdlibTelegramClient implements TelegramClient {
           'application_version': applicationVersion,
         });
       case 'authorizationStateWaitPhoneNumber':
+        // A proxy has to be in place before the first network call, which is
+        // the phone number.
+        applyProxy(_proxy);
         _setStage(TgAuthStage.phone);
       case 'authorizationStateWaitCode':
         _setStage(TgAuthStage.code);
@@ -624,6 +628,35 @@ class TdlibTelegramClient implements TelegramClient {
       );
     }
     return const TgAuthResult(stage: TgAuthStage.ready);
+  }
+
+  @override
+  Future<void> applyProxy(TgProxy? proxy) async {
+    _proxy = proxy;
+    if (_bindings == null) return;
+
+    if (proxy == null || !proxy.enabled || !proxy.isValid) {
+      _send({'@type': 'disableProxy'});
+      TgDiagnostics.instance.info('Proxy disabled — connecting directly.');
+      return;
+    }
+
+    _send({
+      '@type': 'addProxy',
+      'server': proxy.server.trim(),
+      'port': proxy.port,
+      'enable': true,
+      'type': proxy.type == 'socks5'
+          ? {
+              '@type': 'proxyTypeSocks5',
+              'username': proxy.username,
+              'password': proxy.password,
+            }
+          : {'@type': 'proxyTypeMtproto', 'secret': proxy.secret.trim()},
+    });
+    TgDiagnostics.instance.info(
+      'Proxy ${proxy.type} ${proxy.server}:${proxy.port} enabled.',
+    );
   }
 
   @override

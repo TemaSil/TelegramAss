@@ -339,12 +339,14 @@ class _ReplyBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: GlassTextField(
+            child: CupertinoTextField(
               placeholder: AppL10n.of(context).replyToStory,
-              height: 46,
-              shape: const LiquidRoundedRectangle(borderRadius: 23),
-              settings: GlassTokens.composer(context),
-              quality: GlassQuality.premium,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              style: const TextStyle(color: CupertinoColors.white),
+              decoration: BoxDecoration(
+                color: CupertinoColors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(23),
+              ),
               onSubmitted: (_) => onSend(),
             ),
           ),

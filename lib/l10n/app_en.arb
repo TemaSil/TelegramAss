@@ -227,5 +227,19 @@
   "diagnosticsCopied": "Log copied",
   "connecting": "Connecting to Telegram…",
   "demoBanner": "Running on demo data — no code will be sent to a real phone.",
-  "openDiagnostics": "Why?"
+  "openDiagnostics": "Why?",
+  "proxy": "Proxy",
+  "proxyHint": "Use a proxy when Telegram is unreachable directly.",
+  "proxyServer": "Server",
+  "proxyPort": "Port",
+  "proxySecret": "Secret",
+  "proxyUsername": "Username",
+  "proxyPassword": "Password",
+  "proxyUse": "Use proxy",
+  "proxyEnabled": "Proxy enabled",
+  "proxyDisabled": "Proxy disabled",
+  "proxyInvalid": "Enter a server and a port",
+  "save": "Save",
+  "connection": "Connection",
+  "proxyOff": "Off"
 }
