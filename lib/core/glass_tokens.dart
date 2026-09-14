@@ -15,13 +15,27 @@ import 'tg_theme.dart';
 class GlassTokens {
   GlassTokens._();
 
-  /// The rendering tier every glass surface in the app asks for.
+  /// The tier an ordinary control renders at.
   ///
-  /// Call sites pass this rather than a literal so the Settings choice reaches
-  /// all of them: a widget's own `quality` argument wins over any scope, so a
-  /// hard-coded one would quietly ignore the preference.
+  /// The package is explicit about which tier goes where: `standard` is the
+  /// single-pass shader and the default for controls, `premium` the multi-pass
+  /// one that "may not render correctly in scrollable contexts". A button or a
+  /// card in a list is therefore standard — asking for premium there bought
+  /// nothing and risked the wrong pixels.
+  ///
+  /// Call sites go through this rather than a literal so the Settings choice
+  /// reaches all of them: a widget's own `quality` argument wins over any
+  /// scope, so a hard-coded one would quietly ignore the preference.
   static GlassQuality quality(BuildContext context) =>
-      GlassPreferencesScope.of(context).quality;
+      GlassPreferencesScope.of(context).resolve(GlassQuality.standard);
+
+  /// The tier reserved for hero surfaces: the tab bar, context menus,
+  /// popovers, sheets and dialogs. None of them scroll, and each one is a
+  /// moment the material is meant to be looked at.
+  ///
+  /// [GlassScaffold] promotes its own bars, so the app bars need nothing here.
+  static GlassQuality heroQuality(BuildContext context) =>
+      GlassPreferencesScope.of(context).resolve(GlassQuality.premium);
 
   /// Adapts a finished settings object to the user's preferences.
   ///

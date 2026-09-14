@@ -74,7 +74,7 @@ class ChatsAppBar extends StatelessWidget {
             context: context,
             halfSize: 0.7,
             settings: GlassTokens.panel(context),
-            quality: GlassTokens.quality(context),
+            quality: GlassTokens.heroQuality(context),
             builder: (sheetContext) => NewMessageSheet(
               onPick: (chatId) {
                 Navigator.of(sheetContext).pop();
@@ -104,7 +104,7 @@ class _EditMenu extends StatelessWidget {
       autoAdjustToScreen: true,
       menuWidth: 250,
       menuBorderRadius: 30,
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       settings: GlassTokens.menu(context),
       menuAlignment: GlassMenuAlignment.bottomLeft,
       triggerBuilder: (context, toggleMenu) => GlassButton.custom(
@@ -213,7 +213,7 @@ class _ChatsBodyState extends State<ChatsBody> {
       title: chat.title,
       message: AppL10n.of(context).deleteChatMessage,
       settings: GlassTokens.menu(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       actions: [
         GlassActionSheetAction(
           label: AppL10n.of(context).deleteChat,

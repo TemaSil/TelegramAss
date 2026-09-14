@@ -18,7 +18,7 @@ Future<void> showProxySheet(BuildContext context, AppState state) {
     context: context,
     halfSize: 0.72,
     settings: GlassTokens.panel(context),
-    quality: GlassTokens.quality(context),
+    quality: GlassTokens.heroQuality(context),
     builder: (_) => _ProxySheet(state: state),
   );
 }
@@ -154,9 +154,11 @@ class _ProxySheetState extends State<_ProxySheet> {
               Expanded(
                 child: Text(l10n.proxyUse, style: TgText.rowTitle(context)),
               ),
-              CupertinoSwitch(
+              GlassSwitch(
                 value: _enabled,
                 onChanged: (value) => setState(() => _enabled = value),
+                settings: GlassTokens.chrome(context),
+                activeColor: TgColors.accent.resolveFrom(context),
               ),
             ],
           ),

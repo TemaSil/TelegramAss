@@ -33,7 +33,7 @@ class SettingsAppBar extends StatelessWidget {
         GlassPopover(
           popoverWidth: 250,
           popoverHeight: 150,
-          quality: GlassTokens.quality(context),
+          quality: GlassTokens.heroQuality(context),
           settings: GlassTokens.menu(context),
           triggerBuilder: (context, toggle) => GlassIconButton(
             icon: const Icon(TgIcons.help, size: 20),
@@ -424,7 +424,7 @@ class SettingsBody extends StatelessWidget {
       context: context,
       title: l10n.language,
       settings: GlassTokens.menu(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       actions: [
         for (final code in const ['system', 'en', 'ru'])
           GlassActionSheetAction(
@@ -451,7 +451,7 @@ class SettingsBody extends StatelessWidget {
       context: context,
       title: l10n.doubleTapReaction,
       settings: GlassTokens.menu(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       actions: [
         for (final emoji in const ['❤️', '👍', '🔥', '😂', '😮', ''])
           GlassActionSheetAction(
@@ -476,7 +476,7 @@ class SettingsBody extends StatelessWidget {
       title: AppL10n.of(context).logOutTitle,
       message: AppL10n.of(context).logOutMessage,
       settings: GlassTokens.menu(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       actions: [
         GlassDialogAction(
           label: AppL10n.of(context).cancel,
@@ -571,7 +571,7 @@ class _ProfileCard extends StatelessWidget {
               context: context,
               halfSize: 0.62,
               settings: GlassTokens.panel(context),
-              quality: GlassTokens.quality(context),
+              quality: GlassTokens.heroQuality(context),
               builder: (_) => const EditProfileSheet(),
             ),
           ),

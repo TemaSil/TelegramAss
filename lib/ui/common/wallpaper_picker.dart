@@ -16,7 +16,7 @@ Future<void> showWallpaperPicker(BuildContext context, AppState state) {
     title: l10n.wallpaper,
     message: l10n.wallpaperSubtitle,
     settings: GlassTokens.menu(context),
-    quality: GlassTokens.quality(context),
+    quality: GlassTokens.heroQuality(context),
     actions: [
       for (final entry in GlassWallpaper.labels.entries)
         GlassActionSheetAction(

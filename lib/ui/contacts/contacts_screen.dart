@@ -37,7 +37,7 @@ class ContactsAppBar extends StatelessWidget {
             context: context,
             halfSize: 0.6,
             settings: GlassTokens.panel(context),
-            quality: GlassTokens.quality(context),
+            quality: GlassTokens.heroQuality(context),
             builder: (sheetContext) => AddContactSheet(
               onAdded: (chatId) {
                 Navigator.of(sheetContext).pop();

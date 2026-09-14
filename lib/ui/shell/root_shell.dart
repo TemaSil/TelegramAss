@@ -80,7 +80,7 @@ class _RootShellState extends State<RootShell> {
       bottomBar: GlassTabBar.bottom(
         selectedIndex: _index,
         onTabSelected: _onTabSelected,
-        quality: GlassTokens.quality(context),
+        quality: GlassTokens.heroQuality(context),
         settings: GlassTokens.chrome(context),
         selectedIconColor: TgColors.accent.resolveFrom(context),
         unselectedIconColor: TgColors.secondaryLabel.resolveFrom(context),

@@ -358,7 +358,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.55,
       settings: GlassTokens.panel(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       builder: (_) => _ChatInfoSheet(
         chat: chat,
         onMedia: () {
@@ -393,7 +393,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.65,
       settings: GlassTokens.panel(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       builder: (_) => _MembersSheet(members: members),
     );
   }
@@ -432,7 +432,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.6,
       settings: GlassTokens.panel(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       builder: (sheetContext) => _SearchSheet(
         chatId: widget.chatId,
         onOpen: (message) {
@@ -456,7 +456,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.55,
       settings: GlassTokens.panel(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       builder: (sheetContext) => _ForwardSheet(
         chats: state.chats.where((chat) => chat.id != widget.chatId).toList(),
         onPick: (chat) {
@@ -488,7 +488,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.55,
       settings: GlassTokens.panel(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       builder: (_) => _MediaSheet(photos: photos),
     );
   }
@@ -499,7 +499,7 @@ class _ChatScreenState extends State<ChatScreen> {
       title: AppL10n.of(context).clearHistoryTitle,
       message: AppL10n.of(context).clearHistoryMessage,
       settings: GlassTokens.menu(context),
-      quality: GlassTokens.quality(context),
+      quality: GlassTokens.heroQuality(context),
       actions: [
         GlassDialogAction(
           label: AppL10n.of(context).cancel,
@@ -714,7 +714,7 @@ class _ChatAppBar extends StatelessWidget {
           autoAdjustToScreen: true,
           menuWidth: 235,
           menuBorderRadius: 26,
-          quality: GlassTokens.quality(context),
+          quality: GlassTokens.heroQuality(context),
           settings: GlassTokens.menu(context),
           menuAlignment: GlassMenuAlignment.bottomRight,
           triggerBuilder: (context, toggleMenu) => GlassIconButton(

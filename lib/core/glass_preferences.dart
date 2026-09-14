@@ -34,13 +34,12 @@ class GlassPreferences {
   /// flat material when the user has asked for reduced transparency.
   double get factor => reduceTransparency ? 0.25 : 1.0;
 
-  /// The rendering tier these preferences ask for. The package resolves
-  /// [GlassQuality.minimal] to a backdrop blur with a tint and a rim stroke,
-  /// which is exactly the simplified material — so the choice needs no
-  /// second implementation here.
-  GlassQuality get quality => material == GlassMaterial.blur
-      ? GlassQuality.minimal
-      : GlassQuality.premium;
+  /// The tier a surface actually renders at, given what it asked for. The
+  /// package resolves [GlassQuality.minimal] to a backdrop blur with a tint
+  /// and a rim stroke, which is exactly the simplified material — so the
+  /// choice needs no second implementation here.
+  GlassQuality resolve(GlassQuality preferred) =>
+      material == GlassMaterial.blur ? GlassQuality.minimal : preferred;
 
   @override
   bool operator ==(Object other) =>

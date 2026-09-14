@@ -92,7 +92,7 @@ class MessageBubble extends StatelessWidget {
           autoAdjustToScreen: true,
           menuWidth: 240,
           menuBorderRadius: 26,
-          quality: GlassTokens.quality(context),
+          quality: GlassTokens.heroQuality(context),
           settings: GlassTokens.menu(context),
           menuAlignment: outgoing
               ? GlassMenuAlignment.bottomRight
