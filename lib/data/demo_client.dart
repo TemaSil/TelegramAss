@@ -168,42 +168,124 @@ class DemoTelegramClient implements TelegramClient {
 
   @override
   List<TgFolder> get folders => const [
-        TgFolder(id: 'all', title: 'All Chats', unreadCount: 12),
-        TgFolder(id: 'personal', title: 'Personal', unreadCount: 3),
-        TgFolder(id: 'groups', title: 'Groups', unreadCount: 6),
-        TgFolder(id: 'channels', title: 'Channels', unreadCount: 3),
-        TgFolder(id: 'unread', title: 'Unread'),
-        TgFolder(id: 'bots', title: 'Bots'),
-      ];
+    TgFolder(id: 'all', title: 'All Chats', unreadCount: 12),
+    TgFolder(id: 'personal', title: 'Personal', unreadCount: 3),
+    TgFolder(id: 'groups', title: 'Groups', unreadCount: 6),
+    TgFolder(id: 'channels', title: 'Channels', unreadCount: 3),
+    TgFolder(id: 'unread', title: 'Unread'),
+    TgFolder(id: 'bots', title: 'Bots'),
+  ];
 
   @override
   List<TgStory> get stories => const [
-        TgStory(id: 1, authorId: 1, authorName: 'My Story', seed: 1, isSeen: true),
-        TgStory(id: 2, authorId: 2, authorName: 'Nina', seed: 2, caption: 'Morning run'),
-        TgStory(id: 3, authorId: 3, authorName: 'Pavel', seed: 3),
-        TgStory(id: 4, authorId: 5, authorName: 'Design', seed: 4),
-        TgStory(id: 5, authorId: 7, authorName: 'Marta', seed: 5, isSeen: true),
-        TgStory(id: 6, authorId: 9, authorName: 'Ilya', seed: 6),
-      ];
+    TgStory(id: 1, authorId: 1, authorName: 'My Story', seed: 1, isSeen: true),
+    TgStory(
+      id: 2,
+      authorId: 2,
+      authorName: 'Nina',
+      seed: 2,
+      caption: 'Morning run',
+    ),
+    TgStory(id: 3, authorId: 3, authorName: 'Pavel', seed: 3),
+    TgStory(id: 4, authorId: 5, authorName: 'Design', seed: 4),
+    TgStory(id: 5, authorId: 7, authorName: 'Marta', seed: 5, isSeen: true),
+    TgStory(id: 6, authorId: 9, authorName: 'Ilya', seed: 6),
+  ];
 
   @override
   List<TgUser> get contacts => const [
-        TgUser(id: 2, name: 'Nina Kovalenko', username: 'ninak', phone: '+7 911 222-33-44', isOnline: true),
-        TgUser(id: 3, name: 'Pavel Durov', username: 'durov', phone: '+7 911 555-66-77', isVerified: true),
-        TgUser(id: 4, name: 'Sergey Ivanov', username: 'sergey', phone: '+7 903 111-22-33', lastSeen: 'last seen 2 hours ago'),
-        TgUser(id: 7, name: 'Marta Lis', username: 'martalis', phone: '+48 500 100 200', isOnline: true),
-        TgUser(id: 9, name: 'Ilya Petrov', username: 'ilyap', phone: '+7 921 777-88-99', lastSeen: 'last seen yesterday'),
-        TgUser(id: 11, name: 'Katya Orlova', username: 'katya', phone: '+7 999 123-45-67', lastSeen: 'last seen recently'),
-      ];
+    TgUser(
+      id: 2,
+      name: 'Nina Kovalenko',
+      username: 'ninak',
+      phone: '+7 911 222-33-44',
+      isOnline: true,
+    ),
+    TgUser(
+      id: 3,
+      name: 'Pavel Durov',
+      username: 'durov',
+      phone: '+7 911 555-66-77',
+      isVerified: true,
+    ),
+    TgUser(
+      id: 4,
+      name: 'Sergey Ivanov',
+      username: 'sergey',
+      phone: '+7 903 111-22-33',
+      lastSeen: 'last seen 2 hours ago',
+    ),
+    TgUser(
+      id: 7,
+      name: 'Marta Lis',
+      username: 'martalis',
+      phone: '+48 500 100 200',
+      isOnline: true,
+    ),
+    TgUser(
+      id: 9,
+      name: 'Ilya Petrov',
+      username: 'ilyap',
+      phone: '+7 921 777-88-99',
+      lastSeen: 'last seen yesterday',
+    ),
+    TgUser(
+      id: 11,
+      name: 'Katya Orlova',
+      username: 'katya',
+      phone: '+7 999 123-45-67',
+      lastSeen: 'last seen recently',
+    ),
+  ];
 
   @override
   List<TgCall> get calls => [
-        TgCall(id: 1, peerName: 'Nina Kovalenko', peerId: 2, date: _ago(const Duration(hours: 2)), isOutgoing: false, isVideo: true, duration: const Duration(minutes: 24)),
-        TgCall(id: 2, peerName: 'Marta Lis', peerId: 7, date: _ago(const Duration(hours: 8)), isOutgoing: true, isVideo: false, duration: const Duration(minutes: 3, seconds: 12)),
-        TgCall(id: 3, peerName: 'Sergey Ivanov', peerId: 4, date: _ago(const Duration(days: 1)), isOutgoing: false, isVideo: false, isMissed: true),
-        TgCall(id: 4, peerName: 'Ilya Petrov', peerId: 9, date: _ago(const Duration(days: 2)), isOutgoing: true, isVideo: true, duration: const Duration(minutes: 47)),
-        TgCall(id: 5, peerName: 'Katya Orlova', peerId: 11, date: _ago(const Duration(days: 3)), isOutgoing: true, isVideo: false, isMissed: true),
-      ];
+    TgCall(
+      id: 1,
+      peerName: 'Nina Kovalenko',
+      peerId: 2,
+      date: _ago(const Duration(hours: 2)),
+      isOutgoing: false,
+      isVideo: true,
+      duration: const Duration(minutes: 24),
+    ),
+    TgCall(
+      id: 2,
+      peerName: 'Marta Lis',
+      peerId: 7,
+      date: _ago(const Duration(hours: 8)),
+      isOutgoing: true,
+      isVideo: false,
+      duration: const Duration(minutes: 3, seconds: 12),
+    ),
+    TgCall(
+      id: 3,
+      peerName: 'Sergey Ivanov',
+      peerId: 4,
+      date: _ago(const Duration(days: 1)),
+      isOutgoing: false,
+      isVideo: false,
+      isMissed: true,
+    ),
+    TgCall(
+      id: 4,
+      peerName: 'Ilya Petrov',
+      peerId: 9,
+      date: _ago(const Duration(days: 2)),
+      isOutgoing: true,
+      isVideo: true,
+      duration: const Duration(minutes: 47),
+    ),
+    TgCall(
+      id: 5,
+      peerName: 'Katya Orlova',
+      peerId: 11,
+      date: _ago(const Duration(days: 3)),
+      isOutgoing: true,
+      isVideo: false,
+      isMissed: true,
+    ),
+  ];
 
   @override
   Stream<List<TgMessage>> messagesOf(int chatId) =>
@@ -253,7 +335,9 @@ class DemoTelegramClient implements TelegramClient {
       replyToText: replyTo?.text,
       replyToSender: replyTo == null
           ? null
-          : (replyTo.isOutgoing ? 'You' : (replyTo.senderName ?? _titleOf(chatId))),
+          : (replyTo.isOutgoing
+                ? 'You'
+                : (replyTo.senderName ?? _titleOf(chatId))),
     );
     _append(chatId, message);
     _advanceStatus(chatId, message.id);
@@ -351,6 +435,29 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> deleteChat(int chatId) async {
+    _chats = _chats.where((chat) => chat.id != chatId).toList();
+    _messages.remove(chatId);
+    _chatsController.add(_chats);
+  }
+
+  @override
+  Future<void> setDraft(int chatId, String text) async {
+    _updateChat(chatId, (chat) => chat.copyWith(draft: text));
+  }
+
+  @override
+  List<TgMessage> searchMessages(int chatId, String query) {
+    final needle = query.trim().toLowerCase();
+    if (needle.isEmpty) return const [];
+    return (_messages[chatId] ?? const <TgMessage>[])
+        .where((message) => message.text.toLowerCase().contains(needle))
+        .toList()
+        .reversed
+        .toList();
+  }
+
+  @override
   Future<void> toggleMute(int chatId) async {
     _updateChat(chatId, (chat) => chat.copyWith(isMuted: !chat.isMuted));
   }
@@ -376,7 +483,11 @@ class DemoTelegramClient implements TelegramClient {
     _syncPreview(chatId);
   }
 
-  void _mutate(int chatId, int messageId, TgMessage Function(TgMessage) update) {
+  void _mutate(
+    int chatId,
+    int messageId,
+    TgMessage Function(TgMessage) update,
+  ) {
     final list = _messages[chatId];
     if (list == null) return;
     final index = list.indexWhere((m) => m.id == messageId);
@@ -389,14 +500,25 @@ class DemoTelegramClient implements TelegramClient {
   /// which is what makes the tick animation in the bubble feel alive.
   void _advanceStatus(int chatId, int messageId) {
     _schedule(const Duration(milliseconds: 420), () {
-      _mutate(chatId, messageId, (m) => m.copyWith(status: TgMessageStatus.sent));
+      _mutate(
+        chatId,
+        messageId,
+        (m) => m.copyWith(status: TgMessageStatus.sent),
+      );
     });
     _schedule(const Duration(milliseconds: 1100), () {
       _mutate(
-          chatId, messageId, (m) => m.copyWith(status: TgMessageStatus.delivered));
+        chatId,
+        messageId,
+        (m) => m.copyWith(status: TgMessageStatus.delivered),
+      );
     });
     _schedule(const Duration(milliseconds: 2400), () {
-      _mutate(chatId, messageId, (m) => m.copyWith(status: TgMessageStatus.read));
+      _mutate(
+        chatId,
+        messageId,
+        (m) => m.copyWith(status: TgMessageStatus.read),
+      );
     });
   }
 
@@ -408,8 +530,11 @@ class DemoTelegramClient implements TelegramClient {
       if (progress >= 1) {
         timer.cancel();
         _timers.remove(ticker);
-        _mutate(chatId, messageId,
-            (m) => m.copyWith(uploadProgress: null, status: TgMessageStatus.sent));
+        _mutate(
+          chatId,
+          messageId,
+          (m) => m.copyWith(uploadProgress: null, status: TgMessageStatus.sent),
+        );
         _advanceStatus(chatId, messageId);
       } else {
         _mutate(chatId, messageId, (m) => m.copyWith(uploadProgress: progress));
@@ -421,9 +546,13 @@ class DemoTelegramClient implements TelegramClient {
   /// A short typing indicator followed by a canned reply, so an open
   /// conversation keeps moving while the user looks at it.
   void _maybeReply(int chatId) {
-    final chat = _chats.firstWhere((c) => c.id == chatId,
-        orElse: () => _chats.first);
-    if (chat.kind == TgChatKind.saved || chat.kind == TgChatKind.channel) return;
+    final chat = _chats.firstWhere(
+      (c) => c.id == chatId,
+      orElse: () => _chats.first,
+    );
+    if (chat.kind == TgChatKind.saved || chat.kind == TgChatKind.channel) {
+      return;
+    }
     if (_random.nextDouble() > 0.75) return;
 
     _schedule(const Duration(milliseconds: 900), () {
@@ -438,7 +567,9 @@ class DemoTelegramClient implements TelegramClient {
             text: _replyLines[_random.nextInt(_replyLines.length)],
             date: DateTime.now(),
             isOutgoing: false,
-            senderName: chat.kind == TgChatKind.group ? _groupSenders[_random.nextInt(_groupSenders.length)] : null,
+            senderName: chat.kind == TgChatKind.group
+                ? _groupSenders[_random.nextInt(_groupSenders.length)]
+                : null,
           ),
         );
       });
@@ -461,7 +592,9 @@ class DemoTelegramClient implements TelegramClient {
           text: _ambientLines[_random.nextInt(_ambientLines.length)],
           date: DateTime.now(),
           isOutgoing: false,
-          senderName: chat.kind == TgChatKind.private ? null : _groupSenders[_random.nextInt(_groupSenders.length)],
+          senderName: chat.kind == TgChatKind.private
+              ? null
+              : _groupSenders[_random.nextInt(_groupSenders.length)],
         ),
       );
       _updateChat(chat.id, (c) => c.copyWith(unreadCount: c.unreadCount + 1));
@@ -520,8 +653,9 @@ class DemoTelegramClient implements TelegramClient {
     _chatsController.add(_chats);
   }
 
-  String _titleOf(int chatId) =>
-      _chats.firstWhere((c) => c.id == chatId, orElse: () => _chats.first).title;
+  String _titleOf(int chatId) => _chats
+      .firstWhere((c) => c.id == chatId, orElse: () => _chats.first)
+      .title;
 
   static DateTime _ago(Duration d) => DateTime.now().subtract(d);
 
@@ -690,9 +824,7 @@ class DemoTelegramClient implements TelegramClient {
     for (final chat in _chats) {
       _messages.putIfAbsent(
         chat.id,
-        () => _thread(chat.id, [
-          _Line(false, chat.lastMessage ?? 'Hello!'),
-        ]),
+        () => _thread(chat.id, [_Line(false, chat.lastMessage ?? 'Hello!')]),
       );
     }
   }

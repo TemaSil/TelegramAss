@@ -86,11 +86,54 @@ void main() {
     state.setSearchQuery('design');
     expect(state.visibleChats, isNotEmpty);
     expect(
-      state.visibleChats.every((chat) =>
-          chat.title.toLowerCase().contains('design') ||
-          (chat.lastMessage ?? '').toLowerCase().contains('design')),
+      state.visibleChats.every(
+        (chat) =>
+            chat.title.toLowerCase().contains('design') ||
+            (chat.lastMessage ?? '').toLowerCase().contains('design'),
+      ),
       isTrue,
     );
+  });
+
+  test('deleting a chat removes it and its history', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final chat = state.chats.first;
+    final before = state.chats.length;
+
+    await state.client.deleteChat(chat.id);
+    await settle();
+
+    expect(state.chats.length, before - 1);
+    expect(state.chatById(chat.id), isNull);
+    expect(state.client.currentMessagesOf(chat.id), isEmpty);
+  });
+
+  test('drafts survive leaving and returning to a chat', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final chat = state.chats.first;
+    state.setDraft(chat.id, 'half-written thought');
+    await settle();
+
+    expect(state.chatById(chat.id)?.draft, 'half-written thought');
+  });
+
+  test('in-chat search matches message text, newest first', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    final chat = state.chats.first;
+    await state.client.sendText(chat.id, 'first needle here');
+    await state.client.sendText(chat.id, 'second needle here');
+
+    final results = state.client.searchMessages(chat.id, 'needle');
+    expect(results.length, 2);
+    expect(results.first.text, 'second needle here');
+
+    expect(state.client.searchMessages(chat.id, 'nothing-matches'), isEmpty);
   });
 
   test('reactions toggle on and off', () async {

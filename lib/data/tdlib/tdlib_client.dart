@@ -97,10 +97,9 @@ class TdlibTelegramClient implements TelegramClient {
       );
     }
     _bindings = bindings;
-    bindings.execute(jsonEncode({
-      '@type': 'setLogVerbosityLevel',
-      'new_verbosity_level': 1,
-    }));
+    bindings.execute(
+      jsonEncode({'@type': 'setLogVerbosityLevel', 'new_verbosity_level': 1}),
+    );
     _clientId = bindings.createClientId();
 
     final port = ReceivePort();
@@ -178,7 +177,8 @@ class TdlibTelegramClient implements TelegramClient {
     switch (update['@type'] as String?) {
       case 'updateAuthorizationState':
         _onAuthorizationState(
-            update['authorization_state'] as Map<String, dynamic>);
+          update['authorization_state'] as Map<String, dynamic>,
+        );
       case 'updateNewChat':
         _onChat(update['chat'] as Map<String, dynamic>);
       case 'updateChatLastMessage':
@@ -247,7 +247,8 @@ class TdlibTelegramClient implements TelegramClient {
       phone: json['phone_number'] as String?,
       isVerified: (json['is_verified'] as bool?) ?? false,
       isPremium: (json['is_premium'] as bool?) ?? false,
-      isOnline: (json['status'] as Map<String, dynamic>?)?['@type'] ==
+      isOnline:
+          (json['status'] as Map<String, dynamic>?)?['@type'] ==
           'userStatusOnline',
     );
   }
@@ -262,9 +263,10 @@ class TdlibTelegramClient implements TelegramClient {
 
   void _onChat(Map<String, dynamic> json) {
     final id = (json['id'] as num).toInt();
-    final type = (json['type'] as Map<String, dynamic>?)?['@type'] as String?;
+    final type = json['type'] as Map<String, dynamic>?;
     final positions = json['positions'] as List?;
-    final pinned = positions != null &&
+    final pinned =
+        positions != null &&
         positions.any((p) => (p as Map)['is_pinned'] == true);
 
     _chatIndex[id] = TgChat(
@@ -278,7 +280,7 @@ class TdlibTelegramClient implements TelegramClient {
       lastMessageTime: _dateOf(json['last_message'] as Map<String, dynamic>?),
       lastMessageOutgoing:
           (json['last_message'] as Map<String, dynamic>?)?['is_outgoing'] ==
-              true,
+          true,
     );
     _chatsController.add(currentChats);
   }
@@ -289,14 +291,17 @@ class TdlibTelegramClient implements TelegramClient {
     return muteFor > 0;
   }
 
-  static TgChatKind _kindFrom(String? type) {
-    switch (type) {
+  /// Supergroups and channels share a TDLib chat type; `is_channel` is what
+  /// separates a broadcast channel from a group.
+  static TgChatKind _kindFrom(Map<String, dynamic>? type) {
+    switch (type?['@type'] as String?) {
       case 'chatTypeBasicGroup':
         return TgChatKind.group;
       case 'chatTypeSupergroup':
-        return TgChatKind.group;
+        return (type?['is_channel'] as bool?) ?? false
+            ? TgChatKind.channel
+            : TgChatKind.group;
       case 'chatTypeSecret':
-        return TgChatKind.private;
       default:
         return TgChatKind.private;
     }
@@ -351,7 +356,8 @@ class TdlibTelegramClient implements TelegramClient {
       chatId: (json['chat_id'] as num).toInt(),
       text: _textOf(content),
       date: DateTime.fromMillisecondsSinceEpoch(
-          ((json['date'] as num?) ?? 0).toInt() * 1000),
+        ((json['date'] as num?) ?? 0).toInt() * 1000,
+      ),
       isOutgoing: (json['is_outgoing'] as bool?) ?? false,
       kind: _messageKindFrom(type),
       status: TgMessageStatus.read,
@@ -368,7 +374,8 @@ class TdlibTelegramClient implements TelegramClient {
     return [
       for (final entry in list.cast<Map<String, dynamic>>())
         TgReaction(
-          emoji: (entry['type'] as Map<String, dynamic>?)?['emoji'] as String? ??
+          emoji:
+              (entry['type'] as Map<String, dynamic>?)?['emoji'] as String? ??
               '👍',
           count: ((entry['total_count'] as num?) ?? 0).toInt(),
           chosen: (entry['is_chosen'] as bool?) ?? false,
@@ -486,13 +493,13 @@ class TdlibTelegramClient implements TelegramClient {
 
   @override
   List<TgFolder> get folders => const [
-        TgFolder(id: 'all', title: 'All Chats'),
-        TgFolder(id: 'personal', title: 'Personal'),
-        TgFolder(id: 'groups', title: 'Groups'),
-        TgFolder(id: 'channels', title: 'Channels'),
-        TgFolder(id: 'unread', title: 'Unread'),
-        TgFolder(id: 'bots', title: 'Bots'),
-      ];
+    TgFolder(id: 'all', title: 'All Chats'),
+    TgFolder(id: 'personal', title: 'Personal'),
+    TgFolder(id: 'groups', title: 'Groups'),
+    TgFolder(id: 'channels', title: 'Channels'),
+    TgFolder(id: 'unread', title: 'Unread'),
+    TgFolder(id: 'bots', title: 'Bots'),
+  ];
 
   @override
   List<TgStory> get stories => const [];
@@ -647,6 +654,51 @@ class TdlibTelegramClient implements TelegramClient {
       'message_ids': ids,
       'force_read': true,
     });
+  }
+
+  @override
+  Future<void> deleteChat(int chatId) async {
+    _send({
+      '@type': 'deleteChatHistory',
+      'chat_id': chatId,
+      'remove_from_chat_list': true,
+      'revoke': false,
+    });
+    _chatIndex.remove(chatId);
+    _messages.remove(chatId);
+    _chatsController.add(currentChats);
+  }
+
+  @override
+  Future<void> setDraft(int chatId, String text) async {
+    _send({
+      '@type': 'setChatDraftMessage',
+      'chat_id': chatId,
+      'draft_message': text.isEmpty
+          ? null
+          : {
+              '@type': 'draftMessage',
+              'input_message_text': {
+                '@type': 'inputMessageText',
+                'text': {'@type': 'formattedText', 'text': text},
+              },
+            },
+    });
+    final chat = _chatIndex[chatId];
+    if (chat != null) _chatIndex[chatId] = chat.copyWith(draft: text);
+  }
+
+  @override
+  List<TgMessage> searchMessages(int chatId, String query) {
+    final needle = query.trim().toLowerCase();
+    if (needle.isEmpty) return const [];
+    // Local pass over what is already loaded; `searchChatMessages` would take
+    // this server-side once the UI needs paging.
+    return (_messages[chatId] ?? const <TgMessage>[])
+        .where((message) => message.text.toLowerCase().contains(needle))
+        .toList()
+        .reversed
+        .toList();
   }
 
   @override

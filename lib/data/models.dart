@@ -147,17 +147,21 @@ class TgChat {
 }
 
 class TgReaction {
-  const TgReaction({required this.emoji, required this.count, this.chosen = false});
+  const TgReaction({
+    required this.emoji,
+    required this.count,
+    this.chosen = false,
+  });
 
   final String emoji;
   final int count;
   final bool chosen;
 
   TgReaction toggled() => TgReaction(
-        emoji: emoji,
-        count: chosen ? count - 1 : count + 1,
-        chosen: !chosen,
-      );
+    emoji: emoji,
+    count: chosen ? count - 1 : count + 1,
+    chosen: !chosen,
+  );
 }
 
 class TgMessage {

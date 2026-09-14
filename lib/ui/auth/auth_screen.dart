@@ -7,6 +7,7 @@ import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../common/wallpaper.dart';
+import '../../core/tg_icons.dart';
 
 /// Phone → code → two-factor password, each step a glass card that
 /// materialises over the wallpaper.
@@ -145,7 +146,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                     style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w600,
-                                      color: TgColors.accent.resolveFrom(context),
+                                      color: TgColors.accent.resolveFrom(
+                                        context,
+                                      ),
                                     ),
                                   ),
                           ),
@@ -204,7 +207,7 @@ class _AuthScreenState extends State<AuthScreen> {
             controller: _phoneController,
             placeholder: '+7 900 000 00 00',
             keyboardType: TextInputType.phone,
-            prefixIcon: const Icon(CupertinoIcons.phone, size: 19),
+            prefixIcon: const Icon(TgIcons.calls, size: 19),
             settings: GlassTokens.chrome(context),
             onSubmitted: (_) => _submit(),
           ),
@@ -247,7 +250,7 @@ class _Logo extends StatelessWidget {
       useOwnLayer: true,
       child: Center(
         child: Icon(
-          CupertinoIcons.paperplane_fill,
+          TgIcons.logo,
           size: 42,
           color: TgColors.accent.resolveFrom(context),
         ),
@@ -271,7 +274,7 @@ class _DemoHint extends StatelessWidget {
 
     return GlassChip(
       label: text,
-      icon: const Icon(CupertinoIcons.info_circle, size: 15),
+      icon: const Icon(TgIcons.info, size: 15),
       settings: GlassTokens.chrome(context),
       labelStyle: TextStyle(
         fontSize: 13,

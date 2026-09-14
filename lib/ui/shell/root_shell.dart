@@ -10,6 +10,7 @@ import '../chats/chats_screen.dart';
 import '../common/wallpaper.dart';
 import '../contacts/contacts_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../core/tg_icons.dart';
 
 /// The four-tab shell.
 ///
@@ -84,23 +85,23 @@ class _RootShellState extends State<RootShell> {
         unselectedIconColor: TgColors.secondaryLabel.resolveFrom(context),
         tabs: [
           GlassTab(
-            icon: const Icon(CupertinoIcons.chat_bubble_2),
-            activeIcon: const Icon(CupertinoIcons.chat_bubble_2_fill),
+            icon: const Icon(TgIcons.chats),
+            activeIcon: const Icon(TgIcons.chatsActive),
             label: unread > 0 ? 'Chats ($unread)' : 'Chats',
           ),
           const GlassTab(
-            icon: Icon(CupertinoIcons.person_2),
-            activeIcon: Icon(CupertinoIcons.person_2_fill),
+            icon: Icon(TgIcons.contacts),
+            activeIcon: Icon(TgIcons.contactsActive),
             label: 'Contacts',
           ),
           const GlassTab(
-            icon: Icon(CupertinoIcons.phone),
-            activeIcon: Icon(CupertinoIcons.phone_fill),
+            icon: Icon(TgIcons.calls),
+            activeIcon: Icon(TgIcons.callsActive),
             label: 'Calls',
           ),
           const GlassTab(
-            icon: Icon(CupertinoIcons.settings),
-            activeIcon: Icon(CupertinoIcons.settings_solid),
+            icon: Icon(TgIcons.settings),
+            activeIcon: Icon(TgIcons.settingsActive),
             label: 'Settings',
           ),
         ],

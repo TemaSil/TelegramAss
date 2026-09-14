@@ -5,6 +5,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
+import '../../../core/tg_icons.dart';
 
 /// Bottom composer: attachment button, growing text area, send / voice button.
 ///
@@ -80,7 +81,7 @@ class _ComposerBarState extends State<ComposerBar> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               GlassIconButton(
-                icon: const Icon(CupertinoIcons.plus, size: 22),
+                icon: const Icon(TgIcons.attach, size: 22),
                 size: 46,
                 settings: GlassTokens.composer(context),
                 quality: GlassQuality.premium,
@@ -90,7 +91,9 @@ class _ComposerBarState extends State<ComposerBar> {
               Expanded(
                 child: GlassTextArea(
                   controller: widget.controller,
-                  placeholder: widget.editing != null ? 'Edit message' : 'Message',
+                  placeholder: widget.editing != null
+                      ? 'Edit message'
+                      : 'Message',
                   minLines: 1,
                   maxLines: 5,
                   minHeight: 46,
@@ -107,16 +110,13 @@ class _ComposerBarState extends State<ComposerBar> {
               ),
               const SizedBox(width: 8),
               GlassIconButton(
-                icon: Icon(
-                  _hasText ? CupertinoIcons.arrow_up : CupertinoIcons.mic_fill,
-                  size: 21,
-                ),
+                icon: Icon(_hasText ? TgIcons.send : TgIcons.voice, size: 21),
                 size: 46,
                 settings: GlassTokens.composer(context).copyWith(
                   glassColor: _hasText
                       ? TgColors.accent
-                          .resolveFrom(context)
-                          .withValues(alpha: 0.78)
+                            .resolveFrom(context)
+                            .withValues(alpha: 0.78)
                       : null,
                 ),
                 quality: GlassQuality.premium,
@@ -163,9 +163,7 @@ class _Banner extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              isEdit
-                  ? CupertinoIcons.pencil
-                  : CupertinoIcons.arrowshape_turn_up_left,
+              isEdit ? TgIcons.edit : TgIcons.reply,
               size: 18,
               color: accent,
             ),
@@ -176,7 +174,9 @@ class _Banner extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    isEdit ? 'Edit message' : 'Reply to ${message.senderName ?? 'message'}',
+                    isEdit
+                        ? 'Edit message'
+                        : 'Reply to ${message.senderName ?? 'message'}',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -198,7 +198,7 @@ class _Banner extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: Icon(
-                  CupertinoIcons.xmark,
+                  TgIcons.close,
                   size: 17,
                   color: TgColors.secondaryLabel.resolveFrom(context),
                 ),

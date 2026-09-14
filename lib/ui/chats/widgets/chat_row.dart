@@ -6,6 +6,7 @@ import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../common/tg_avatar.dart';
+import '../../../core/tg_icons.dart';
 
 /// One conversation in the chat list.
 ///
@@ -49,26 +50,24 @@ class ChatRow extends StatelessWidget {
       items: [
         GlassMenuItem(
           title: chat.isPinned ? 'Unpin' : 'Pin to top',
-          icon: const Icon(CupertinoIcons.pin),
+          icon: const Icon(TgIcons.pin),
           onTap: onPin,
         ),
         GlassMenuItem(
           title: chat.isMuted ? 'Unmute' : 'Mute',
-          icon: Icon(chat.isMuted
-              ? CupertinoIcons.bell
-              : CupertinoIcons.bell_slash),
+          icon: Icon(chat.isMuted ? TgIcons.unmute : TgIcons.mute),
           onTap: onMute,
         ),
         if (chat.unreadCount > 0)
           GlassMenuItem(
             title: 'Mark as read',
-            icon: const Icon(CupertinoIcons.checkmark_circle),
+            icon: const Icon(TgIcons.markRead),
             onTap: onMarkRead,
           ),
         const GlassMenuDivider(),
         GlassMenuItem(
           title: 'Delete chat',
-          icon: const Icon(CupertinoIcons.delete),
+          icon: const Icon(TgIcons.delete),
           isDestructive: true,
           onTap: onDelete,
         ),
@@ -108,7 +107,7 @@ class ChatRow extends StatelessWidget {
                     if (chat.isVerified) ...[
                       const SizedBox(width: 4),
                       Icon(
-                        CupertinoIcons.checkmark_seal_fill,
+                        TgIcons.verified,
                         size: 14,
                         color: TgColors.accent.resolveFrom(context),
                       ),
@@ -116,7 +115,7 @@ class ChatRow extends StatelessWidget {
                     if (chat.isMuted) ...[
                       const SizedBox(width: 4),
                       Icon(
-                        CupertinoIcons.bell_slash_fill,
+                        TgIcons.muteFilled,
                         size: 13,
                         color: TgColors.tertiaryLabel.resolveFrom(context),
                       ),
@@ -140,11 +139,14 @@ class ChatRow extends StatelessWidget {
                     Expanded(child: _preview(context)),
                     if (chat.unreadCount > 0) ...[
                       const SizedBox(width: 8),
-                      _UnreadBadge(count: chat.unreadCount, muted: chat.isMuted),
+                      _UnreadBadge(
+                        count: chat.unreadCount,
+                        muted: chat.isMuted,
+                      ),
                     ] else if (chat.isPinned) ...[
                       const SizedBox(width: 8),
                       Icon(
-                        CupertinoIcons.pin_fill,
+                        TgIcons.pinFilled,
                         size: 13,
                         color: TgColors.tertiaryLabel.resolveFrom(context),
                       ),
@@ -173,13 +175,17 @@ class ChatRow extends StatelessWidget {
 
     if (chat.draft != null && chat.draft!.isNotEmpty) {
       return Text.rich(
-        TextSpan(children: [
-          TextSpan(
-            text: 'Draft: ',
-            style: TextStyle(color: TgColors.destructive.resolveFrom(context)),
-          ),
-          TextSpan(text: chat.draft),
-        ]),
+        TextSpan(
+          children: [
+            TextSpan(
+              text: 'Draft: ',
+              style: TextStyle(
+                color: TgColors.destructive.resolveFrom(context),
+              ),
+            ),
+            TextSpan(text: chat.draft),
+          ],
+        ),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TgText.rowPreview(context),
@@ -197,11 +203,11 @@ class ChatRow extends StatelessWidget {
   static IconData? _iconFor(TgChatKind kind) {
     switch (kind) {
       case TgChatKind.saved:
-        return CupertinoIcons.bookmark_fill;
+        return TgIcons.saved;
       case TgChatKind.bot:
-        return CupertinoIcons.chevron_left_slash_chevron_right;
+        return TgIcons.bot;
       case TgChatKind.channel:
-        return CupertinoIcons.antenna_radiowaves_left_right;
+        return TgIcons.channel;
       case TgChatKind.private:
       case TgChatKind.group:
         return null;
@@ -227,10 +233,8 @@ class _UnreadBadge extends StatelessWidget {
       height: 23,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       shape: const LiquidRoundedRectangle(borderRadius: 11.5),
-      settings: GlassTokens.chrome(context).copyWith(
-        glassColor: tint.withValues(alpha: 0.72),
-        thickness: 10,
-      ),
+      settings: GlassTokens.chrome(context)
+          .copyWith(glassColor: tint.withValues(alpha: 0.72), thickness: 10),
       child: Center(
         child: Text(
           label,
@@ -256,14 +260,14 @@ class _StatusTicks extends StatelessWidget {
   Widget build(BuildContext context) {
     if (status == TgMessageStatus.sending) {
       return Icon(
-        CupertinoIcons.clock,
+        TgIcons.pending,
         size: 13,
         color: color ?? TgColors.tertiaryLabel.resolveFrom(context),
       );
     }
     if (status == TgMessageStatus.failed) {
       return Icon(
-        CupertinoIcons.exclamationmark_circle,
+        TgIcons.failed,
         size: 13,
         color: TgColors.destructive.resolveFrom(context),
       );
@@ -274,7 +278,7 @@ class _StatusTicks extends StatelessWidget {
         : (color ?? TgColors.tertiaryLabel.resolveFrom(context));
 
     if (status == TgMessageStatus.sent) {
-      return Icon(CupertinoIcons.checkmark_alt, size: 14, color: tint);
+      return Icon(TgIcons.sent, size: 14, color: tint);
     }
 
     // Double tick — two glyphs overlapped, which is how Telegram draws it.
@@ -283,14 +287,8 @@ class _StatusTicks extends StatelessWidget {
       height: 14,
       child: Stack(
         children: [
-          Positioned(
-            left: 0,
-            child: Icon(CupertinoIcons.checkmark_alt, size: 14, color: tint),
-          ),
-          Positioned(
-            left: 5,
-            child: Icon(CupertinoIcons.checkmark_alt, size: 14, color: tint),
-          ),
+          Positioned(left: 0, child: Icon(TgIcons.sent, size: 14, color: tint)),
+          Positioned(left: 5, child: Icon(TgIcons.sent, size: 14, color: tint)),
         ],
       ),
     );

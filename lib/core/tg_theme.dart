@@ -65,43 +65,43 @@ class TgText {
   TgText._();
 
   static TextStyle navTitle(BuildContext context) => TextStyle(
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.4,
-        color: TgColors.label.resolveFrom(context),
-      );
+    fontSize: 17,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.4,
+    color: TgColors.label.resolveFrom(context),
+  );
 
   static TextStyle rowTitle(BuildContext context) => TextStyle(
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.4,
-        color: TgColors.label.resolveFrom(context),
-      );
+    fontSize: 17,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.4,
+    color: TgColors.label.resolveFrom(context),
+  );
 
   static TextStyle rowPreview(BuildContext context) => TextStyle(
-        fontSize: 15,
-        height: 1.25,
-        letterSpacing: -0.2,
-        color: TgColors.secondaryLabel.resolveFrom(context),
-      );
+    fontSize: 15,
+    height: 1.25,
+    letterSpacing: -0.2,
+    color: TgColors.secondaryLabel.resolveFrom(context),
+  );
 
   static TextStyle timestamp(BuildContext context) => TextStyle(
-        fontSize: 13,
-        letterSpacing: -0.1,
-        color: TgColors.tertiaryLabel.resolveFrom(context),
-      );
+    fontSize: 13,
+    letterSpacing: -0.1,
+    color: TgColors.tertiaryLabel.resolveFrom(context),
+  );
 
   static TextStyle body(BuildContext context) => TextStyle(
-        fontSize: 16.5,
-        height: 1.3,
-        letterSpacing: -0.2,
-        color: TgColors.label.resolveFrom(context),
-      );
+    fontSize: 16.5,
+    height: 1.3,
+    letterSpacing: -0.2,
+    color: TgColors.label.resolveFrom(context),
+  );
 
   static TextStyle sectionHeader(BuildContext context) => TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.2,
-        color: TgColors.secondaryLabel.resolveFrom(context),
-      );
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.2,
+    color: TgColors.secondaryLabel.resolveFrom(context),
+  );
 }

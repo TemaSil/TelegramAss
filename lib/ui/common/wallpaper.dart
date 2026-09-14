@@ -90,7 +90,8 @@ class _GlassWallpaperState extends State<GlassWallpaper>
   Widget build(BuildContext context) {
     final dark = CupertinoTheme.of(context).brightness == Brightness.dark;
     final colors =
-        GlassWallpaper.palettes[widget.variant] ?? GlassWallpaper.palettes['aurora']!;
+        GlassWallpaper.palettes[widget.variant] ??
+        GlassWallpaper.palettes['aurora']!;
 
     return AnimatedBuilder(
       animation: _controller,
@@ -147,16 +148,18 @@ class _MeshPainter extends CustomPainter {
       );
       final color = dark
           ? colors[i].withValues(alpha: 0.55)
-          : Color.lerp(colors[i], const Color(0xFFFFFFFF), 0.45)!
-              .withValues(alpha: 0.55);
+          : Color.lerp(
+              colors[i],
+              const Color(0xFFFFFFFF),
+              0.45,
+            )!.withValues(alpha: 0.55);
 
       canvas.drawCircle(
         center,
         radius,
         Paint()
-          ..shader = RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
-          ).createShader(Rect.fromCircle(center: center, radius: radius)),
+          ..shader = RadialGradient(colors: [color, color.withValues(alpha: 0)])
+              .createShader(Rect.fromCircle(center: center, radius: radius)),
       );
     }
   }

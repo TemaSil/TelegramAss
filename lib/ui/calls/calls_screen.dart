@@ -7,6 +7,7 @@ import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../common/tg_avatar.dart';
+import '../../core/tg_icons.dart';
 
 /// Nav bar for the Calls tab.
 class CallsAppBar extends StatelessWidget {
@@ -23,7 +24,7 @@ class CallsAppBar extends StatelessWidget {
       title: Text('Calls', style: TgText.navTitle(context)),
       actions: [
         GlassIconButton(
-          icon: const Icon(CupertinoIcons.phone_badge_plus, size: 20),
+          icon: const Icon(TgIcons.newCall, size: 20),
           size: 44,
           settings: GlassTokens.chrome(context),
           quality: GlassQuality.premium,
@@ -81,8 +82,9 @@ class _CallsBodyState extends State<CallsBody> {
               height: 40,
               settings: GlassTokens.chrome(context),
               quality: GlassQuality.premium,
-              indicatorColor:
-                  TgColors.accent.resolveFrom(context).withValues(alpha: 0.22),
+              indicatorColor: TgColors.accent
+                  .resolveFrom(context)
+                  .withValues(alpha: 0.22),
               selectedTextStyle: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
@@ -119,9 +121,7 @@ class _CallsBodyState extends State<CallsBody> {
                 ),
                 settings: GlassTokens.panel(context),
                 quality: GlassQuality.premium,
-                children: [
-                  for (final call in calls) _CallTile(call: call),
-                ],
+                children: [for (final call in calls) _CallTile(call: call)],
               ),
             ),
           ),
@@ -161,9 +161,7 @@ class _CallTile extends StatelessWidget {
       subtitle: Row(
         children: [
           Icon(
-            call.isOutgoing
-                ? CupertinoIcons.arrow_up_right
-                : CupertinoIcons.arrow_down_left,
+            call.isOutgoing ? TgIcons.callOutgoing : TgIcons.callIncoming,
             size: 13,
             color: tint,
           ),
@@ -172,8 +170,8 @@ class _CallTile extends StatelessWidget {
             call.isMissed
                 ? 'Missed'
                 : (call.duration == null
-                    ? 'Cancelled'
-                    : TgFormat.duration(call.duration!)),
+                      ? 'Cancelled'
+                      : TgFormat.duration(call.duration!)),
           ),
         ],
       ),
@@ -183,7 +181,7 @@ class _CallTile extends StatelessWidget {
           Text(TgFormat.callStamp(call.date), style: TgText.timestamp(context)),
           const SizedBox(width: 8),
           Icon(
-            call.isVideo ? CupertinoIcons.videocam : CupertinoIcons.phone,
+            call.isVideo ? TgIcons.video : TgIcons.calls,
             size: 19,
             color: TgColors.accent.resolveFrom(context),
           ),
@@ -193,7 +191,7 @@ class _CallTile extends StatelessWidget {
         context,
         message: 'Calling ${call.peerName}…',
         type: GlassToastType.info,
-        icon: const Icon(CupertinoIcons.phone_fill, size: 17),
+        icon: const Icon(TgIcons.callsActive, size: 17),
       ),
     );
   }

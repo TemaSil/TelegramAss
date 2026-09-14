@@ -11,6 +11,7 @@ import '../chat/chat_screen.dart';
 import '../stories/story_viewer.dart';
 import 'widgets/chat_row.dart';
 import 'widgets/story_rail.dart';
+import '../../core/tg_icons.dart';
 
 /// Nav bar for the Chats tab: an Edit menu on the left, a filter pull-down
 /// and a compose button on the right.
@@ -31,7 +32,7 @@ class ChatsAppBar extends StatelessWidget {
       leading: _EditMenu(state: state),
       actions: [
         GlassPullDownButton(
-          icon: const Icon(CupertinoIcons.line_horizontal_3_decrease, size: 19),
+          icon: const Icon(TgIcons.filter, size: 19),
           menuWidth: 240,
           quality: GlassQuality.premium,
           // The callback reports the item title, which is also the folder name.
@@ -48,8 +49,8 @@ class ChatsAppBar extends StatelessWidget {
                 title: folder.title,
                 icon: Icon(
                   folder.id == state.activeFolder
-                      ? CupertinoIcons.checkmark_circle_fill
-                      : CupertinoIcons.circle,
+                      ? TgIcons.selected
+                      : TgIcons.unselected,
                 ),
                 onTap: () {},
               ),
@@ -57,7 +58,7 @@ class ChatsAppBar extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         GlassIconButton(
-          icon: const Icon(CupertinoIcons.square_pencil, size: 20),
+          icon: const Icon(TgIcons.compose, size: 20),
           size: 44,
           settings: GlassTokens.chrome(context),
           quality: GlassQuality.premium,
@@ -65,7 +66,7 @@ class ChatsAppBar extends StatelessWidget {
             context,
             message: 'New message — pick a contact from the Contacts tab',
             type: GlassToastType.info,
-            icon: const Icon(CupertinoIcons.square_pencil, size: 18),
+            icon: const Icon(TgIcons.compose, size: 18),
           ),
         ),
       ],
@@ -108,18 +109,8 @@ class _EditMenu extends StatelessWidget {
       items: [
         const GlassMenuLabel(title: 'Chat list'),
         GlassMenuItem(
-          title: 'Select chats',
-          icon: const Icon(CupertinoIcons.checkmark_circle),
-          onTap: () {},
-        ),
-        GlassMenuItem(
-          title: 'Edit folders',
-          icon: const Icon(CupertinoIcons.folder),
-          onTap: () {},
-        ),
-        GlassMenuItem(
           title: 'Mark all as read',
-          icon: const Icon(CupertinoIcons.checkmark_alt_circle),
+          icon: const Icon(TgIcons.markRead),
           onTap: () {
             for (final chat in state.chats) {
               state.client.markChatRead(chat.id);
@@ -151,7 +142,9 @@ class _ChatsBodyState extends State<ChatsBody> {
   }
 
   void _openChat(BuildContext context, TgChat chat) {
-    AppScope.read(context).client.markChatRead(chat.id);
+    final state = AppScope.read(context);
+    // With read receipts off we do not tell the server the chat was opened.
+    if (state.readReceipts) state.client.markChatRead(chat.id);
     Navigator.of(context).push(
       CupertinoPageRoute<void>(builder: (_) => ChatScreen(chatId: chat.id)),
     );
@@ -168,12 +161,13 @@ class _ChatsBodyState extends State<ChatsBody> {
         GlassActionSheetAction(
           label: 'Delete chat',
           style: GlassActionSheetStyle.destructive,
-          icon: const Icon(CupertinoIcons.delete),
+          icon: const Icon(TgIcons.delete),
           onPressed: () {
             Navigator.of(context).pop();
+            AppScope.read(context).client.deleteChat(chat.id);
             GlassToast.show(
               context,
-              message: 'Chat deleted',
+              message: '${chat.title} deleted',
               type: GlassToastType.success,
             );
           },
@@ -226,35 +220,30 @@ class _ChatsBodyState extends State<ChatsBody> {
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: _FolderBar(state: state),
-          ),
+          SliverToBoxAdapter(child: _FolderBar(state: state)),
         ],
         if (chats.isEmpty)
           SliverToBoxAdapter(child: _EmptyState(query: state.searchQuery))
         else
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final chat = chats[index];
-                return ChatRow(
-                  chat: chat,
-                  isTyping: state.typingChatId == chat.id,
-                  onTap: () => _openChat(context, chat),
-                  onPin: () {
-                    HapticFeedback.selectionClick();
-                    state.client.togglePin(chat.id);
-                  },
-                  onMute: () {
-                    HapticFeedback.selectionClick();
-                    state.client.toggleMute(chat.id);
-                  },
-                  onMarkRead: () => state.client.markChatRead(chat.id),
-                  onDelete: () => _confirmDelete(context, chat),
-                );
-              },
-              childCount: chats.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final chat = chats[index];
+              return ChatRow(
+                chat: chat,
+                isTyping: state.typingChatId == chat.id,
+                onTap: () => _openChat(context, chat),
+                onPin: () {
+                  HapticFeedback.selectionClick();
+                  state.client.togglePin(chat.id);
+                },
+                onMute: () {
+                  HapticFeedback.selectionClick();
+                  state.client.toggleMute(chat.id);
+                },
+                onMarkRead: () => state.client.markChatRead(chat.id),
+                onDelete: () => _confirmDelete(context, chat),
+              );
+            }, childCount: chats.length),
           ),
         SliverToBoxAdapter(child: SizedBox(height: 96 + bottomPad)),
       ],
@@ -271,8 +260,9 @@ class _FolderBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final folders = state.folders;
-    final selected =
-        folders.indexWhere((folder) => folder.id == state.activeFolder);
+    final selected = folders.indexWhere(
+      (folder) => folder.id == state.activeFolder,
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
@@ -285,7 +275,9 @@ class _FolderBar extends StatelessWidget {
         height: 40,
         settings: GlassTokens.chrome(context),
         quality: GlassQuality.premium,
-        indicatorColor: TgColors.accent.resolveFrom(context).withValues(alpha: 0.22),
+        indicatorColor: TgColors.accent
+            .resolveFrom(context)
+            .withValues(alpha: 0.22),
         selectedTextStyle: TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w600,
@@ -297,10 +289,7 @@ class _FolderBar extends StatelessWidget {
         ),
         segments: [
           for (final folder in folders)
-            GlassSegment(
-              label: _labelFor(folder, state),
-              id: folder.id,
-            ),
+            GlassSegment(label: _labelFor(folder, state), id: folder.id),
         ],
       ),
     );
@@ -329,9 +318,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              query.isEmpty
-                  ? CupertinoIcons.chat_bubble_2
-                  : CupertinoIcons.search,
+              query.isEmpty ? TgIcons.chats : TgIcons.search,
               size: 34,
               color: TgColors.secondaryLabel.resolveFrom(context),
             ),

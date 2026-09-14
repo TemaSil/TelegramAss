@@ -7,6 +7,7 @@ import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../chat/chat_screen.dart';
 import '../common/tg_avatar.dart';
+import '../../core/tg_icons.dart';
 
 /// Nav bar for the Contacts tab.
 class ContactsAppBar extends StatelessWidget {
@@ -23,7 +24,7 @@ class ContactsAppBar extends StatelessWidget {
       title: Text('Contacts', style: TgText.navTitle(context)),
       actions: [
         GlassIconButton(
-          icon: const Icon(CupertinoIcons.person_badge_plus, size: 20),
+          icon: const Icon(TgIcons.addContact, size: 20),
           size: 44,
           settings: GlassTokens.chrome(context),
           quality: GlassQuality.premium,
@@ -64,10 +65,12 @@ class _ContactsBodyState extends State<ContactsBody> {
     final filtered = query.isEmpty
         ? contacts
         : contacts
-            .where((user) =>
-                user.name.toLowerCase().contains(query) ||
-                (user.username ?? '').toLowerCase().contains(query))
-            .toList();
+              .where(
+                (user) =>
+                    user.name.toLowerCase().contains(query) ||
+                    (user.username ?? '').toLowerCase().contains(query),
+              )
+              .toList();
 
     final groups = <String, List<TgUser>>{};
     for (final user in filtered) {
@@ -119,7 +122,7 @@ class _ContactsBodyState extends State<ContactsBody> {
               children: [
                 GlassChip(
                   label: '${state.contacts.length} contacts',
-                  icon: const Icon(CupertinoIcons.person_2, size: 15),
+                  icon: const Icon(TgIcons.contacts, size: 15),
                   settings: GlassTokens.chrome(context),
                   labelStyle: TgText.rowPreview(context),
                 ),
@@ -127,7 +130,7 @@ class _ContactsBodyState extends State<ContactsBody> {
                 GlassChip(
                   label: '$online online',
                   icon: Icon(
-                    CupertinoIcons.circle_fill,
+                    TgIcons.dot,
                     size: 10,
                     color: TgColors.teal.resolveFrom(context),
                   ),
@@ -167,7 +170,7 @@ class _ContactsBodyState extends State<ContactsBody> {
                           if (user.isVerified) ...[
                             const SizedBox(width: 4),
                             Icon(
-                              CupertinoIcons.checkmark_seal_fill,
+                              TgIcons.verified,
                               size: 14,
                               color: TgColors.accent.resolveFrom(context),
                             ),
@@ -179,7 +182,7 @@ class _ContactsBodyState extends State<ContactsBody> {
                             ? 'online'
                             : (user.lastSeen ?? user.username ?? ''),
                       ),
-                      trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
+                      trailing: const Icon(TgIcons.forward, size: 16),
                       onTap: () => Navigator.of(context).push(
                         CupertinoPageRoute<void>(
                           builder: (_) => ChatScreen(chatId: user.id),

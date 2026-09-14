@@ -8,6 +8,25 @@ Every surface that floats — nav bars, the tab bar, message bubbles, menus,
 sheets, badges — is real refracting glass rendered by a fragment shader, over
 an animated mesh-gradient wallpaper that gives the material something to bend.
 
+## iOS experience on Android
+
+- `CupertinoApp` throughout: iOS page transitions, swipe-back, iOS-native
+  scroll physics and modal presentation.
+- **SF Symbols 6** icons via `flutter_cupertino_symbols`, mapped semantically
+  in `lib/core/tg_icons.dart`.
+- Large titles that collapse into the nav bar, grouped inset lists, action
+  sheets, pull-down menus and detented modal sheets.
+- iMessage touches in the conversation: bubbles spring in from the side they
+  belong to (a real `SpringSimulation`, not a curve), a "Delivered" / "Read"
+  footnote under the last outgoing message, double-tap to react, and
+  **drag the thread left to reveal per-message timestamps**.
+
+> **Licence note on icons.** Apple licenses SF Symbols for use on Apple
+> platforms; shipping the font inside an Android APK falls outside that
+> licence. This project does it deliberately, at the publisher's discretion.
+> `lib/core/tg_icons.dart` is the single place to swap back to
+> `CupertinoIcons` if that is not acceptable for a given release.
+
 ## Requirements
 
 - Flutter **3.47.3** or newer (the glass package needs ≥ 3.41 and Impeller)
@@ -84,6 +103,13 @@ lib/
 | **Contacts** | Alphabetically grouped glass sections |
 | **Calls** | All / Missed segmented control, call history |
 | **Settings** | Profile card, wallpaper picker, glass intensity slider, text-size stepper, privacy switches, backend mode, log out |
+
+Preferences persist through `shared_preferences`. The glass intensity slider
+and the reduce-transparency switch feed `GlassPreferencesScope`, which scales
+the shader's thickness, blur, Fresnel and specular response — the setting
+changes the material itself, not a label. Appearance follows the system when
+*Auto night mode* is on, and the Dark mode switch otherwise; both light and
+dark palettes are defined.
 
 ## Licence
 

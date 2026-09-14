@@ -27,6 +27,10 @@ Future<void> main() async {
   runApp(
     LiquidGlassWidgets.wrap(
       adaptiveQuality: true,
+      // CupertinoApp drives the brightness, so the glass reads the theme
+      // rather than the raw OS setting.
+      brightnessResolver: (context) =>
+          CupertinoTheme.maybeBrightnessOf(context),
       child: TelegramLiquidApp(state: state),
     ),
   );

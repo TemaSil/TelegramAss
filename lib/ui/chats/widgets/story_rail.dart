@@ -5,6 +5,7 @@ import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../common/tg_avatar.dart';
+import '../../../core/tg_icons.dart';
 
 /// Horizontal stories strip above the chat list.
 class StoryRail extends StatelessWidget {
@@ -57,7 +58,7 @@ class StoryRail extends StatelessWidget {
                                 .withValues(alpha: 0.85),
                           ),
                           child: const Icon(
-                            CupertinoIcons.add,
+                            TgIcons.attach,
                             size: 14,
                             color: CupertinoColors.white,
                           ),

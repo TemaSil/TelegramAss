@@ -9,8 +9,11 @@ import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../common/tg_avatar.dart';
 import '../common/wallpaper.dart';
+import '../common/wallpaper_picker.dart';
+import 'widgets/bubble_entrance.dart';
 import 'widgets/composer_bar.dart';
 import 'widgets/message_bubble.dart';
+import '../../core/tg_icons.dart';
 
 /// One conversation.
 class ChatScreen extends StatefulWidget {
@@ -27,6 +30,11 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
 
   List<TgMessage> _messages = const [];
+
+  /// Ids rendered at least once; anything outside this set is new and gets the
+  /// spring entrance.
+  final _settled = <int>{};
+
   TgMessage? _replyTo;
   TgMessage? _editing;
   bool _loadingMore = false;
@@ -36,6 +44,11 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     final client = AppScope.read(context).client;
     _messages = client.currentMessagesOf(widget.chatId);
+    _settled.addAll(_messages.map((message) => message.id));
+
+    // Restore the draft the last visit left behind.
+    final draft = AppScope.read(context).chatById(widget.chatId)?.draft;
+    if (draft != null && draft.isNotEmpty) _composerController.text = draft;
     client.messagesOf(widget.chatId).listen((messages) {
       if (!mounted) return;
       final wasAtBottom = _isNearBottom;
@@ -44,12 +57,17 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     client.openChat(widget.chatId);
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(jump: true));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollToBottom(jump: true),
+    );
   }
 
   @override
   void dispose() {
-    AppScope.read(context).client.closeChat(widget.chatId);
+    final state = AppScope.read(context);
+    // Keep whatever is in the composer as a draft, the way Telegram does.
+    state.setDraft(widget.chatId, _composerController.text.trim());
+    state.client.closeChat(widget.chatId);
     _composerController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -140,7 +158,70 @@ class _ChatScreenState extends State<ChatScreen> {
       halfSize: 0.55,
       settings: GlassTokens.panel(context),
       quality: GlassQuality.premium,
-      builder: (_) => _ChatInfoSheet(chat: chat),
+      builder: (_) => _ChatInfoSheet(
+        chat: chat,
+        onMedia: () {
+          Navigator.of(context).pop();
+          _openMedia();
+        },
+        onWallpaper: () {
+          Navigator.of(context).pop();
+          showWallpaperPicker(context, AppScope.read(context));
+        },
+        onSearch: () {
+          Navigator.of(context).pop();
+          _openSearch();
+        },
+      ),
+    );
+  }
+
+  /// In-chat message search, presented as a sheet over the conversation.
+  Future<void> _openSearch() async {
+    await GlassModalSheet.show<void>(
+      context: context,
+      halfSize: 0.6,
+      settings: GlassTokens.panel(context),
+      quality: GlassQuality.premium,
+      builder: (_) => _SearchSheet(chatId: widget.chatId),
+    );
+  }
+
+  /// Picks a destination chat and forwards [message] into it.
+  Future<void> _forward(TgMessage message) async {
+    final state = AppScope.read(context);
+    await GlassModalSheet.show<void>(
+      context: context,
+      halfSize: 0.55,
+      settings: GlassTokens.panel(context),
+      quality: GlassQuality.premium,
+      builder: (sheetContext) => _ForwardSheet(
+        chats: state.chats.where((chat) => chat.id != widget.chatId).toList(),
+        onPick: (chat) {
+          Navigator.of(sheetContext).pop();
+          state.client.sendText(chat.id, message.text);
+          GlassToast.show(
+            context,
+            message: 'Forwarded to ${chat.title}',
+            type: GlassToastType.success,
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _openMedia() async {
+    final photos = _messages
+        .where((message) => message.kind == TgMessageKind.photo)
+        .toList()
+        .reversed
+        .toList();
+    await GlassModalSheet.show<void>(
+      context: context,
+      halfSize: 0.55,
+      settings: GlassTokens.panel(context),
+      quality: GlassQuality.premium,
+      builder: (_) => _MediaSheet(photos: photos),
     );
   }
 
@@ -194,6 +275,7 @@ class _ChatScreenState extends State<ChatScreen> {
         onBack: () => Navigator.of(context).maybePop(),
         onInfo: () => _openChatInfo(chat),
         onClearHistory: _confirmClearHistory,
+        onSearch: _openSearch,
         onToggleMute: () => state.client.toggleMute(chat.id),
       ),
       bottomBar: ComposerBar(
@@ -216,6 +298,7 @@ class _ChatScreenState extends State<ChatScreen> {
       body: _MessageList(
         chat: chat,
         messages: _messages,
+        settled: _settled,
         scrollController: _scrollController,
         fontSize: state.messageFontSize.toDouble(),
         isTyping: isTyping,
@@ -231,6 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }),
         onDelete: (message) =>
             state.client.deleteMessage(widget.chatId, message.id),
+        onForward: _forward,
         onReact: (message, emoji) =>
             state.client.toggleReaction(widget.chatId, message.id, emoji),
       ),
@@ -245,6 +329,7 @@ class _ChatAppBar extends StatelessWidget {
     required this.onBack,
     required this.onInfo,
     required this.onClearHistory,
+    required this.onSearch,
     required this.onToggleMute,
   });
 
@@ -253,6 +338,7 @@ class _ChatAppBar extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onInfo;
   final VoidCallback onClearHistory;
+  final VoidCallback onSearch;
   final VoidCallback onToggleMute;
 
   @override
@@ -262,7 +348,7 @@ class _ChatAppBar extends StatelessWidget {
       centerTitle: false,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       leading: GlassIconButton(
-        icon: const Icon(CupertinoIcons.back, size: 22),
+        icon: const Icon(TgIcons.back, size: 22),
         size: 42,
         settings: GlassTokens.chrome(context),
         quality: GlassQuality.premium,
@@ -314,7 +400,7 @@ class _ChatAppBar extends StatelessWidget {
           settings: GlassTokens.menu(context),
           menuAlignment: GlassMenuAlignment.bottomRight,
           triggerBuilder: (context, toggleMenu) => GlassIconButton(
-            icon: const Icon(CupertinoIcons.ellipsis, size: 20),
+            icon: const Icon(TgIcons.more, size: 20),
             size: 42,
             settings: GlassTokens.chrome(context),
             quality: GlassQuality.premium,
@@ -323,25 +409,23 @@ class _ChatAppBar extends StatelessWidget {
           items: [
             GlassMenuItem(
               title: 'Chat info',
-              icon: const Icon(CupertinoIcons.info_circle),
+              icon: const Icon(TgIcons.info),
               onTap: onInfo,
             ),
             GlassMenuItem(
               title: chat.isMuted ? 'Unmute' : 'Mute',
-              icon: Icon(chat.isMuted
-                  ? CupertinoIcons.bell
-                  : CupertinoIcons.bell_slash),
+              icon: Icon(chat.isMuted ? TgIcons.unmute : TgIcons.mute),
               onTap: onToggleMute,
             ),
             GlassMenuItem(
               title: 'Search in chat',
-              icon: const Icon(CupertinoIcons.search),
-              onTap: () {},
+              icon: const Icon(TgIcons.search),
+              onTap: onSearch,
             ),
             const GlassMenuDivider(),
             GlassMenuItem(
               title: 'Clear history',
-              icon: const Icon(CupertinoIcons.trash),
+              icon: const Icon(TgIcons.delete),
               isDestructive: true,
               onTap: onClearHistory,
             ),
@@ -352,10 +436,11 @@ class _ChatAppBar extends StatelessWidget {
   }
 }
 
-class _MessageList extends StatelessWidget {
+class _MessageList extends StatefulWidget {
   const _MessageList({
     required this.chat,
     required this.messages,
+    required this.settled,
     required this.scrollController,
     required this.fontSize,
     required this.isTyping,
@@ -363,11 +448,13 @@ class _MessageList extends StatelessWidget {
     required this.onReply,
     required this.onEdit,
     required this.onDelete,
+    required this.onForward,
     required this.onReact,
   });
 
   final TgChat chat;
   final List<TgMessage> messages;
+  final Set<int> settled;
   final ScrollController scrollController;
   final double fontSize;
   final bool isTyping;
@@ -375,10 +462,49 @@ class _MessageList extends StatelessWidget {
   final ValueChanged<TgMessage> onReply;
   final ValueChanged<TgMessage> onEdit;
   final ValueChanged<TgMessage> onDelete;
+  final ValueChanged<TgMessage> onForward;
   final void Function(TgMessage, String) onReact;
 
   @override
+  State<_MessageList> createState() => _MessageListState();
+}
+
+class _MessageListState extends State<_MessageList>
+    with SingleTickerProviderStateMixin {
+  /// How far the thread is dragged left, revealing per-message timestamps —
+  /// the iMessage gesture.
+  static const _revealExtent = 64.0;
+
+  late final AnimationController _reveal = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+
+  @override
+  void dispose() {
+    _reveal.dispose();
+    super.dispose();
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    _reveal.value = (_reveal.value - details.primaryDelta! / _revealExtent)
+        .clamp(0.0, 1.0);
+  }
+
+  void _onDragEnd(DragEndDetails details) {
+    // Fling left holds the timestamps open; anything else springs back.
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity < -220 || (_reveal.value > 0.6 && velocity <= 0)) {
+      _reveal.animateTo(1, curve: Curves.easeOutCubic);
+    } else {
+      _reveal.animateTo(0, curve: Curves.easeOutCubic);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final chat = widget.chat;
+    final messages = widget.messages;
     final topPad = MediaQuery.paddingOf(context).top + 56;
 
     return GlassScrollEdgeEffect(
@@ -386,68 +512,164 @@ class _MessageList extends StatelessWidget {
       fadeBottom: false,
       topFadeHeight: topPad,
       style: GlassScrollEdgeStyle.blur,
-      child: ListView.builder(
-        controller: scrollController,
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        padding: EdgeInsets.fromLTRB(0, topPad + 8, 0, 16),
-        itemCount: messages.length + (isTyping ? 1 : 0) + (loadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          var cursor = index;
+      child: GestureDetector(
+        onHorizontalDragUpdate: _onDragUpdate,
+        onHorizontalDragEnd: _onDragEnd,
+        child: ListView.builder(
+          controller: widget.scrollController,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          padding: EdgeInsets.fromLTRB(0, topPad + 8, 0, 16),
+          itemCount:
+              messages.length +
+              (widget.isTyping ? 1 : 0) +
+              (widget.loadingMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            var cursor = index;
 
-          if (loadingMore) {
-            if (cursor == 0) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Center(
-                  child: GlassProgressIndicator.circular(size: 22, strokeWidth: 2.5),
-                ),
-              );
+            if (widget.loadingMore) {
+              if (cursor == 0) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                    child: GlassProgressIndicator.circular(
+                      size: 22,
+                      strokeWidth: 2.5,
+                    ),
+                  ),
+                );
+              }
+              cursor -= 1;
             }
-            cursor -= 1;
-          }
 
-          if (cursor >= messages.length) {
-            return _TypingBubble(name: chat.title);
-          }
+            if (cursor >= messages.length) {
+              return _TypingBubble(name: chat.title);
+            }
 
-          final message = messages[cursor];
-          final previous = cursor > 0 ? messages[cursor - 1] : null;
-          final next =
-              cursor + 1 < messages.length ? messages[cursor + 1] : null;
+            final message = messages[cursor];
+            final previous = cursor > 0 ? messages[cursor - 1] : null;
+            final next = cursor + 1 < messages.length
+                ? messages[cursor + 1]
+                : null;
 
-          final needsSeparator = previous == null ||
-              !_sameDay(previous.date, message.date);
-          final showTail = next == null ||
-              next.isOutgoing != message.isOutgoing ||
-              next.date.difference(message.date).inMinutes > 4;
-          final showSender = chat.kind == TgChatKind.group &&
-              (previous == null || previous.isOutgoing != message.isOutgoing);
+            final needsSeparator =
+                previous == null || !_sameDay(previous.date, message.date);
+            final showTail =
+                next == null ||
+                next.isOutgoing != message.isOutgoing ||
+                next.date.difference(message.date).inMinutes > 4;
+            final showSender =
+                chat.kind == TgChatKind.group &&
+                (previous == null || previous.isOutgoing != message.isOutgoing);
 
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (needsSeparator) _DaySeparator(date: message.date),
-              MessageBubble(
-                message: message,
-                fontSize: fontSize,
-                showTail: showTail,
-                showSender: showSender,
-                onReply: onReply,
-                onEdit: onEdit,
-                onDelete: onDelete,
-                onReact: onReact,
-              ),
-            ],
-          );
-        },
+            // Only the very last outgoing message carries the status line.
+            final isLastOutgoing =
+                message.isOutgoing &&
+                messages.skip(cursor + 1).every((m) => !m.isOutgoing);
+            final isNew = !widget.settled.contains(message.id);
+            widget.settled.add(message.id);
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (needsSeparator) _DaySeparator(date: message.date),
+                _RevealRow(
+                  reveal: _reveal,
+                  extent: _revealExtent,
+                  date: message.date,
+                  child: BubbleEntrance(
+                    enabled: isNew,
+                    fromRight: message.isOutgoing,
+                    child: MessageBubble(
+                      message: message,
+                      fontSize: widget.fontSize,
+                      showTail: showTail,
+                      showSender: showSender,
+                      onReply: widget.onReply,
+                      onEdit: widget.onEdit,
+                      onDelete: widget.onDelete,
+                      onForward: widget.onForward,
+                      onReact: widget.onReact,
+                    ),
+                  ),
+                ),
+                if (isLastOutgoing)
+                  DeliveryFootnote(
+                    label: _statusLabel(message.status),
+                    color: TgColors.tertiaryLabel.resolveFrom(context),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
+  static String _statusLabel(TgMessageStatus status) {
+    switch (status) {
+      case TgMessageStatus.sending:
+        return 'Sending…';
+      case TgMessageStatus.failed:
+        return 'Not delivered';
+      case TgMessageStatus.sent:
+        return 'Sent';
+      case TgMessageStatus.delivered:
+        return 'Delivered';
+      case TgMessageStatus.read:
+        return 'Read';
+    }
+  }
+
   static bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+/// Slides a bubble left as the thread is dragged, revealing its timestamp in
+/// the gutter behind it.
+class _RevealRow extends StatelessWidget {
+  const _RevealRow({
+    required this.reveal,
+    required this.extent,
+    required this.date,
+    required this.child,
+  });
+
+  final Animation<double> reveal;
+  final double extent;
+  final DateTime date;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: reveal,
+      builder: (context, child) {
+        final t = reveal.value;
+        return Stack(
+          children: [
+            Positioned(
+              right: 10,
+              top: 0,
+              bottom: 0,
+              child: Opacity(
+                opacity: t,
+                child: Center(
+                  child: Text(
+                    TgFormat.time(date),
+                    style: TgText.timestamp(context),
+                  ),
+                ),
+              ),
+            ),
+            Transform.translate(offset: Offset(-extent * t, 0), child: child),
+          ],
+        );
+      },
+      child: child,
+    );
+  }
 }
 
 class _DaySeparator extends StatelessWidget {
@@ -542,7 +764,8 @@ class _TypingDotsState extends State<_TypingDots>
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (index) {
             final phase = (_controller.value * 3 - index).clamp(0.0, 1.0);
-            final scale = 0.6 + 0.4 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2);
+            final scale =
+                0.6 + 0.4 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2);
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
               child: Transform.scale(
@@ -560,6 +783,189 @@ class _TypingDotsState extends State<_TypingDots>
           }),
         );
       },
+    );
+  }
+}
+
+/// Search over the messages of one conversation.
+class _SearchSheet extends StatefulWidget {
+  const _SearchSheet({required this.chatId});
+
+  final int chatId;
+
+  @override
+  State<_SearchSheet> createState() => _SearchSheetState();
+}
+
+class _SearchSheetState extends State<_SearchSheet> {
+  final _controller = TextEditingController();
+  List<TgMessage> _results = const [];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GlassSearchBar(
+            controller: _controller,
+            placeholder: 'Search in chat',
+            autofocus: true,
+            settings: GlassTokens.chrome(context),
+            onChanged: (query) => setState(() {
+              _results = AppScope.read(context).client
+                  .searchMessages(widget.chatId, query);
+            }),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _results.isEmpty
+                ? Center(
+                    child: Text(
+                      _controller.text.isEmpty
+                          ? 'Type to search this conversation'
+                          : 'No matches',
+                      style: TgText.rowPreview(context),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _results.length,
+                    itemBuilder: (context, index) {
+                      final message = _results[index];
+                      return GlassListTile.standalone(
+                        leading: Icon(
+                          message.isOutgoing ? TgIcons.sent : TgIcons.chats,
+                          size: 18,
+                        ),
+                        title: Text(
+                          message.text,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          '${TgFormat.daySeparator(message.date)} · '
+                          '${TgFormat.time(message.date)}',
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chat picker used when forwarding a message.
+class _ForwardSheet extends StatelessWidget {
+  const _ForwardSheet({required this.chats, required this.onPick});
+
+  final List<TgChat> chats;
+  final ValueChanged<TgChat> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Forward to',
+            textAlign: TextAlign.center,
+            style: TgText.rowTitle(context),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.builder(
+              itemCount: chats.length,
+              itemBuilder: (context, index) {
+                final chat = chats[index];
+                return GlassListTile.standalone(
+                  leading: TgAvatar(
+                    seed: chat.id,
+                    initials: chat.initials,
+                    size: 38,
+                  ),
+                  title: Text(chat.title, maxLines: 1),
+                  subtitle: Text(chat.presence, maxLines: 1),
+                  trailing: const Icon(TgIcons.forwardMessage, size: 17),
+                  onTap: () => onPick(chat),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Photo grid for the chat's shared media.
+class _MediaSheet extends StatelessWidget {
+  const _MediaSheet({required this.photos});
+
+  final List<TgMessage> photos;
+
+  @override
+  Widget build(BuildContext context) {
+    if (photos.isEmpty) {
+      return Center(
+        child: Text(
+          'No media in this chat yet',
+          style: TgText.rowPreview(context),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '${photos.length} photos',
+            textAlign: TextAlign.center,
+            style: TgText.rowTitle(context),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 6,
+                crossAxisSpacing: 6,
+              ),
+              itemCount: photos.length,
+              itemBuilder: (context, index) {
+                final colors = TgColors.avatarGradient(
+                  photos[index].mediaSeed ?? photos[index].id,
+                );
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: colors,
+                      ),
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -596,17 +1002,17 @@ class _AttachmentSheet extends StatelessWidget {
             iconSize: 22,
             items: [
               GlassButtonGroupItem(
-                icon: const Icon(CupertinoIcons.photo),
+                icon: const Icon(TgIcons.photo),
                 label: 'Photo',
                 onTap: onPhoto,
               ),
               GlassButtonGroupItem(
-                icon: const Icon(CupertinoIcons.doc),
+                icon: const Icon(TgIcons.document),
                 label: 'File',
                 onTap: onFile,
               ),
               GlassButtonGroupItem(
-                icon: const Icon(CupertinoIcons.location),
+                icon: const Icon(TgIcons.location),
                 label: 'Location',
                 onTap: onLocation,
               ),
@@ -618,17 +1024,17 @@ class _AttachmentSheet extends StatelessWidget {
             settings: GlassTokens.panel(context),
             children: [
               GlassListTile(
-                leading: const Icon(CupertinoIcons.photo_on_rectangle),
+                leading: const Icon(TgIcons.media),
                 title: const Text('Camera roll'),
                 subtitle: const Text('248 items'),
-                trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
+                trailing: const Icon(TgIcons.forward, size: 16),
                 onTap: onPhoto,
               ),
               GlassListTile(
-                leading: const Icon(CupertinoIcons.folder),
+                leading: const Icon(TgIcons.folder),
                 title: const Text('Documents'),
                 subtitle: const Text('Browse files'),
-                trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
+                trailing: const Icon(TgIcons.forward, size: 16),
                 onTap: onFile,
               ),
             ],
@@ -640,9 +1046,17 @@ class _AttachmentSheet extends StatelessWidget {
 }
 
 class _ChatInfoSheet extends StatelessWidget {
-  const _ChatInfoSheet({required this.chat});
+  const _ChatInfoSheet({
+    required this.chat,
+    required this.onMedia,
+    required this.onWallpaper,
+    required this.onSearch,
+  });
 
   final TgChat chat;
+  final VoidCallback onMedia;
+  final VoidCallback onWallpaper;
+  final VoidCallback onSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -684,19 +1098,19 @@ class _ChatInfoSheet extends StatelessWidget {
             settings: GlassTokens.chrome(context),
             items: [
               GlassButtonGroupItem(
-                icon: const Icon(CupertinoIcons.phone),
+                icon: const Icon(TgIcons.calls),
                 label: 'Call',
                 onTap: () {},
               ),
               GlassButtonGroupItem(
-                icon: const Icon(CupertinoIcons.videocam),
+                icon: const Icon(TgIcons.video),
                 label: 'Video',
                 onTap: () {},
               ),
               GlassButtonGroupItem(
-                icon: const Icon(CupertinoIcons.search),
+                icon: const Icon(TgIcons.search),
                 label: 'Search',
-                onTap: () {},
+                onTap: onSearch,
               ),
             ],
           ),
@@ -706,7 +1120,7 @@ class _ChatInfoSheet extends StatelessWidget {
             settings: GlassTokens.panel(context),
             children: [
               GlassListTile(
-                leading: const Icon(CupertinoIcons.bell),
+                leading: const Icon(TgIcons.unmute),
                 title: const Text('Notifications'),
                 trailing: Text(
                   chat.isMuted ? 'Off' : 'On',
@@ -714,16 +1128,16 @@ class _ChatInfoSheet extends StatelessWidget {
                 ),
               ),
               GlassListTile(
-                leading: const Icon(CupertinoIcons.photo_on_rectangle),
+                leading: const Icon(TgIcons.media),
                 title: const Text('Media, links and docs'),
-                trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
-                onTap: () {},
+                trailing: const Icon(TgIcons.forward, size: 16),
+                onTap: onMedia,
               ),
               GlassListTile(
-                leading: const Icon(CupertinoIcons.paintbrush),
+                leading: const Icon(TgIcons.wallpaper),
                 title: const Text('Chat wallpaper'),
-                trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
-                onTap: () {},
+                trailing: const Icon(TgIcons.forward, size: 16),
+                onTap: onWallpaper,
               ),
             ],
           ),

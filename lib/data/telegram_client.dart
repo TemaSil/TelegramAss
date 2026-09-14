@@ -71,6 +71,17 @@ abstract class TelegramClient {
 
   Future<void> markChatRead(int chatId);
 
+  /// Removes the chat from the list. On TDLib this clears the history and
+  /// drops the chat from the main list; it does not delete the account's
+  /// messages for the other side.
+  Future<void> deleteChat(int chatId);
+
+  /// Stores the unsent composer text for [chatId]. An empty string clears it.
+  Future<void> setDraft(int chatId, String text);
+
+  /// Messages of [chatId] whose text matches [query], newest first.
+  List<TgMessage> searchMessages(int chatId, String query);
+
   Future<void> toggleMute(int chatId);
 
   Future<void> togglePin(int chatId);

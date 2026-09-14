@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'demo_client.dart';
 import 'models.dart';
@@ -13,12 +14,16 @@ import 'telegram_client.dart';
 /// carries real credentials *and* the native library is present, demo data
 /// otherwise. Every screen listens to this notifier.
 class AppState extends ChangeNotifier {
-  AppState._(this.client);
+  AppState._(this.client, this._prefs);
 
   static const _apiId = int.fromEnvironment('TELEGRAM_API_ID');
   static const _apiHash = String.fromEnvironment('TELEGRAM_API_HASH');
 
   final TelegramClient client;
+
+  /// Null when the platform channel is unavailable (plain `dart test` runs),
+  /// in which case preferences stay in memory for the session.
+  final SharedPreferences? _prefs;
 
   final _subscriptions = <StreamSubscription<Object?>>[];
 
@@ -32,6 +37,7 @@ class AppState extends ChangeNotifier {
   bool _reduceTransparency = false;
   bool _readReceipts = true;
   bool _autoNightMode = true;
+  bool _darkMode = true;
   double _glassIntensity = 1.0;
   int _messageFontSize = 16;
   String _wallpaper = 'aurora';
@@ -50,18 +56,31 @@ class AppState extends ChangeNotifier {
   bool get reduceTransparency => _reduceTransparency;
   bool get readReceipts => _readReceipts;
   bool get autoNightMode => _autoNightMode;
+
+  /// Used only when [autoNightMode] is off.
+  bool get darkMode => _darkMode;
   double get glassIntensity => _glassIntensity;
   int get messageFontSize => _messageFontSize;
   String get wallpaper => _wallpaper;
 
-  int get totalUnread =>
-      _chats.fold(0, (sum, chat) => sum + (chat.isMuted ? 0 : chat.unreadCount));
+  int get totalUnread => _chats.fold(
+    0,
+    (sum, chat) => sum + (chat.isMuted ? 0 : chat.unreadCount),
+  );
 
   /// Builds the state with whichever backend the environment allows.
   static Future<AppState> create({
     String databaseDirectory = '',
     String filesDirectory = '',
   }) async {
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+    } on Object catch (error) {
+      // No platform channel (unit tests) — run with in-memory preferences.
+      debugPrint('Preferences unavailable: $error');
+    }
+
     TelegramClient client = DemoTelegramClient();
 
     if (_apiId != 0 && _apiHash.isNotEmpty) {
@@ -85,27 +104,57 @@ class AppState extends ChangeNotifier {
       await client.start();
     }
 
-    final state = AppState._(client);
+    final state = AppState._(client, prefs);
+    state._restore();
     state._attach();
     return state;
+  }
+
+  // ── Persistence ───────────────────────────────────────────────────────────
+
+  static const _kReduceTransparency = 'reduce_transparency';
+  static const _kReadReceipts = 'read_receipts';
+  static const _kAutoNightMode = 'auto_night_mode';
+  static const _kDarkMode = 'dark_mode';
+  static const _kGlassIntensity = 'glass_intensity';
+  static const _kMessageFontSize = 'message_font_size';
+  static const _kWallpaper = 'wallpaper';
+
+  void _restore() {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    _reduceTransparency =
+        prefs.getBool(_kReduceTransparency) ?? _reduceTransparency;
+    _readReceipts = prefs.getBool(_kReadReceipts) ?? _readReceipts;
+    _autoNightMode = prefs.getBool(_kAutoNightMode) ?? _autoNightMode;
+    _darkMode = prefs.getBool(_kDarkMode) ?? _darkMode;
+    _glassIntensity = prefs.getDouble(_kGlassIntensity) ?? _glassIntensity;
+    _messageFontSize = prefs.getInt(_kMessageFontSize) ?? _messageFontSize;
+    _wallpaper = prefs.getString(_kWallpaper) ?? _wallpaper;
   }
 
   void _attach() {
     _chats = client.currentChats;
     _stage = client.currentStage;
     _subscriptions
-      ..add(client.authStage.listen((stage) {
-        _stage = stage;
-        notifyListeners();
-      }))
-      ..add(client.chats.listen((chats) {
-        _chats = chats;
-        notifyListeners();
-      }))
-      ..add(client.typingChatId.listen((chatId) {
-        _typingChatId = chatId;
-        notifyListeners();
-      }));
+      ..add(
+        client.authStage.listen((stage) {
+          _stage = stage;
+          notifyListeners();
+        }),
+      )
+      ..add(
+        client.chats.listen((chats) {
+          _chats = chats;
+          notifyListeners();
+        }),
+      )
+      ..add(
+        client.typingChatId.listen((chatId) {
+          _typingChatId = chatId;
+          notifyListeners();
+        }),
+      );
   }
 
   @override
@@ -136,8 +185,9 @@ class AppState extends ChangeNotifier {
 
     switch (_activeFolder) {
       case 'personal':
-        result = result.where((c) =>
-            c.kind == TgChatKind.private || c.kind == TgChatKind.saved);
+        result = result.where(
+          (c) => c.kind == TgChatKind.private || c.kind == TgChatKind.saved,
+        );
       case 'groups':
         result = result.where((c) => c.kind == TgChatKind.group);
       case 'channels':
@@ -150,9 +200,11 @@ class AppState extends ChangeNotifier {
 
     final query = _searchQuery.trim().toLowerCase();
     if (query.isNotEmpty) {
-      result = result.where((c) =>
-          c.title.toLowerCase().contains(query) ||
-          (c.lastMessage ?? '').toLowerCase().contains(query));
+      result = result.where(
+        (c) =>
+            c.title.toLowerCase().contains(query) ||
+            (c.lastMessage ?? '').toLowerCase().contains(query),
+      );
     }
 
     return result.toList();
@@ -162,7 +214,9 @@ class AppState extends ChangeNotifier {
     final previous = _activeFolder;
     _activeFolder = id;
     final count = visibleChats.fold<int>(
-        0, (sum, chat) => sum + (chat.isMuted ? 0 : chat.unreadCount));
+      0,
+      (sum, chat) => sum + (chat.isMuted ? 0 : chat.unreadCount),
+    );
     _activeFolder = previous;
     return count;
   }
@@ -178,31 +232,48 @@ class AppState extends ChangeNotifier {
 
   void setReduceTransparency(bool value) {
     _reduceTransparency = value;
+    _prefs?.setBool(_kReduceTransparency, value);
     notifyListeners();
   }
 
   void setReadReceipts(bool value) {
     _readReceipts = value;
+    _prefs?.setBool(_kReadReceipts, value);
     notifyListeners();
   }
 
   void setAutoNightMode(bool value) {
     _autoNightMode = value;
+    _prefs?.setBool(_kAutoNightMode, value);
+    notifyListeners();
+  }
+
+  void setDarkMode(bool value) {
+    _darkMode = value;
+    _prefs?.setBool(_kDarkMode, value);
     notifyListeners();
   }
 
   void setGlassIntensity(double value) {
     _glassIntensity = value;
+    _prefs?.setDouble(_kGlassIntensity, value);
     notifyListeners();
   }
 
   void setMessageFontSize(int value) {
     _messageFontSize = value.clamp(12, 22);
+    _prefs?.setInt(_kMessageFontSize, _messageFontSize);
     notifyListeners();
   }
 
   void setWallpaper(String value) {
     _wallpaper = value;
+    _prefs?.setString(_kWallpaper, value);
     notifyListeners();
+  }
+
+  /// Saves a draft locally and pushes it to the backend.
+  void setDraft(int chatId, String text) {
+    client.setDraft(chatId, text);
   }
 }

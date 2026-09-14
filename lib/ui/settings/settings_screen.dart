@@ -7,6 +7,8 @@ import '../../core/tg_theme.dart';
 import '../../data/app_state.dart';
 import '../common/tg_avatar.dart';
 import '../common/wallpaper.dart';
+import '../common/wallpaper_picker.dart';
+import '../../core/tg_icons.dart';
 
 /// Nav bar for the Settings tab.
 class SettingsAppBar extends StatelessWidget {
@@ -28,7 +30,7 @@ class SettingsAppBar extends StatelessWidget {
           quality: GlassQuality.premium,
           settings: GlassTokens.menu(context),
           triggerBuilder: (context, toggle) => GlassIconButton(
-            icon: const Icon(CupertinoIcons.question_circle, size: 20),
+            icon: const Icon(TgIcons.help, size: 20),
             size: 44,
             settings: GlassTokens.chrome(context),
             quality: GlassQuality.premium,
@@ -95,7 +97,7 @@ class SettingsBody extends StatelessWidget {
               quality: GlassQuality.premium,
               children: [
                 GlassListTile(
-                  leading: const Icon(CupertinoIcons.paintbrush),
+                  leading: const Icon(TgIcons.wallpaper),
                   title: const Text('Wallpaper'),
                   trailing: SizedBox(
                     width: 150,
@@ -103,13 +105,14 @@ class SettingsBody extends StatelessWidget {
                       value: GlassWallpaper.labels[state.wallpaper],
                       placeholder: 'Choose',
                       settings: GlassTokens.chrome(context),
-                      onTap: () => _pickWallpaper(context, state),
+                      onTap: () => showWallpaperPicker(context, state),
                     ),
                   ),
                 ),
                 GlassListTile(
-                  leading: const Icon(CupertinoIcons.circle_lefthalf_fill),
+                  leading: const Icon(TgIcons.nightMode),
                   title: const Text('Auto night mode'),
+                  subtitle: const Text('Follow the system appearance'),
                   trailing: GlassSwitch(
                     value: state.autoNightMode,
                     onChanged: state.setAutoNightMode,
@@ -117,8 +120,23 @@ class SettingsBody extends StatelessWidget {
                     activeColor: TgColors.accent.resolveFrom(context),
                   ),
                 ),
+                if (!state.autoNightMode)
+                  GlassListTile(
+                    leading: Icon(
+                      state.darkMode
+                          ? TgIcons.nightModeFilled
+                          : TgIcons.lightMode,
+                    ),
+                    title: const Text('Dark mode'),
+                    trailing: GlassSwitch(
+                      value: state.darkMode,
+                      onChanged: state.setDarkMode,
+                      settings: GlassTokens.chrome(context),
+                      activeColor: TgColors.accent.resolveFrom(context),
+                    ),
+                  ),
                 GlassListTile(
-                  leading: const Icon(CupertinoIcons.eye_slash),
+                  leading: const Icon(TgIcons.transparency),
                   title: const Text('Reduce transparency'),
                   subtitle: const Text('Stops the wallpaper animation'),
                   trailing: GlassSwitch(
@@ -149,7 +167,7 @@ class SettingsBody extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        CupertinoIcons.sparkles,
+                        TgIcons.glass,
                         size: 19,
                         color: TgColors.accent.resolveFrom(context),
                       ),
@@ -175,13 +193,15 @@ class SettingsBody extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        CupertinoIcons.textformat_size,
+                        TgIcons.textSize,
                         size: 19,
                         color: TgColors.accent.resolveFrom(context),
                       ),
                       const SizedBox(width: 10),
-                      Text('Message text size',
-                          style: TgText.rowTitle(context)),
+                      Text(
+                        'Message text size',
+                        style: TgText.rowTitle(context),
+                      ),
                       const Spacer(),
                       GlassStepper(
                         value: state.messageFontSize.toDouble(),
@@ -196,9 +216,8 @@ class SettingsBody extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'The quick brown fox jumps over the lazy dog',
-                    style: TgText.body(context).copyWith(
-                      fontSize: state.messageFontSize.toDouble(),
-                    ),
+                    style: TgText.body(context)
+                        .copyWith(fontSize: state.messageFontSize.toDouble()),
                   ),
                 ],
               ),
@@ -214,7 +233,7 @@ class SettingsBody extends StatelessWidget {
               quality: GlassQuality.premium,
               children: [
                 GlassListTile(
-                  leading: const Icon(CupertinoIcons.checkmark_seal),
+                  leading: const Icon(TgIcons.receipts),
                   title: const Text('Read receipts'),
                   trailing: GlassSwitch(
                     value: state.readReceipts,
@@ -224,18 +243,18 @@ class SettingsBody extends StatelessWidget {
                   ),
                 ),
                 GlassListTile(
-                  leading: const Icon(CupertinoIcons.lock),
+                  leading: const Icon(TgIcons.privacy),
                   title: const Text('Two-step verification'),
-                  trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
+                  trailing: const Icon(TgIcons.forward, size: 16),
                   onTap: () {},
                 ),
                 GlassListTile(
-                  leading: const Icon(CupertinoIcons.device_phone_portrait),
+                  leading: const Icon(TgIcons.sessions),
                   title: const Text('Active sessions'),
                   trailing: GlassBadge(
                     count: 3,
                     settings: GlassTokens.chrome(context),
-                    child: const Icon(CupertinoIcons.chevron_right, size: 16),
+                    child: const Icon(TgIcons.forward, size: 16),
                   ),
                   onTap: () {},
                 ),
@@ -252,8 +271,8 @@ class SettingsBody extends StatelessWidget {
                 state.client.isLive
                     ? 'Connected through the official TDLib JSON interface.'
                     : 'Demo data. Pass --dart-define=TELEGRAM_API_ID and '
-                        'TELEGRAM_API_HASH, and bundle libtdjson.so, to talk to '
-                        'real Telegram servers.',
+                          'TELEGRAM_API_HASH, and bundle libtdjson.so, to talk to '
+                          'real Telegram servers.',
                 style: TgText.timestamp(context),
               ),
               settings: GlassTokens.panel(context),
@@ -261,9 +280,7 @@ class SettingsBody extends StatelessWidget {
               children: [
                 GlassListTile(
                   leading: Icon(
-                    state.client.isLive
-                        ? CupertinoIcons.antenna_radiowaves_left_right
-                        : CupertinoIcons.cube_box,
+                    state.client.isLive ? TgIcons.channel : TgIcons.demo,
                   ),
                   title: const Text('Mode'),
                   trailing: Text(
@@ -272,7 +289,7 @@ class SettingsBody extends StatelessWidget {
                   ),
                 ),
                 GlassListTile(
-                  leading: const Icon(CupertinoIcons.square_arrow_right),
+                  leading: const Icon(TgIcons.logOut),
                   title: Text(
                     'Log out',
                     style: TextStyle(
@@ -286,31 +303,6 @@ class SettingsBody extends StatelessWidget {
           ),
         ),
         SliverToBoxAdapter(child: SizedBox(height: 96 + bottomPad)),
-      ],
-    );
-  }
-
-  Future<void> _pickWallpaper(BuildContext context, AppState state) async {
-    await showGlassActionSheet<void>(
-      context: context,
-      title: 'Wallpaper',
-      message: 'Glass refracts whatever sits behind it.',
-      settings: GlassTokens.menu(context),
-      quality: GlassQuality.premium,
-      actions: [
-        for (final entry in GlassWallpaper.labels.entries)
-          GlassActionSheetAction(
-            label: entry.value,
-            icon: Icon(
-              state.wallpaper == entry.key
-                  ? CupertinoIcons.checkmark_circle_fill
-                  : CupertinoIcons.circle,
-            ),
-            onPressed: () {
-              state.setWallpaper(entry.key);
-              Navigator.of(context).pop();
-            },
-          ),
       ],
     );
   }
@@ -388,7 +380,7 @@ class _ProfileCard extends StatelessWidget {
                     if (me?.isPremium ?? false) ...[
                       const SizedBox(width: 5),
                       Icon(
-                        CupertinoIcons.star_fill,
+                        TgIcons.premium,
                         size: 15,
                         color: TgColors.accent.resolveFrom(context),
                       ),
@@ -401,15 +393,14 @@ class _ProfileCard extends StatelessWidget {
                 if (me?.username != null)
                   Text(
                     '@${me!.username}',
-                    style: TgText.rowPreview(context).copyWith(
-                      color: TgColors.accent.resolveFrom(context),
-                    ),
+                    style: TgText.rowPreview(context)
+                        .copyWith(color: TgColors.accent.resolveFrom(context)),
                   ),
               ],
             ),
           ),
           GlassIconButton(
-            icon: const Icon(CupertinoIcons.pencil, size: 18),
+            icon: const Icon(TgIcons.edit, size: 18),
             size: 40,
             settings: GlassTokens.chrome(context),
             quality: GlassQuality.premium,

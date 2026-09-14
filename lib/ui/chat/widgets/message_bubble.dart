@@ -9,6 +9,7 @@ import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
 import '../../chats/widgets/chat_row.dart' show MessageStatusTicks;
+import '../../../core/tg_icons.dart';
 
 /// A single message.
 ///
@@ -23,6 +24,7 @@ class MessageBubble extends StatelessWidget {
     required this.onReply,
     required this.onEdit,
     required this.onDelete,
+    required this.onForward,
     required this.onReact,
     this.showTail = true,
     this.showSender = false,
@@ -33,6 +35,7 @@ class MessageBubble extends StatelessWidget {
   final ValueChanged<TgMessage> onReply;
   final ValueChanged<TgMessage> onEdit;
   final ValueChanged<TgMessage> onDelete;
+  final ValueChanged<TgMessage> onForward;
   final void Function(TgMessage message, String emoji) onReact;
 
   /// Last message of a group gets the wider corner.
@@ -89,29 +92,29 @@ class MessageBubble extends StatelessWidget {
             ),
             GlassMenuItem(
               title: 'Reply',
-              icon: const Icon(CupertinoIcons.arrowshape_turn_up_left),
+              icon: const Icon(TgIcons.reply),
               onTap: () => onReply(message),
             ),
             GlassMenuItem(
               title: 'Copy',
-              icon: const Icon(CupertinoIcons.doc_on_doc),
+              icon: const Icon(TgIcons.copy),
               onTap: () => Clipboard.setData(ClipboardData(text: message.text)),
             ),
             if (message.isOutgoing && message.kind == TgMessageKind.text)
               GlassMenuItem(
                 title: 'Edit',
-                icon: const Icon(CupertinoIcons.pencil),
+                icon: const Icon(TgIcons.edit),
                 onTap: () => onEdit(message),
               ),
             GlassMenuItem(
               title: 'Forward',
-              icon: const Icon(CupertinoIcons.arrowshape_turn_up_right),
-              onTap: () {},
+              icon: const Icon(TgIcons.forwardMessage),
+              onTap: () => onForward(message),
             ),
             const GlassMenuDivider(),
             GlassMenuItem(
               title: 'Delete',
-              icon: const Icon(CupertinoIcons.delete),
+              icon: const Icon(TgIcons.delete),
               isDestructive: true,
               onTap: () => onDelete(message),
             ),
@@ -154,9 +157,9 @@ class MessageBubble extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
-                    color: TgColors.avatarGradient(message.senderId ??
-                            message.senderName.hashCode)
-                        .last,
+                    color: TgColors.avatarGradient(
+                      message.senderId ?? message.senderName.hashCode,
+                    ).last,
                   ),
                 ),
               ),
@@ -219,7 +222,11 @@ class MessageBubble extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 message.text,
-                style: TextStyle(fontSize: fontSize, height: 1.3, color: textColor),
+                style: TextStyle(
+                  fontSize: fontSize,
+                  height: 1.3,
+                  color: textColor,
+                ),
               ),
             ],
           ],
@@ -266,8 +273,7 @@ class MessageBubble extends StatelessWidget {
         if (message.isEdited)
           Padding(
             padding: const EdgeInsets.only(right: 4),
-            child: Text('edited',
-                style: TextStyle(fontSize: 11, color: tint)),
+            child: Text('edited', style: TextStyle(fontSize: 11, color: tint)),
           ),
         Text(
           TgFormat.time(message.date),
@@ -397,8 +403,8 @@ class _ReactionPicker extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: chosen.contains(emoji)
                     ? TgColors.accent
-                        .resolveFrom(context)
-                        .withValues(alpha: 0.25)
+                          .resolveFrom(context)
+                          .withValues(alpha: 0.25)
                     : null,
               ),
               child: Text(emoji, style: const TextStyle(fontSize: 21)),
@@ -430,7 +436,7 @@ class _PhotoPlaceholder extends StatelessWidget {
       ),
       child: Center(
         child: Icon(
-          CupertinoIcons.photo,
+          TgIcons.photo,
           size: 34,
           color: CupertinoColors.white.withValues(alpha: 0.65),
         ),
@@ -450,12 +456,14 @@ class _VoiceContent extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(CupertinoIcons.play_fill, size: 22, color: tint),
+        Icon(TgIcons.play, size: 22, color: tint),
         const SizedBox(width: 10),
         SizedBox(
           width: 120,
           height: 26,
-          child: CustomPaint(painter: _WaveformPainter(tint: tint, seed: seconds)),
+          child: CustomPaint(
+            painter: _WaveformPainter(tint: tint, seed: seconds),
+          ),
         ),
         const SizedBox(width: 10),
         Text(
@@ -517,7 +525,7 @@ class _FileContent extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(CupertinoIcons.doc_fill, size: 30, color: tint),
+          Icon(TgIcons.file, size: 30, color: tint),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

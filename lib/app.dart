@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
+import 'core/glass_preferences.dart';
+import 'core/tg_theme.dart';
 import 'data/app_state.dart';
 import 'data/models.dart';
 import 'ui/auth/auth_screen.dart';
@@ -16,18 +18,32 @@ class TelegramLiquidApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScope(
       state: state,
-      child: CupertinoApp(
-        title: 'Telegram Liquid',
-        debugShowCheckedModeBanner: false,
-        theme: const CupertinoThemeData(brightness: Brightness.dark),
-        home: AnimatedBuilder(
-          animation: state,
-          builder: (context, _) {
-            return state.stage == TgAuthStage.ready
-                ? const RootShell()
-                : const AuthScreen();
-          },
-        ),
+      child: AnimatedBuilder(
+        animation: state,
+        builder: (context, _) {
+          // Auto night mode follows the OS; otherwise the Settings switch wins.
+          final brightness = state.autoNightMode
+              ? MediaQuery.maybePlatformBrightnessOf(context) ?? Brightness.dark
+              : (state.darkMode ? Brightness.dark : Brightness.light);
+
+          return GlassPreferencesScope(
+            preferences: GlassPreferences(
+              intensity: state.glassIntensity,
+              reduceTransparency: state.reduceTransparency,
+            ),
+            child: CupertinoApp(
+              title: 'Telegram Liquid',
+              debugShowCheckedModeBanner: false,
+              theme: CupertinoThemeData(
+                brightness: brightness,
+                primaryColor: TgColors.accent,
+              ),
+              home: state.stage == TgAuthStage.ready
+                  ? const RootShell()
+                  : const AuthScreen(),
+            ),
+          );
+        },
       ),
     );
   }
@@ -36,7 +52,7 @@ class TelegramLiquidApp extends StatelessWidget {
 /// `AppScope.of(context)` anywhere below the app root.
 class AppScope extends InheritedNotifier<AppState> {
   const AppScope({super.key, required AppState state, required super.child})
-      : super(notifier: state);
+    : super(notifier: state);
 
   static AppState of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();

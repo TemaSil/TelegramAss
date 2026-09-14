@@ -5,6 +5,7 @@ import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
 import '../../data/models.dart';
 import '../common/tg_avatar.dart';
+import '../../core/tg_icons.dart';
 
 /// Full-screen story viewer.
 ///
@@ -29,8 +30,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     with SingleTickerProviderStateMixin {
   static const _storyDuration = Duration(seconds: 6);
 
-  late final PageController _pageController =
-      PageController(initialPage: widget.initialIndex);
+  late final PageController _pageController = PageController(
+    initialPage: widget.initialIndex,
+  );
   late final AnimationController _progressController = AnimationController(
     vsync: this,
     duration: _storyDuration,
@@ -255,8 +257,9 @@ class _ProgressBars extends StatelessWidget {
                         child: Stack(
                           children: [
                             ColoredBox(
-                              color: CupertinoColors.white
-                                  .withValues(alpha: 0.28),
+                              color: CupertinoColors.white.withValues(
+                                alpha: 0.28,
+                              ),
                               child: const SizedBox.expand(),
                             ),
                             FractionallySizedBox(
@@ -311,7 +314,7 @@ class _Header extends StatelessWidget {
             ),
           ),
           GlassIconButton(
-            icon: const Icon(CupertinoIcons.xmark, size: 18),
+            icon: const Icon(TgIcons.close, size: 18),
             size: 38,
             settings: GlassTokens.chrome(context),
             quality: GlassQuality.premium,
@@ -346,7 +349,7 @@ class _ReplyBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           GlassIconButton(
-            icon: const Icon(CupertinoIcons.heart, size: 20),
+            icon: const Icon(TgIcons.heart, size: 20),
             size: 46,
             settings: GlassTokens.composer(context),
             quality: GlassQuality.premium,

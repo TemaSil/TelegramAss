@@ -14,15 +14,24 @@ import 'package:ffi/ffi.dart';
 /// the app falls back to the demo backend instead of crashing.
 class TdJsonBindings {
   TdJsonBindings._(DynamicLibrary lib)
-      : _createClientId =
-            lib.lookupFunction<Int32 Function(), int Function()>(
-                'td_create_client_id'),
-        _send = lib.lookupFunction<Void Function(Int32, Pointer<Utf8>),
-            void Function(int, Pointer<Utf8>)>('td_send'),
-        _receive = lib.lookupFunction<Pointer<Utf8> Function(Double),
-            Pointer<Utf8> Function(double)>('td_receive'),
-        _execute = lib.lookupFunction<Pointer<Utf8> Function(Pointer<Utf8>),
-            Pointer<Utf8> Function(Pointer<Utf8>)>('td_execute');
+    : _createClientId = lib.lookupFunction<Int32 Function(), int Function()>(
+        'td_create_client_id',
+      ),
+      _send = lib
+          .lookupFunction<
+            Void Function(Int32, Pointer<Utf8>),
+            void Function(int, Pointer<Utf8>)
+          >('td_send'),
+      _receive = lib
+          .lookupFunction<
+            Pointer<Utf8> Function(Double),
+            Pointer<Utf8> Function(double)
+          >('td_receive'),
+      _execute = lib
+          .lookupFunction<
+            Pointer<Utf8> Function(Pointer<Utf8>),
+            Pointer<Utf8> Function(Pointer<Utf8>)
+          >('td_execute');
 
   final int Function() _createClientId;
   final void Function(int, Pointer<Utf8>) _send;
