@@ -116,7 +116,12 @@ class TdlibTelegramClient implements TelegramClient {
   Future<void> sendPhoto(int chatId, {String? path, String? caption}) async {}
 
   @override
-  Future<void> sendVoice(int chatId, int seconds) async {}
+  Future<void> sendVoice(
+    int chatId,
+    int seconds, {
+    String? path,
+    bool isOpus = true,
+  }) async {}
 
   @override
   Future<void> sendFile(
@@ -143,6 +148,9 @@ class TdlibTelegramClient implements TelegramClient {
 
   @override
   Future<void> setDraft(int chatId, String text) async {}
+
+  @override
+  Future<void> downloadMessageMedia(int chatId, int messageId) async {}
 
   @override
   List<TgMessage> searchMessages(int chatId, String query) => const [];

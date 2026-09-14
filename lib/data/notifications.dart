@@ -104,6 +104,10 @@ class TgNotifications {
 
     if (await FlutterForegroundTask.isRunningService) return;
     await FlutterForegroundTask.startService(
+      serviceTypes: const [
+        ForegroundServiceTypes.remoteMessaging,
+        ForegroundServiceTypes.dataSync,
+      ],
       notificationTitle: 'Telegram Liquid',
       notificationText: 'Connected',
     );

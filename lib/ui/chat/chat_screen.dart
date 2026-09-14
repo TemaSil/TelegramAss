@@ -388,9 +388,13 @@ class _ChatScreenState extends State<ChatScreen> {
         }),
         onSend: _send,
         onAttach: _openAttachments,
-        onVoice: () {
-          HapticFeedback.mediumImpact();
-          state.client.sendVoice(widget.chatId, 8);
+        onVoiceRecorded: (path, seconds, isOpus) {
+          state.client.sendVoice(
+            widget.chatId,
+            seconds,
+            path: path,
+            isOpus: isOpus,
+          );
           _scrollToBottom();
         },
       ),

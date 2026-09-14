@@ -799,6 +799,36 @@ abstract class AppL10n {
   /// **'Unread messages'**
   String get unreadMessages;
 
+  /// No description provided for @voiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot record'**
+  String get voiceUnavailable;
+
+  /// No description provided for @voiceUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant microphone access to send a voice message.'**
+  String get voiceUnavailableMessage;
+
+  /// No description provided for @slideToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to cancel'**
+  String get slideToCancel;
+
+  /// No description provided for @releaseToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to cancel'**
+  String get releaseToCancel;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:

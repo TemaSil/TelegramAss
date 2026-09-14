@@ -59,6 +59,10 @@ class TdlibTelegramClient implements TelegramClient {
   /// resolved thumbnail cannot be mistaken for a photo attachment.
   final _previewOfFile = <int, (int chatId, int messageId)>{};
 
+  /// File behind a message's music or document, remembered so a tap can start
+  /// the download without re-reading the message from TDLib.
+  final _playableOfMessage = <(int, int), int>{};
+
   TdJsonBindings? _bindings;
   Isolate? _receiveIsolate;
   ReceivePort? _receivePort;
@@ -636,7 +640,25 @@ class TdlibTelegramClient implements TelegramClient {
       messageId,
     );
 
-    final previewFile = largest ?? stickerFile ?? videoThumb;
+    // Voice notes are a few tens of kilobytes; fetching them up front costs
+    // nothing and means a tap plays immediately. Music and documents are not
+    // fetched until asked for — see downloadMessageMedia.
+    final voice =
+        (content?['voice_note'] as Map<String, dynamic>?)?['voice']
+            as Map<String, dynamic>?;
+    final playable =
+        (audio?['audio'] ?? document?['document']) as Map<String, dynamic>?;
+    final playableId = (playable?['id'] as num?)?.toInt();
+    if (playableId != null) {
+      _playableOfMessage[(chatId, messageId)] = playableId;
+      final ready =
+          (playable?['local']
+              as Map<String, dynamic>?)?['is_downloading_completed'] ==
+          true;
+      if (!ready) _messageOfFile[playableId] = (chatId, messageId);
+    }
+
+    final previewFile = largest ?? stickerFile ?? videoThumb ?? voice;
     final mediaPath = _resolveFile(previewFile, priority: 16);
     final mediaFileId = (previewFile?['id'] as num?)?.toInt();
     if (mediaPath == null && mediaFileId != null) {
@@ -930,6 +952,19 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<void> downloadMessageMedia(int chatId, int messageId) async {
+    final fileId = _playableOfMessage[(chatId, messageId)];
+    if (fileId == null) return;
+    _messageOfFile[fileId] = (chatId, messageId);
+    _send({
+      '@type': 'downloadFile',
+      'file_id': fileId,
+      'priority': 32,
+      'synchronous': false,
+    });
+  }
+
+  @override
   Future<void> logOut() async {
     await _request({'@type': 'logOut'});
   }
@@ -1027,14 +1062,24 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
-  Future<void> sendVoice(int chatId, int seconds) async {
+  Future<void> sendVoice(
+    int chatId,
+    int seconds, {
+    String? path,
+    bool isOpus = true,
+  }) async {
+    if (path == null) return;
+    final file = {'@type': 'inputFileLocal', 'path': path};
     _send({
       '@type': 'sendMessage',
       'chat_id': chatId,
-      'input_message_content': {
-        '@type': 'inputMessageVoiceNote',
-        'duration': seconds,
-      },
+      'input_message_content': isOpus
+          ? {
+              '@type': 'inputMessageVoiceNote',
+              'voice_note': file,
+              'duration': seconds,
+            }
+          : {'@type': 'inputMessageAudio', 'audio': file, 'duration': seconds},
     });
   }
 

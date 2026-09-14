@@ -388,7 +388,12 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
-  Future<void> sendVoice(int chatId, int seconds) async {
+  Future<void> sendVoice(
+    int chatId,
+    int seconds, {
+    String? path,
+    bool isOpus = true,
+  }) async {
     final message = TgMessage(
       id: _nextMessageId++,
       chatId: chatId,
@@ -398,6 +403,7 @@ class DemoTelegramClient implements TelegramClient {
       kind: TgMessageKind.voice,
       status: TgMessageStatus.sending,
       voiceSeconds: seconds,
+      localPath: path,
     );
     _append(chatId, message);
     _advanceStatus(chatId, message.id);
@@ -476,6 +482,11 @@ class DemoTelegramClient implements TelegramClient {
   @override
   Future<void> setDraft(int chatId, String text) async {
     _updateChat(chatId, (chat) => chat.copyWith(draft: text));
+  }
+
+  @override
+  Future<void> downloadMessageMedia(int chatId, int messageId) async {
+    // Demo media is already local; nothing to fetch.
   }
 
   @override

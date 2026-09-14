@@ -59,6 +59,10 @@ class TgIcons {
   static const pending = SFSymbols.clock;
   static const failed = SFSymbols.exclamationmark_circle;
   static const play = SFSymbols.play_fill;
+  static const pause = SFSymbols.pause_fill;
+  static const download = SFSymbols.arrow_down_circle;
+  static const stopRecording = SFSymbols.stop_fill;
+  static const record = SFSymbols.microphone_fill;
   static const file = SFSymbols.document_fill;
   static const photo = SFSymbols.photo;
   static const camera = SFSymbols.camera;

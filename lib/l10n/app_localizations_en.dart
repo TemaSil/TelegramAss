@@ -387,6 +387,22 @@ class AppL10nEn extends AppL10n {
   String get unreadMessages => 'Unread messages';
 
   @override
+  String get voiceUnavailable => 'Cannot record';
+
+  @override
+  String get voiceUnavailableMessage =>
+      'Grant microphone access to send a voice message.';
+
+  @override
+  String get slideToCancel => 'Slide to cancel';
+
+  @override
+  String get releaseToCancel => 'Release to cancel';
+
+  @override
+  String get ok => 'OK';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

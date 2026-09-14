@@ -8,6 +8,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../../core/formatters.dart';
 import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
+import '../../../app.dart';
 import '../../../data/models.dart';
 import '../../chats/widgets/chat_row.dart' show MessageStatusTicks;
 import 'attachment_image.dart';
@@ -15,6 +16,7 @@ import 'bubble_shape.dart';
 import 'message_text.dart';
 import 'photo_viewer.dart';
 import '../../../core/tg_icons.dart';
+import '../../../data/audio_player.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// A single message.
@@ -278,6 +280,7 @@ class MessageBubble extends StatelessWidget {
 
       case TgMessageKind.audio:
         return _AudioContent(
+          message: message,
           title: message.audioTitle?.isNotEmpty == true
               ? message.audioTitle!
               : (message.fileName ?? 'Audio'),
@@ -288,10 +291,7 @@ class MessageBubble extends StatelessWidget {
         );
 
       case TgMessageKind.voice:
-        return _VoiceContent(
-          seconds: message.voiceSeconds ?? 12,
-          tint: textColor,
-        );
+        return _VoiceContent(message: message, tint: textColor);
 
       case TgMessageKind.file:
         return _FileContent(
@@ -535,32 +535,74 @@ class _PhotoPlaceholder extends StatelessWidget {
   }
 }
 
+/// A voice note, played in place. The waveform doubles as the scrubber: the
+/// played part is solid, the rest is dimmed, and a tap anywhere seeks.
 class _VoiceContent extends StatelessWidget {
-  const _VoiceContent({required this.seconds, required this.tint});
+  const _VoiceContent({required this.message, required this.tint});
 
-  final int seconds;
+  final TgMessage message;
   final Color tint;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(TgIcons.play, size: 22, color: tint),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 120,
-          height: 26,
-          child: CustomPaint(
-            painter: _WaveformPainter(tint: tint, seed: seconds),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          TgFormat.duration(Duration(seconds: seconds)),
-          style: TextStyle(fontSize: 12.5, color: tint),
-        ),
-      ],
+    final seconds = message.voiceSeconds ?? 0;
+    final path = message.localPath;
+
+    return ListenableBuilder(
+      listenable: TgAudio.instance,
+      builder: (context, _) {
+        final audio = TgAudio.instance;
+        final isCurrent = audio.currentMessageId == message.id;
+        final playing = audio.isPlayingMessage(message.id);
+        final progress = audio.progressFor(message.id);
+
+        // Once it is playing, the elapsed time is more useful than the length.
+        final label = isCurrent && audio.duration > Duration.zero
+            ? TgFormat.duration(audio.position)
+            : TgFormat.duration(Duration(seconds: seconds));
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: path == null ? null : () => audio.toggle(message.id, path),
+              behavior: HitTestBehavior.opaque,
+              child: path == null
+                  // Still coming down from the server.
+                  ? SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CupertinoActivityIndicator(color: tint, radius: 9),
+                    )
+                  : Icon(
+                      playing ? TgIcons.pause : TgIcons.play,
+                      size: 22,
+                      color: tint,
+                    ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTapDown: (details) {
+                if (!isCurrent) return;
+                audio.seekFraction(message.id, details.localPosition.dx / 120);
+              },
+              child: SizedBox(
+                width: 120,
+                height: 26,
+                child: CustomPaint(
+                  painter: _WaveformPainter(
+                    tint: tint,
+                    seed: seconds,
+                    progress: isCurrent ? progress : 0,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(label, style: TextStyle(fontSize: 12.5, color: tint)),
+          ],
+        );
+      },
     );
   }
 }
@@ -642,8 +684,11 @@ class _VideoContent extends StatelessWidget {
 }
 
 /// Music: title, performer, and how long it runs.
+/// A music track. Tapping the disc downloads it if it is not here yet, then
+/// plays it; a hairline under the row tracks the position.
 class _AudioContent extends StatelessWidget {
   const _AudioContent({
+    required this.message,
     required this.title,
     required this.performer,
     required this.size,
@@ -651,6 +696,7 @@ class _AudioContent extends StatelessWidget {
     required this.tint,
   });
 
+  final TgMessage message;
   final String title;
   final String? performer;
   final String? size;
@@ -659,89 +705,193 @@ class _AudioContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = [
-      if (performer != null && performer!.isNotEmpty) performer!,
-      if (seconds != null) TgFormat.duration(Duration(seconds: seconds!)),
-      if (size != null && size!.isNotEmpty) size!,
-    ].join(' · ');
+    return ListenableBuilder(
+      listenable: TgAudio.instance,
+      builder: (context, _) {
+        final audio = TgAudio.instance;
+        final path = message.localPath;
+        final isCurrent = audio.currentMessageId == message.id;
+        final playing = audio.isPlayingMessage(message.id);
 
-    return SizedBox(
-      width: 230,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: tint.withValues(alpha: 0.18),
-            ),
-            child: Icon(TgIcons.play, size: 18, color: tint),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                    color: tint,
-                  ),
-                ),
-                if (subtitle.isNotEmpty)
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: tint.withValues(alpha: 0.75),
+        final elapsed = isCurrent && audio.duration > Duration.zero
+            ? TgFormat.duration(audio.position)
+            : (seconds != null
+                  ? TgFormat.duration(Duration(seconds: seconds!))
+                  : null);
+        final subtitle = [
+          if (performer != null && performer!.isNotEmpty) performer!,
+          ?elapsed,
+          if (size != null && size!.isNotEmpty) size!,
+        ].join(' · ');
+
+        return SizedBox(
+          width: 230,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      if (path != null) {
+                        audio.toggle(message.id, path);
+                      } else {
+                        AppScope.read(context).client
+                            .downloadMessageMedia(message.chatId, message.id);
+                      }
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: tint.withValues(alpha: 0.18),
+                      ),
+                      child: Icon(
+                        path == null
+                            ? TgIcons.download
+                            : (playing ? TgIcons.pause : TgIcons.play),
+                        size: 18,
+                        color: tint,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w600,
+                            color: tint,
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty)
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: tint.withValues(alpha: 0.75),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (isCurrent) ...[
+                const SizedBox(height: 8),
+                _TrackBar(
+                  progress: audio.progressFor(message.id),
+                  tint: tint,
+                  onSeek: (fraction) =>
+                      audio.seekFraction(message.id, fraction),
+                ),
               ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// The hairline under a playing track. Tapping it seeks.
+class _TrackBar extends StatelessWidget {
+  const _TrackBar({
+    required this.progress,
+    required this.tint,
+    required this.onSeek,
+  });
+
+  final double progress;
+  final Color tint;
+  final ValueChanged<double> onSeek;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GestureDetector(
+          onTapDown: (details) =>
+              onSeek(details.localPosition.dx / constraints.maxWidth),
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(
+            height: 12,
+            child: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: SizedBox(
+                  height: 3,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: ColoredBox(color: tint.withValues(alpha: 0.2)),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: progress.clamp(0.0, 1.0),
+                        child: ColoredBox(color: tint),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _WaveformPainter extends CustomPainter {
-  _WaveformPainter({required this.tint, required this.seed});
+  _WaveformPainter({required this.tint, required this.seed, this.progress = 0});
 
   final Color tint;
   final int seed;
 
+  /// 0..1 through the note; bars before it are solid, bars after are dimmed.
+  final double progress;
+
   @override
   void paint(Canvas canvas, Size size) {
     final random = math.Random(seed);
-    final paint = Paint()
+    final played = Paint()
       ..color = tint
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;
+    final remaining = Paint()
+      ..color = tint.withValues(alpha: 0.35)
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
 
+    final head = size.width * progress;
     const step = 5.0;
     for (var x = 0.0; x < size.width; x += step) {
       final height = size.height * (0.25 + random.nextDouble() * 0.75);
       canvas.drawLine(
         Offset(x, (size.height - height) / 2),
         Offset(x, (size.height + height) / 2),
-        paint,
+        x <= head ? played : remaining,
       );
     }
   }
 
   @override
   bool shouldRepaint(_WaveformPainter oldDelegate) =>
-      oldDelegate.tint != tint || oldDelegate.seed != seed;
+      oldDelegate.tint != tint ||
+      oldDelegate.seed != seed ||
+      oldDelegate.progress != progress;
 }
 
 class _FileContent extends StatelessWidget {

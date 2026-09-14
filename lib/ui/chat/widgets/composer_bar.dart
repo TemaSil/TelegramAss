@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
+import '../../../core/formatters.dart';
 import '../../../core/glass_tokens.dart';
 import '../../../core/tg_theme.dart';
 import '../../../data/models.dart';
+import '../../../data/voice_recorder.dart';
 import '../../../core/tg_icons.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -18,7 +22,7 @@ class ComposerBar extends StatefulWidget {
     required this.controller,
     required this.onSend,
     required this.onAttach,
-    required this.onVoice,
+    required this.onVoiceRecorded,
     this.replyTo,
     this.editing,
     this.onCancelReply,
@@ -27,7 +31,10 @@ class ComposerBar extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
   final VoidCallback onAttach;
-  final VoidCallback onVoice;
+
+  /// Called with the finished recording: the file, its length, and whether it
+  /// is OGG/Opus — a true voice note — or the AAC fallback.
+  final void Function(String path, int seconds, bool isOpus) onVoiceRecorded;
   final TgMessage? replyTo;
   final TgMessage? editing;
   final VoidCallback? onCancelReply;
@@ -39,6 +46,13 @@ class ComposerBar extends StatefulWidget {
 class _ComposerBarState extends State<ComposerBar> {
   bool _hasText = false;
 
+  /// Set while the mic is held down. The composer swaps the field for a timer
+  /// and a slide-to-cancel hint, as the official clients do.
+  bool _recording = false;
+  bool _willCancel = false;
+  Duration _elapsed = Duration.zero;
+  Timer? _tick;
+
   @override
   void initState() {
     super.initState();
@@ -49,7 +63,72 @@ class _ComposerBarState extends State<ComposerBar> {
   @override
   void dispose() {
     widget.controller.removeListener(_onTextChanged);
+    _tick?.cancel();
+    // A take still running when the chat closes is abandoned, not sent.
+    if (_recording) TgVoiceRecorder.instance.cancel();
     super.dispose();
+  }
+
+  Future<void> _startRecording() async {
+    if (_recording) return;
+    HapticFeedback.mediumImpact();
+    final started = await TgVoiceRecorder.instance.start();
+    if (!mounted) return;
+    if (!started) {
+      // No microphone permission, or no encoder. Saying nothing would look
+      // like a dead button.
+      await GlassDialog.show<void>(
+        context: context,
+        title: AppL10n.of(context).voiceUnavailable,
+        message: AppL10n.of(context).voiceUnavailableMessage,
+        settings: GlassTokens.menu(context),
+        actions: [
+          GlassDialogAction(
+            label: AppL10n.of(context).ok,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      );
+      return;
+    }
+
+    setState(() {
+      _recording = true;
+      _willCancel = false;
+      _elapsed = Duration.zero;
+    });
+    _tick = Timer.periodic(const Duration(milliseconds: 200), (_) {
+      if (!mounted) return;
+      setState(() => _elapsed = TgVoiceRecorder.instance.elapsed);
+    });
+  }
+
+  Future<void> _finishRecording({required bool cancelled}) async {
+    if (!_recording) return;
+    _tick?.cancel();
+    _tick = null;
+
+    if (cancelled) {
+      HapticFeedback.lightImpact();
+      await TgVoiceRecorder.instance.cancel();
+    } else {
+      final recording = await TgVoiceRecorder.instance.stop();
+      if (recording != null) {
+        HapticFeedback.mediumImpact();
+        widget.onVoiceRecorded(
+          recording.path,
+          recording.seconds,
+          recording.isOpus,
+        );
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _recording = false;
+      _willCancel = false;
+      _elapsed = Duration.zero;
+    });
   }
 
   void _onTextChanged() {
@@ -91,51 +170,131 @@ class _ComposerBarState extends State<ComposerBar> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: GlassContainer(
-                  shape: const LiquidRoundedRectangle(borderRadius: 23),
-                  settings: GlassTokens.composer(context),
-                  quality: GlassQuality.premium,
-                  child: CupertinoTextField(
-                    controller: widget.controller,
-                    placeholder: widget.editing != null
-                        ? l10n.editMessage
-                        : l10n.message,
-                    minLines: 1,
-                    maxLines: 5,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    style: TgText.body(context),
-                    // The glass is the surface; the field must not paint a
-                    // second one on top of it.
-                    decoration: const BoxDecoration(),
-                  ),
-                ),
+                child: _recording
+                    ? _RecordingField(
+                        elapsed: _elapsed,
+                        willCancel: _willCancel,
+                      )
+                    : GlassContainer(
+                        shape: const LiquidRoundedRectangle(borderRadius: 23),
+                        settings: GlassTokens.composer(context),
+                        quality: GlassQuality.premium,
+                        child: CupertinoTextField(
+                          controller: widget.controller,
+                          placeholder: widget.editing != null
+                              ? l10n.editMessage
+                              : l10n.message,
+                          minLines: 1,
+                          maxLines: 5,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          style: TgText.body(context),
+                          // The glass is the surface; the field must not paint a
+                          // second one on top of it.
+                          decoration: const BoxDecoration(),
+                        ),
+                      ),
               ),
               const SizedBox(width: 8),
-              GlassIconButton(
-                icon: Icon(_hasText ? TgIcons.send : TgIcons.voice, size: 21),
-                size: 46,
-                settings: GlassTokens.composer(context).copyWith(
-                  glassColor: _hasText
-                      ? TgColors.accent
-                            .resolveFrom(context)
-                            .withValues(alpha: 0.78)
-                      : null,
-                ),
-                quality: GlassQuality.premium,
-                glowColor: TgColors.accent.resolveFrom(context),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  if (_hasText) {
+              // Tap sends when there is text; otherwise the button is held to
+              // record, and slid left to throw the take away.
+              GestureDetector(
+                onLongPressStart: _hasText ? null : (_) => _startRecording(),
+                onLongPressMoveUpdate: _hasText
+                    ? null
+                    : (details) {
+                        final willCancel =
+                            details.localOffsetFromOrigin.dx < -70;
+                        if (willCancel != _willCancel) {
+                          setState(() => _willCancel = willCancel);
+                        }
+                      },
+                onLongPressEnd: _hasText
+                    ? null
+                    : (_) => _finishRecording(cancelled: _willCancel),
+                onLongPressCancel: _hasText
+                    ? null
+                    : () => _finishRecording(cancelled: true),
+                child: GlassIconButton(
+                  icon: Icon(
+                    _hasText
+                        ? TgIcons.send
+                        : (_recording ? TgIcons.record : TgIcons.voice),
+                    size: 21,
+                  ),
+                  size: 46,
+                  settings: GlassTokens.composer(context).copyWith(
+                    glassColor: _hasText
+                        ? TgColors.accent
+                              .resolveFrom(context)
+                              .withValues(alpha: 0.78)
+                        : (_recording
+                              ? CupertinoColors.systemRed
+                                    .resolveFrom(context)
+                                    .withValues(alpha: 0.78)
+                              : null),
+                  ),
+                  quality: GlassQuality.premium,
+                  glowColor: _recording
+                      ? CupertinoColors.systemRed.resolveFrom(context)
+                      : TgColors.accent.resolveFrom(context),
+                  onPressed: () {
+                    if (!_hasText) return;
+                    HapticFeedback.lightImpact();
                     widget.onSend();
-                  } else {
-                    widget.onVoice();
-                  }
-                },
+                  },
+                ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Replaces the text field while a take is running: a pulsing red dot, the
+/// elapsed time, and the hint that sliding left throws it away.
+class _RecordingField extends StatelessWidget {
+  const _RecordingField({required this.elapsed, required this.willCancel});
+
+  final Duration elapsed;
+  final bool willCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    final red = CupertinoColors.systemRed.resolveFrom(context);
+
+    return GlassContainer(
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      shape: const LiquidRoundedRectangle(borderRadius: 23),
+      settings: GlassTokens.composer(context),
+      child: Row(
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: red),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            TgFormat.duration(elapsed),
+            style: TgText.body(context)
+                .copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+          ),
+          const Spacer(),
+          Text(
+            willCancel ? l10n.releaseToCancel : l10n.slideToCancel,
+            style: TextStyle(
+              fontSize: 13,
+              color: willCancel
+                  ? red
+                  : TgColors.secondaryLabel.resolveFrom(context),
+            ),
           ),
         ],
       ),

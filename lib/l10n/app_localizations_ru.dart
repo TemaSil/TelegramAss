@@ -386,6 +386,22 @@ class AppL10nRu extends AppL10n {
   String get unreadMessages => 'Непрочитанные сообщения';
 
   @override
+  String get voiceUnavailable => 'Не удалось записать';
+
+  @override
+  String get voiceUnavailableMessage =>
+      'Разрешите доступ к микрофону, чтобы отправлять голосовые сообщения.';
+
+  @override
+  String get slideToCancel => 'Влево — отмена';
+
+  @override
+  String get releaseToCancel => 'Отпустите для отмены';
+
+  @override
+  String get ok => 'OK';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

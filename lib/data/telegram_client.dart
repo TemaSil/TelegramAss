@@ -73,7 +73,15 @@ abstract class TelegramClient {
   /// [path] is a file on this device, from the picker.
   Future<void> sendPhoto(int chatId, {String? path, String? caption});
 
-  Future<void> sendVoice(int chatId, int seconds);
+  /// Sends a recorded voice note. [path] is the file the recorder produced;
+  /// [isOpus] says whether it is OGG/Opus, which is the only format Telegram
+  /// accepts as a true voice note — anything else goes as an audio file.
+  Future<void> sendVoice(
+    int chatId,
+    int seconds, {
+    String? path,
+    bool isOpus = true,
+  });
 
   Future<void> sendFile(int chatId, String name, String size, {String? path});
 
@@ -92,6 +100,13 @@ abstract class TelegramClient {
 
   /// Stores the unsent composer text for [chatId]. An empty string clears it.
   Future<void> setDraft(int chatId, String text);
+
+  /// Pulls the media behind a message onto the device, so it can be played or
+  /// opened. The message's `localPath` appears on its stream once it lands.
+  ///
+  /// Voice notes arrive on their own — they are small enough that waiting for
+  /// a tap would only add latency — so this is for music and documents.
+  Future<void> downloadMessageMedia(int chatId, int messageId) async {}
 
   /// Messages of [chatId] whose text matches [query], newest first.
   List<TgMessage> searchMessages(int chatId, String query);
