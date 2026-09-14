@@ -11,6 +11,7 @@ import '../common/wallpaper_picker.dart';
 import 'proxy_sheet.dart';
 import '../../core/tg_icons.dart';
 import '../../l10n/app_localizations.dart';
+import 'sessions_screen.dart';
 
 /// Nav bar for the Settings tab.
 class SettingsAppBar extends StatelessWidget {
@@ -296,17 +297,31 @@ class SettingsBody extends StatelessWidget {
                   leading: const Icon(TgIcons.privacy),
                   title: Text(l10n.twoStepVerification),
                   trailing: const CupertinoListTileChevron(),
-                  onTap: () {},
+                  // Signing in with an existing password works; setting or
+                  // changing one does not, and a row that silently does
+                  // nothing is worse than one that says so.
+                  onTap: () => GlassDialog.show<void>(
+                    context: context,
+                    title: l10n.twoStepVerification,
+                    message: l10n.notImplementedHere,
+                    settings: GlassTokens.menu(context),
+                    actions: [
+                      GlassDialogAction(
+                        label: l10n.ok,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
                 ),
                 CupertinoListTile.notched(
                   leading: const Icon(TgIcons.sessions),
                   title: Text(l10n.activeSessions),
-                  trailing: GlassBadge(
-                    count: 3,
-                    settings: GlassTokens.chrome(context),
-                    child: const CupertinoListTileChevron(),
+                  trailing: const CupertinoListTileChevron(),
+                  onTap: () => Navigator.of(context).push(
+                    CupertinoPageRoute<void>(
+                      builder: (_) => const SessionsScreen(),
+                    ),
                   ),
-                  onTap: () {},
                 ),
               ],
             ),

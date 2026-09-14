@@ -1340,6 +1340,55 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<List<TgSession>> activeSessions() async {
+    final response = await _request({'@type': 'getActiveSessions'});
+    final sessions = response['sessions'] as List?;
+    if (sessions == null) return const [];
+
+    final list = [
+      for (final raw in sessions.cast<Map<String, dynamic>>())
+        TgSession(
+          id: raw['id'] as String? ?? '',
+          deviceModel: raw['device_model'] as String? ?? 'Device',
+          platform: [
+            if ((raw['platform'] as String?)?.isNotEmpty ?? false)
+              raw['platform'] as String,
+            if ((raw['system_version'] as String?)?.isNotEmpty ?? false)
+              raw['system_version'] as String,
+          ].join(' '),
+          appName: [
+            if ((raw['application_name'] as String?)?.isNotEmpty ?? false)
+              raw['application_name'] as String,
+            if ((raw['application_version'] as String?)?.isNotEmpty ?? false)
+              raw['application_version'] as String,
+          ].join(' '),
+          isCurrent: raw['is_current'] as bool? ?? false,
+          ip: raw['ip_address'] as String?,
+          location: raw['location'] as String?,
+          lastActive: (raw['last_active_date'] as num?) == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(
+                  (raw['last_active_date'] as num).toInt() * 1000,
+                ),
+        ),
+    ];
+
+    // This device first, then most recently seen.
+    list.sort((a, b) {
+      if (a.isCurrent != b.isCurrent) return a.isCurrent ? -1 : 1;
+      final at = a.lastActive ?? DateTime(1970);
+      final bt = b.lastActive ?? DateTime(1970);
+      return bt.compareTo(at);
+    });
+    return list;
+  }
+
+  @override
+  Future<void> terminateSession(String sessionId) async {
+    await _request({'@type': 'terminateSession', 'session_id': sessionId});
+  }
+
+  @override
   Future<List<TgMessage>> pinnedMessages(int chatId) async {
     // Recent TDLib has no pinned_message_id on the chat; the pinned set is a
     // filtered search, which also covers chats with several of them.

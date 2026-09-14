@@ -937,6 +937,36 @@ abstract class AppL10n {
   /// **'Forward without quoting'**
   String get forwardWithoutQuoting;
 
+  /// No description provided for @terminateSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign this device out?'**
+  String get terminateSession;
+
+  /// No description provided for @terminate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get terminate;
+
+  /// No description provided for @thisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get thisDevice;
+
+  /// No description provided for @otherSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Other session'**
+  String get otherSessions;
+
+  /// No description provided for @notImplementedHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing the two-step password is not implemented here yet. Use another Telegram client; signing in with an existing password works.'**
+  String get notImplementedHere;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:

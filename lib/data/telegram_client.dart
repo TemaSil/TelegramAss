@@ -118,6 +118,12 @@ abstract class TelegramClient {
     bool asCopy = false,
   }) async {}
 
+  /// Devices signed in to this account, the current one first.
+  Future<List<TgSession>> activeSessions() async => const [];
+
+  /// Signs one device out.
+  Future<void> terminateSession(String sessionId) async {}
+
   /// Messages pinned in [chatId], newest first.
   Future<List<TgMessage>> pinnedMessages(int chatId) async => const [];
 

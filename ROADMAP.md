@@ -74,7 +74,9 @@ SOCKS5 proxy support; and an in-app diagnostics log.
   new message becomes a local notification, which needs no Firebase project.
   Tapping one opens the chat. Not covered: in-app notification settings per
   chat beyond mute, and delivery when the service is killed by the system.
-- **Privacy and sessions** — the rows exist, nothing stands behind them.
+- **Privacy and sessions** — active sessions are real: the account's signed-in
+  devices are listed and can be signed out. Setting or changing the two-step
+  password is not implemented, and the row says so rather than doing nothing.
 - **Calls** — impossible through TDLib, which carries neither voice nor video.
   They need `tgcalls` with its own native build for every ABI: a project in
   itself.

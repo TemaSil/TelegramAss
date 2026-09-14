@@ -169,8 +169,8 @@ unread divider and jump-to-latest; pinned messages; attachments that really
 attach (gallery strip, camera, files); downloaded avatars and photos with a
 full-screen viewer; voice notes and music that play, and voice messages you
 record by holding the mic; animated stickers and full-screen video; notifications while the app is closed, carried by a
-foreground service rather than Firebase; contacts, call history, and settings
-that persist.
+foreground service rather than Firebase; contacts, call history, active sessions that can be signed out, a
+compose flow that finds anyone the server knows, and settings that persist.
 
 Also, from the Telegram mods: a configurable double-tap reaction, forwarding
 without quoting, message details, and a hideable story rail.

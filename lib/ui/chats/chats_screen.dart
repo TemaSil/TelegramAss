@@ -14,6 +14,7 @@ import '../chat/chat_screen.dart';
 import '../common/tg_avatar.dart';
 import '../stories/story_viewer.dart';
 import 'archive_screen.dart';
+import 'new_message_sheet.dart';
 import 'widgets/chat_row.dart';
 import 'widgets/story_rail.dart';
 import '../../core/tg_icons.dart';
@@ -69,11 +70,21 @@ class ChatsAppBar extends StatelessWidget {
           size: 44,
           settings: GlassTokens.chrome(context),
           quality: GlassQuality.premium,
-          onPressed: () => GlassToast.show(
-            context,
-            message: l10n.newMessageHint,
-            type: GlassToastType.info,
-            icon: const Icon(TgIcons.compose, size: 18),
+          onPressed: () => GlassModalSheet.show<void>(
+            context: context,
+            halfSize: 0.7,
+            settings: GlassTokens.panel(context),
+            quality: GlassQuality.premium,
+            builder: (sheetContext) => NewMessageSheet(
+              onPick: (chatId) {
+                Navigator.of(sheetContext).pop();
+                Navigator.of(context).push(
+                  CupertinoPageRoute<void>(
+                    builder: (_) => ChatScreen(chatId: chatId),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],

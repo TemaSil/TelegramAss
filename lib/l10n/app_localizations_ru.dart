@@ -466,6 +466,22 @@ class AppL10nRu extends AppL10n {
   String get forwardWithoutQuoting => 'Переслать без цитаты';
 
   @override
+  String get terminateSession => 'Завершить сеанс?';
+
+  @override
+  String get terminate => 'Завершить';
+
+  @override
+  String get thisDevice => 'Это устройство';
+
+  @override
+  String get otherSessions => 'Другой сеанс';
+
+  @override
+  String get notImplementedHere =>
+      'Смена облачного пароля здесь пока не сделана. Поменяйте его в другом клиенте Telegram; вход с существующим паролем работает.';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

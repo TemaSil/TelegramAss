@@ -167,6 +167,12 @@ class TdlibTelegramClient implements TelegramClient {
   }) async {}
 
   @override
+  Future<List<TgSession>> activeSessions() async => const [];
+
+  @override
+  Future<void> terminateSession(String sessionId) async {}
+
+  @override
   Future<List<TgMessage>> pinnedMessages(int chatId) async => const [];
 
   @override

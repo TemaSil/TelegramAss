@@ -465,6 +465,22 @@ class AppL10nEn extends AppL10n {
   String get forwardWithoutQuoting => 'Forward without quoting';
 
   @override
+  String get terminateSession => 'Sign this device out?';
+
+  @override
+  String get terminate => 'Sign out';
+
+  @override
+  String get thisDevice => 'This device';
+
+  @override
+  String get otherSessions => 'Other session';
+
+  @override
+  String get notImplementedHere =>
+      'Changing the two-step password is not implemented here yet. Use another Telegram client; signing in with an existing password works.';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

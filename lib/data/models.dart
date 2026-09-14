@@ -362,6 +362,30 @@ class TgMessage {
   }
 }
 
+/// One signed-in device, as Telegram's own Active Sessions screen lists them.
+class TgSession {
+  const TgSession({
+    required this.id,
+    required this.deviceModel,
+    required this.platform,
+    required this.appName,
+    required this.isCurrent,
+    this.ip,
+    this.location,
+    this.lastActive,
+  });
+
+  /// TDLib reports session ids as int64 strings.
+  final String id;
+  final String deviceModel;
+  final String platform;
+  final String appName;
+  final bool isCurrent;
+  final String? ip;
+  final String? location;
+  final DateTime? lastActive;
+}
+
 /// What a search of the server came back with.
 class TgSearchResults {
   const TgSearchResults({this.chats = const [], this.messages = const []});

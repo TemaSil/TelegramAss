@@ -537,6 +537,33 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<List<TgSession>> activeSessions() async => [
+    TgSession(
+      id: '1',
+      deviceModel: 'Pixel 8 Pro',
+      platform: 'Android 15',
+      appName: 'Telegram Liquid 1.0',
+      isCurrent: true,
+      ip: '192.0.2.14',
+      location: 'Warsaw, Poland',
+      lastActive: DateTime.now(),
+    ),
+    TgSession(
+      id: '2',
+      deviceModel: 'MacBook Pro',
+      platform: 'macOS 15.2',
+      appName: 'Telegram Desktop 5.8',
+      isCurrent: false,
+      ip: '192.0.2.31',
+      location: 'Warsaw, Poland',
+      lastActive: _ago(const Duration(hours: 3)),
+    ),
+  ];
+
+  @override
+  Future<void> terminateSession(String sessionId) async {}
+
+  @override
   Future<List<TgMessage>> pinnedMessages(int chatId) async => [
     for (final id in _pinned[chatId] ?? const <int>{})
       ...?_messages[chatId]?.where((message) => message.id == id),
