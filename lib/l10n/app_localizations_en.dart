@@ -471,4 +471,27 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get attachmentFailed => 'Could not attach that file';
+
+  @override
+  String get diagnostics => 'Diagnostics';
+
+  @override
+  String get diagnosticsHint =>
+      'What the Telegram backend has reported since launch.';
+
+  @override
+  String get diagnosticsEmpty => 'Nothing logged yet.';
+
+  @override
+  String get diagnosticsCopied => 'Log copied';
+
+  @override
+  String get connecting => 'Connecting to Telegram…';
+
+  @override
+  String get demoBanner =>
+      'Running on demo data — no code will be sent to a real phone.';
+
+  @override
+  String get openDiagnostics => 'Why?';
 }

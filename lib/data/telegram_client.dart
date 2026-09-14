@@ -12,6 +12,16 @@ abstract class TelegramClient {
   /// True when the client talks to real Telegram servers.
   bool get isLive;
 
+  /// TDLib's last `authorizationState`, or null for backends that have none.
+  String? get authorizationState => null;
+
+  /// TDLib's last `connectionState`, or null.
+  String? get connectionState => null;
+
+  /// False while a live backend is still handshaking and cannot accept a
+  /// phone number yet.
+  bool get isReadyForPhone => true;
+
   Future<void> start();
 
   Future<void> dispose();

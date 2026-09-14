@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'demo_client.dart';
+import 'diagnostics.dart';
 import 'models.dart';
 import 'tdlib/tdlib_backend.dart';
 import 'telegram_client.dart';
@@ -91,6 +92,17 @@ class AppState extends ChangeNotifier {
 
     TelegramClient client = DemoTelegramClient(autoLogin: _demoAutoLogin);
 
+    if (_apiId == 0 || _apiHash.isEmpty) {
+      TgDiagnostics.instance.warn(
+        'No API credentials compiled in — running the demo backend. Build with '
+        '--dart-define=TELEGRAM_API_ID and TELEGRAM_API_HASH for live mode.',
+      );
+    } else {
+      TgDiagnostics.instance.info(
+        'API id $_apiId compiled in; starting TDLib.',
+      );
+    }
+
     if (_apiId != 0 && _apiHash.isNotEmpty) {
       final live = TdlibTelegramClient(
         apiId: _apiId,
@@ -101,9 +113,11 @@ class AppState extends ChangeNotifier {
       try {
         await live.start();
         client = live;
-      } on StateError catch (error) {
-        // Native library missing — stay on the demo backend rather than
-        // presenting a dead login screen.
+      } on Object catch (error) {
+        // Anything that stops TDLib from starting — a missing library, a bad
+        // directory, a failed isolate — falls back to demo rather than
+        // presenting a dead login screen, but it is never silent.
+        TgDiagnostics.instance.error('TDLib did not start: $error');
         debugPrint('TDLib unavailable, falling back to demo: $error');
         client = DemoTelegramClient(autoLogin: _demoAutoLogin);
         await client.start();

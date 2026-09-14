@@ -5,8 +5,11 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../app.dart';
 import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
+import '../../data/app_state.dart';
 import '../../data/models.dart';
+import '../../data/diagnostics.dart';
 import '../common/wallpaper.dart';
+import 'diagnostics_sheet.dart';
 import '../../core/tg_icons.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -33,6 +36,13 @@ class _AuthScreenState extends State<AuthScreen> {
     _codeController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// A live backend rejects a phone number until it has finished its
+  /// handshake, so the button waits rather than failing silently.
+  bool _canSubmit(AppState state, TgAuthStage stage) {
+    if (stage != TgAuthStage.phone && stage != TgAuthStage.splash) return true;
+    return state.client.isReadyForPhone;
   }
 
   Future<void> _submit() async {
@@ -129,7 +139,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         height: 54,
                         child: GlassButton.custom(
                           onTap: _submit,
-                          enabled: !_busy,
+                          enabled: !_busy && _canSubmit(state, stage),
                           shape: const LiquidRoundedRectangle(borderRadius: 27),
                           settings: GlassTokens.chrome(context),
                           quality: GlassQuality.premium,
@@ -160,7 +170,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                if (!state.client.isLive) _DemoHint(stage: stage),
+                _StatusBar(stage: stage),
               ],
             ),
           ),
@@ -261,28 +271,80 @@ class _Logo extends StatelessWidget {
   }
 }
 
-class _DemoHint extends StatelessWidget {
-  const _DemoHint({required this.stage});
+/// Says which backend is actually running, and why the screen may be stuck.
+///
+/// Before this existed, a demo build and a live build that failed to connect
+/// looked exactly the same: you typed a number, tapped the button, and no code
+/// ever arrived.
+class _StatusBar extends StatelessWidget {
+  const _StatusBar({required this.stage});
 
   final TgAuthStage stage;
 
   @override
   Widget build(BuildContext context) {
+    final state = AppScope.of(context);
     final l10n = AppL10n.of(context);
-    final text = switch (stage) {
-      TgAuthStage.code => l10n.demoCodeHint,
-      TgAuthStage.password => l10n.demoPasswordHint,
-      _ => l10n.demoAnyPhone,
-    };
+    final client = state.client;
+    final lastError = TgDiagnostics.instance.lastError;
 
-    return GlassChip(
-      label: text,
-      icon: const Icon(TgIcons.info, size: 15),
-      settings: GlassTokens.chrome(context),
-      labelStyle: TextStyle(
-        fontSize: 13,
-        color: TgColors.secondaryLabel.resolveFrom(context),
-      ),
+    final String text;
+    final bool isProblem;
+    if (!client.isLive) {
+      text = switch (stage) {
+        TgAuthStage.code => l10n.demoCodeHint,
+        TgAuthStage.password => l10n.demoPasswordHint,
+        _ => l10n.demoBanner,
+      };
+      isProblem = true;
+    } else if (lastError != null) {
+      text = lastError.message;
+      isProblem = true;
+    } else if (!client.isReadyForPhone && stage != TgAuthStage.ready) {
+      text = l10n.connecting;
+      isProblem = false;
+    } else {
+      text = client.connectionState == 'connectionStateReady'
+          ? 'TDLib · ${l10n.presenceOnline}'
+          : 'TDLib';
+      isProblem = false;
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GlassChip(
+          label: text,
+          icon: Icon(
+            isProblem ? TgIcons.failed : TgIcons.info,
+            size: 15,
+            color: isProblem ? TgColors.destructive.resolveFrom(context) : null,
+          ),
+          settings: GlassTokens.chrome(context),
+          labelStyle: TextStyle(
+            fontSize: 13,
+            color: isProblem
+                ? TgColors.destructive.resolveFrom(context)
+                : TgColors.secondaryLabel.resolveFrom(context),
+          ),
+        ),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: () => showDiagnosticsSheet(context),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Text(
+              l10n.diagnostics,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: TgColors.accent.resolveFrom(context),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

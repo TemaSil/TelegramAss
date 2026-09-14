@@ -38,6 +38,15 @@ class TdlibTelegramClient implements TelegramClient {
   bool get isLive => false;
 
   @override
+  bool get isReadyForPhone => false;
+
+  @override
+  String? get authorizationState => null;
+
+  @override
+  String? get connectionState => null;
+
+  @override
   Future<void> start() async => _unsupported();
 
   @override

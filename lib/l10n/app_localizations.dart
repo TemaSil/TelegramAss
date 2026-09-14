@@ -960,6 +960,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Could not attach that file'**
   String get attachmentFailed;
+
+  /// No description provided for @diagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics'**
+  String get diagnostics;
+
+  /// No description provided for @diagnosticsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the Telegram backend has reported since launch.'**
+  String get diagnosticsHint;
+
+  /// No description provided for @diagnosticsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged yet.'**
+  String get diagnosticsEmpty;
+
+  /// No description provided for @diagnosticsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Log copied'**
+  String get diagnosticsCopied;
+
+  /// No description provided for @connecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to Telegram…'**
+  String get connecting;
+
+  /// No description provided for @demoBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Running on demo data — no code will be sent to a real phone.'**
+  String get demoBanner;
+
+  /// No description provided for @openDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Why?'**
+  String get openDiagnostics;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

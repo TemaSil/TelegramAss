@@ -43,6 +43,15 @@ class DemoTelegramClient implements TelegramClient {
   bool get isLive => false;
 
   @override
+  String? get authorizationState => null;
+
+  @override
+  String? get connectionState => null;
+
+  @override
+  bool get isReadyForPhone => true;
+
+  @override
   TgAuthStage get currentStage => _stage;
 
   @override

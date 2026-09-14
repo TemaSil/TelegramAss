@@ -143,5 +143,12 @@
   "folderBots": "Боты",
   "camera": "Камера",
   "chooseFromGallery": "Выбрать из галереи",
-  "attachmentFailed": "Не удалось приложить файл"
+  "attachmentFailed": "Не удалось приложить файл",
+  "diagnostics": "Диагностика",
+  "diagnosticsHint": "Что сообщил бэкенд Telegram с момента запуска.",
+  "diagnosticsEmpty": "Пока ничего не записано.",
+  "diagnosticsCopied": "Лог скопирован",
+  "connecting": "Подключаемся к Telegram…",
+  "demoBanner": "Работают демо-данные — код на реальный номер не придёт.",
+  "openDiagnostics": "Почему?"
 }

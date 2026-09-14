@@ -471,4 +471,27 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get attachmentFailed => 'Не удалось приложить файл';
+
+  @override
+  String get diagnostics => 'Диагностика';
+
+  @override
+  String get diagnosticsHint =>
+      'Что сообщил бэкенд Telegram с момента запуска.';
+
+  @override
+  String get diagnosticsEmpty => 'Пока ничего не записано.';
+
+  @override
+  String get diagnosticsCopied => 'Лог скопирован';
+
+  @override
+  String get connecting => 'Подключаемся к Telegram…';
+
+  @override
+  String get demoBanner =>
+      'Работают демо-данные — код на реальный номер не придёт.';
+
+  @override
+  String get openDiagnostics => 'Почему?';
 }

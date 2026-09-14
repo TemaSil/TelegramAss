@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 
+import '../diagnostics.dart';
 import '../models.dart';
 import '../telegram_client.dart';
 import 'tdlib_ffi.dart';
@@ -54,8 +55,23 @@ class TdlibTelegramClient implements TelegramClient {
   TgAuthStage _stage = TgAuthStage.splash;
   TgUser? _me;
 
+  /// The last states TDLib reported, shown on the login screen so a stall is
+  /// visible instead of looking like a dead button.
+  String? _authorizationState;
+  String? _connectionState;
+
   /// True when the native library was found and the client is usable.
   bool get isAvailable => _bindings != null;
+
+  @override
+  String? get authorizationState => _authorizationState;
+
+  @override
+  String? get connectionState => _connectionState;
+
+  @override
+  bool get isReadyForPhone =>
+      _authorizationState == 'authorizationStateWaitPhoneNumber';
 
   @override
   String get backendName => 'TDLib';
@@ -106,6 +122,7 @@ class TdlibTelegramClient implements TelegramClient {
       jsonEncode({'@type': 'setLogVerbosityLevel', 'new_verbosity_level': 1}),
     );
     _clientId = bindings.createClientId();
+    TgDiagnostics.instance.info('TDLib client $_clientId created.');
 
     final port = ReceivePort();
     _receivePort = port;
@@ -118,6 +135,7 @@ class TdlibTelegramClient implements TelegramClient {
 
     // The first request is what makes TDLib emit its authorization state.
     _send({'@type': 'getOption', 'name': 'version'});
+    TgDiagnostics.instance.info('Waiting for the authorization state…');
   }
 
   @override
@@ -133,8 +151,13 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   static void _receiveLoop(_ReceiveConfig config) {
-    final bindings = TdJsonBindings.open();
-    if (bindings == null) return;
+    // Quiet: the main isolate already reported whether the library loaded, and
+    // this isolate cannot reach that log anyway.
+    final bindings = TdJsonBindings.open(quiet: true);
+    if (bindings == null) {
+      config.port.send('{"@type":"tdlibUnavailableInIsolate"}');
+      return;
+    }
     while (true) {
       final event = bindings.receive(1.0);
       if (event != null) config.port.send(event);
@@ -158,7 +181,11 @@ class TdlibTelegramClient implements TelegramClient {
       const Duration(seconds: 30),
       onTimeout: () {
         _pending.remove(id);
-        return {'@type': 'error', 'message': 'timeout'};
+        final name = request['@type'];
+        TgDiagnostics.instance.error(
+          '$name timed out after 30s — TDLib never answered.',
+        );
+        return {'@type': 'error', 'message': 'No answer from TDLib (timeout)'};
       },
     );
   }
@@ -174,12 +201,28 @@ class TdlibTelegramClient implements TelegramClient {
       return;
     }
 
+    final type = update['@type'] as String?;
+
+    if (type == 'tdlibUnavailableInIsolate') {
+      TgDiagnostics.instance.error(
+        'The receive isolate could not load libtdjson, so no updates will '
+        'ever arrive.',
+      );
+      return;
+    }
+
+    if (type == 'error') {
+      TgDiagnostics.instance.error(
+        'TDLib error ${update['code']}: ${update['message']}',
+      );
+    }
+
     final extra = update['@extra'];
     if (extra is int) {
       _pending.remove(extra)?.complete(update);
     }
 
-    switch (update['@type'] as String?) {
+    switch (type) {
       case 'updateAuthorizationState':
         _onAuthorizationState(
           update['authorization_state'] as Map<String, dynamic>,
@@ -198,11 +241,20 @@ class TdlibTelegramClient implements TelegramClient {
         _onUser(update['user'] as Map<String, dynamic>);
       case 'updateFile':
         _onFile(update['file'] as Map<String, dynamic>);
+      case 'updateConnectionState':
+        final state =
+            (update['state'] as Map<String, dynamic>?)?['@type'] as String?;
+        _connectionState = state;
+        TgDiagnostics.instance.info('Connection: ${state ?? 'unknown'}');
     }
   }
 
   void _onAuthorizationState(Map<String, dynamic> state) {
-    switch (state['@type'] as String?) {
+    final name = state['@type'] as String?;
+    _authorizationState = name;
+    TgDiagnostics.instance.info('Authorization: ${name ?? 'unknown'}');
+
+    switch (name) {
       case 'authorizationStateWaitTdlibParameters':
         _send({
           '@type': 'setTdlibParameters',

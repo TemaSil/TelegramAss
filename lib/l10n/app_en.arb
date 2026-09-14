@@ -220,5 +220,12 @@
   "folderBots": "Bots",
   "camera": "Camera",
   "chooseFromGallery": "Choose from the gallery",
-  "attachmentFailed": "Could not attach that file"
+  "attachmentFailed": "Could not attach that file",
+  "diagnostics": "Diagnostics",
+  "diagnosticsHint": "What the Telegram backend has reported since launch.",
+  "diagnosticsEmpty": "Nothing logged yet.",
+  "diagnosticsCopied": "Log copied",
+  "connecting": "Connecting to Telegram…",
+  "demoBanner": "Running on demo data — no code will be sent to a real phone.",
+  "openDiagnostics": "Why?"
 }

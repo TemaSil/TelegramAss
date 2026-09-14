@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 
+import '../diagnostics.dart';
+
 /// Raw FFI bindings for TDLib's JSON interface.
 ///
 /// Mirrors `td_json_client.h` from tdlib/td, using the modern client-id API:
@@ -38,27 +40,51 @@ class TdJsonBindings {
   final Pointer<Utf8> Function(double) _receive;
   final Pointer<Utf8> Function(Pointer<Utf8>) _execute;
 
-  /// Loads the native library, or returns null when it is not bundled.
-  static TdJsonBindings? open() {
+  /// Loads the native library, or returns null when it cannot be used.
+  ///
+  /// Every failure is logged with its real reason: "nothing happened" on the
+  /// login screen is almost always one of these, and without the text there is
+  /// no way to tell a missing library from a missing symbol.
+  static TdJsonBindings? open({bool quiet = false}) {
+    final DynamicLibrary lib;
     try {
-      final lib = _openLibrary();
-      if (lib == null) return null;
-      return TdJsonBindings._(lib);
-    } on Object {
-      // Missing symbol or wrong ABI — treat exactly like a missing library.
+      final opened = _openLibrary();
+      if (opened == null) {
+        if (!quiet) {
+          TgDiagnostics.instance.error(
+            'No TDLib library for this platform (${Platform.operatingSystem}).',
+          );
+        }
+        return null;
+      }
+      lib = opened;
+    } on Object catch (error) {
+      if (!quiet) {
+        TgDiagnostics.instance.error('Could not load libtdjson: $error');
+      }
+      return null;
+    }
+
+    try {
+      final bindings = TdJsonBindings._(lib);
+      if (!quiet) TgDiagnostics.instance.info('libtdjson loaded.');
+      return bindings;
+    } on Object catch (error) {
+      // The library opened but a symbol is missing — a Java-interface build,
+      // or one whose exports are restricted.
+      if (!quiet) {
+        TgDiagnostics.instance.error('libtdjson is missing a symbol: $error');
+      }
       return null;
     }
   }
 
   static DynamicLibrary? _openLibrary() {
-    try {
-      if (Platform.isAndroid) return DynamicLibrary.open('libtdjson.so');
-      if (Platform.isLinux) return DynamicLibrary.open('libtdjson.so');
-      if (Platform.isWindows) return DynamicLibrary.open('tdjson.dll');
-      if (Platform.isIOS || Platform.isMacOS) return DynamicLibrary.process();
-    } on ArgumentError {
-      return null;
+    if (Platform.isAndroid || Platform.isLinux) {
+      return DynamicLibrary.open('libtdjson.so');
     }
+    if (Platform.isWindows) return DynamicLibrary.open('tdjson.dll');
+    if (Platform.isIOS || Platform.isMacOS) return DynamicLibrary.process();
     return null;
   }
 
