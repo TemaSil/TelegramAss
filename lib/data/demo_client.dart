@@ -9,7 +9,11 @@ import 'telegram_client.dart';
 ///
 /// Login accepts any phone number; the confirmation code is `12345`.
 class DemoTelegramClient implements TelegramClient {
-  DemoTelegramClient();
+  DemoTelegramClient({this.autoLogin = false});
+
+  /// Starts already signed in. Used by the web preview build and by the
+  /// screenshot script, so a demo can be clicked through without a login step.
+  final bool autoLogin;
 
   static const demoCode = '12345';
   static const demoPassword = 'telegram';
@@ -59,6 +63,10 @@ class DemoTelegramClient implements TelegramClient {
   @override
   Future<void> start() async {
     _seed();
+    if (autoLogin) {
+      _completeLogin();
+      return;
+    }
     _setStage(TgAuthStage.phone);
   }
 

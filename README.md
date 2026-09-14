@@ -8,6 +8,39 @@ Every surface that floats — nav bars, the tab bar, message bubbles, menus,
 sheets, badges — is real refracting glass rendered by a fragment shader, over
 an animated mesh-gradient wallpaper that gives the material something to bend.
 
+## What it looks like
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-chats-dark.png" width="240"><br><sub>Chats</sub></td>
+    <td align="center"><img src="docs/screenshots/07-chat-dark.png" width="240"><br><sub>Conversation</sub></td>
+    <td align="center"><img src="docs/screenshots/05-settings-dark.png" width="240"><br><sub>Settings</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/03-contacts-dark.png" width="240"><br><sub>Contacts</sub></td>
+    <td align="center"><img src="docs/screenshots/04-calls-dark.png" width="240"><br><sub>Calls</sub></td>
+    <td align="center"><img src="docs/screenshots/09-sent-dark.png" width="240"><br><sub>Sending</sub></td>
+  </tr>
+</table>
+
+Light appearance:
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-chats-light.png" width="240"></td>
+    <td align="center"><img src="docs/screenshots/07-chat-light.png" width="240"></td>
+    <td align="center"><img src="docs/screenshots/05-settings-light.png" width="240"></td>
+  </tr>
+</table>
+
+> These are captured from the **web preview build**, where the glass falls back
+> to the package's lightweight renderer — Impeller, and with it the real
+> refraction and specular highlights, is Android and iOS only. So the layout,
+> colour and chrome are exactly what the app draws; the material is richer on a
+> phone. Regenerate them with `tool/preview.sh`. A few emoji render as boxes
+> because the preview deliberately bundles no emoji font (see the script).
+
+
 ## iOS experience on Android
 
 - `CupertinoApp` throughout: iOS page transitions, swipe-back, iOS-native

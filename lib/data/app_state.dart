@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'demo_client.dart';
 import 'models.dart';
-import 'tdlib/tdlib_client.dart';
+import 'tdlib/tdlib_backend.dart';
 import 'telegram_client.dart';
 
 /// Single source of truth for the UI.
@@ -18,6 +18,9 @@ class AppState extends ChangeNotifier {
 
   static const _apiId = int.fromEnvironment('TELEGRAM_API_ID');
   static const _apiHash = String.fromEnvironment('TELEGRAM_API_HASH');
+
+  /// `--dart-define=DEMO_AUTOLOGIN=true` starts the demo backend signed in.
+  static const _demoAutoLogin = bool.fromEnvironment('DEMO_AUTOLOGIN');
 
   final TelegramClient client;
 
@@ -81,7 +84,7 @@ class AppState extends ChangeNotifier {
       debugPrint('Preferences unavailable: $error');
     }
 
-    TelegramClient client = DemoTelegramClient();
+    TelegramClient client = DemoTelegramClient(autoLogin: _demoAutoLogin);
 
     if (_apiId != 0 && _apiHash.isNotEmpty) {
       final live = TdlibTelegramClient(
@@ -97,7 +100,7 @@ class AppState extends ChangeNotifier {
         // Native library missing — stay on the demo backend rather than
         // presenting a dead login screen.
         debugPrint('TDLib unavailable, falling back to demo: $error');
-        client = DemoTelegramClient();
+        client = DemoTelegramClient(autoLogin: _demoAutoLogin);
         await client.start();
       }
     } else {
