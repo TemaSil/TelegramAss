@@ -155,6 +155,43 @@ class TgChat {
   }
 }
 
+/// A styled range inside a message, as TDLib reports it.
+///
+/// Offsets are UTF-16 code units, which is what a Dart string indexes by, so
+/// they can be used directly.
+enum TgEntityKind {
+  bold,
+  italic,
+  underline,
+  strikethrough,
+  spoiler,
+  code,
+  pre,
+  link,
+  mention,
+  hashtag,
+  customEmoji,
+}
+
+class TgTextEntity {
+  const TgTextEntity({
+    required this.kind,
+    required this.offset,
+    required this.length,
+    this.url,
+  });
+
+  final TgEntityKind kind;
+  final int offset;
+  final int length;
+
+  /// Where a link points. For `link` entities TDLib either gives an explicit
+  /// url or the covered text is the url itself.
+  final String? url;
+
+  int get end => offset + length;
+}
+
 class TgReaction {
   const TgReaction({
     required this.emoji,
@@ -188,6 +225,7 @@ class TgMessage {
     this.replyToSender,
     this.reactions = const [],
     this.isEdited = false,
+    this.entities = const [],
     this.mediaSeed,
     this.voiceSeconds,
     this.audioTitle,
@@ -211,6 +249,9 @@ class TgMessage {
   final String? replyToSender;
   final List<TgReaction> reactions;
   final bool isEdited;
+
+  /// Formatting ranges over [text].
+  final List<TgTextEntity> entities;
 
   /// Deterministic seed used to paint a placeholder for photo messages.
   final int? mediaSeed;
@@ -251,6 +292,7 @@ class TgMessage {
       replyToSender: replyToSender,
       reactions: reactions ?? this.reactions,
       isEdited: isEdited ?? this.isEdited,
+      entities: entities,
       mediaSeed: mediaSeed,
       voiceSeconds: voiceSeconds,
       audioTitle: audioTitle,

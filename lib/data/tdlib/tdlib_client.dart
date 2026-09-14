@@ -628,6 +628,7 @@ class TdlibTelegramClient implements TelegramClient {
       senderId: (sender?['user_id'] as num?)?.toInt(),
       isEdited: ((json['edit_date'] as num?) ?? 0) > 0,
       reactions: _reactionsFrom(json['interaction_info']),
+      entities: _entitiesOf(content),
       localPath: mediaPath,
       voiceSeconds:
           ((content?['voice_note'] as Map<String, dynamic>?)?['duration']
@@ -698,6 +699,48 @@ class TdlibTelegramClient implements TelegramClient {
     }
     if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
     return '$bytes B';
+  }
+
+  /// Formatting ranges attached to a message's text.
+  static List<TgTextEntity> _entitiesOf(Map<String, dynamic>? content) {
+    final formatted =
+        (content?['text'] ?? content?['caption']) as Map<String, dynamic>?;
+    final raw = formatted?['entities'] as List?;
+    if (raw == null || raw.isEmpty) return const [];
+
+    final entities = <TgTextEntity>[];
+    for (final item in raw.cast<Map<String, dynamic>>()) {
+      final type = (item['type'] as Map<String, dynamic>?)?['@type'] as String?;
+      final kind = switch (type) {
+        'textEntityTypeBold' => TgEntityKind.bold,
+        'textEntityTypeItalic' => TgEntityKind.italic,
+        'textEntityTypeUnderline' => TgEntityKind.underline,
+        'textEntityTypeStrikethrough' => TgEntityKind.strikethrough,
+        'textEntityTypeSpoiler' => TgEntityKind.spoiler,
+        'textEntityTypeCode' => TgEntityKind.code,
+        'textEntityTypePre' || 'textEntityTypePreCode' => TgEntityKind.pre,
+        'textEntityTypeUrl' || 'textEntityTypeTextUrl' => TgEntityKind.link,
+        'textEntityTypeEmailAddress' ||
+        'textEntityTypePhoneNumber' => TgEntityKind.link,
+        'textEntityTypeMention' ||
+        'textEntityTypeMentionName' => TgEntityKind.mention,
+        'textEntityTypeHashtag' ||
+        'textEntityTypeCashtag' => TgEntityKind.hashtag,
+        'textEntityTypeCustomEmoji' => TgEntityKind.customEmoji,
+        _ => null,
+      };
+      if (kind == null) continue;
+
+      entities.add(
+        TgTextEntity(
+          kind: kind,
+          offset: ((item['offset'] as num?) ?? 0).toInt(),
+          length: ((item['length'] as num?) ?? 0).toInt(),
+          url: (item['type'] as Map<String, dynamic>?)?['url'] as String?,
+        ),
+      );
+    }
+    return entities;
   }
 
   static String _textOf(Map<String, dynamic>? content) {

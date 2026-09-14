@@ -11,6 +11,7 @@ import '../../../data/models.dart';
 import '../../chats/widgets/chat_row.dart' show MessageStatusTicks;
 import 'attachment_image.dart';
 import 'bubble_shape.dart';
+import 'message_text.dart';
 import 'photo_viewer.dart';
 import '../../../core/tg_icons.dart';
 import '../../../l10n/app_localizations.dart';
@@ -249,8 +250,12 @@ class MessageBubble extends StatelessWidget {
             ),
             if (message.text.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(
-                message.text,
+              MessageText(
+                text: message.text,
+                entities: message.entities,
+                linkColor: message.isOutgoing
+                    ? CupertinoColors.white
+                    : TgColors.accent.resolveFrom(context),
                 style: TextStyle(
                   fontSize: fontSize,
                   height: 1.3,
@@ -313,8 +318,12 @@ class MessageBubble extends StatelessWidget {
 
       case TgMessageKind.service:
       case TgMessageKind.text:
-        return Text(
-          message.text,
+        return MessageText(
+          text: message.text,
+          entities: message.entities,
+          linkColor: message.isOutgoing
+              ? CupertinoColors.white
+              : TgColors.accent.resolveFrom(context),
           style: TextStyle(
             fontSize: fontSize,
             height: 1.32,
