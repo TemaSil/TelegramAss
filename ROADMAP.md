@@ -1,124 +1,120 @@
-# Gap analysis against the official Telegram client
+# What is done, what is missing
 
-Written by comparing this client's code (~7.7k lines of Dart) against the
-feature set of the official Telegram for Android. The official APK was not
-decompiled — this is a functional comparison, not a binary diff.
+Compared against the official Telegram for Android and against
+[Nekogram](https://github.com/Nekogram/Nekogram), a fork of it. Neither was
+decompiled: this is a functional comparison, with Nekogram's own feature
+toggles read from its `NekoConfig`.
+
+Scale, for honesty: Nekogram is the official client plus patches — about
+1.75M lines of Java in `TMessagesProj/src` and 1.28M lines of bundled C/C++
+(ffmpeg, BoringSSL, tgcalls, ExoPlayer). This client is about 9k lines of Dart.
+It also implements MTProto itself in C++ and does not use TDLib at all, which
+is why it can carry calls and streaming media.
+
+Its code cannot be reused here in any case: GPL-2.0 Java against Android views.
+Ideas travel; lines do not.
 
 Legend: **done** · **partial** — works but incomplete · **missing**
 
-## Authorization
+## Done since the first pass
 
-| Feature | State |
-|---|---|
-| Phone → code → two-step password | done |
-| Log out | done |
-| QR-code login | missing |
-| Multiple accounts | missing |
-| Sign-up for a new account | missing |
-| Email login codes, password recovery | missing |
-| Active session list, terminating sessions | missing (row exists, no backing) |
-
-## Chat list
-
-| Feature | State |
-|---|---|
-| Chat list, pin, mute, delete, unread counters | done |
-| Folders | partial — six fixed folders; the account's own `chatFolders` are not read |
-| Search | partial — local, over loaded titles and previews; no server-side global search for messages, people or public chats |
-| Stories rail | partial — UI works, data is demo-only |
-| Archived chats | missing |
-| Swipe actions on a row | missing |
-| Selection mode and bulk actions | missing |
-| Forum topics | missing |
-| Secret chats | missing |
+Login with two-factor, chat list with folders and search, conversations with
+replies, editing, deletion, reactions, drafts and forwarding, formatted text
+with tappable links and spoilers, attachments that really attach (recent-photo
+strip, camera, files), avatars and photos downloaded through TDLib's file API,
+a full-screen photo viewer, audio and video shown with their metadata, static
+stickers, contacts, call history, persisted settings, English and Russian,
+MTProto and SOCKS5 proxy support, and an in-app diagnostics log.
 
 ## Conversation
 
 | Feature | State |
 |---|---|
-| Text send, reply, edit, delete | done |
-| Reactions | partial — one fixed emoji row; no custom or paid reactions, no reaction list |
-| Drafts | done |
-| In-chat search | partial — local only, no jump-to-message |
-| Forwarding | partial — text only, single message, no attribution header |
-| Day separators, typing indicator, delivery state | done |
-| Shared-media grid | partial — renders placeholders, no real files |
-| Sending real photos, files and voice | missing — no picker, no recorder; TDLib requests are shaped but carry no file |
-| Viewing and downloading media | missing |
-| Text formatting (bold, italic, code, spoiler, links) | missing |
+| Text, replies, editing, deletion, reactions, drafts | done |
+| Formatting, links, spoilers, mentions, hashtags | done |
+| Sending photos, camera shots and files | done |
+| Photos and avatars downloaded and viewable | done |
+| Audio and video shown with title, duration and size | partial — metadata only, no playback |
+| Stickers | partial — static WebP only; animated fall back to their emoji |
+| Custom emoji | partial — the fallback emoji renders, the custom image does not |
+| In-chat search | partial — local, no jump-to-message |
+| Forwarding | partial — text, one message, no attribution header |
+| Shared media grid | partial — placeholders, not real files |
+| Voice recording and playback | missing |
 | Link previews | missing |
-| Stickers, GIFs, custom emoji | missing |
 | Polls, locations, contacts, albums | missing |
 | Pinned messages | missing |
 | Scheduled and silent send | missing |
-| Message threads and channel comments | missing |
-| Multi-select, multi-forward | missing |
+| Threads and channel comments | missing |
+| Multi-select and multi-forward | missing |
 | Unread divider, scroll-to-bottom button | missing |
-| Translation, voice-to-text | missing |
 
-## Groups and channels
+## Elsewhere
 
-Effectively absent. Member lists, admin tools and permissions, invite links,
-joining and leaving, channel posting, comment sections, slow mode and topics
-are all missing. Broadcast channels are now typed correctly, and that is the
-extent of it.
-
-## Calls
-
-The Calls tab renders history from demo data. Real calls are not just
-unimplemented — **TDLib does not carry voice or video**. Calls need the
-separate `tgcalls` WebRTC stack with its own native build, which is a project
-of its own. Group calls and video chats likewise.
-
-## Media and storage
-
-No file downloading, no cache management, no avatar photos (avatars are
-generated monograms), no storage usage screen, no auto-download rules.
-
-## Notifications
-
-None. No FCM registration, no notification channels, no background service,
-no in-app sounds. The app only receives updates while it is open.
-
-## Settings
-
-| Feature | State |
-|---|---|
-| Appearance, wallpaper, glass intensity, text size | done |
-| Read receipts toggle | partial — gates whether opening a chat is reported |
-| Privacy (last seen, who can call, blocked users) | missing |
-| Data and storage | missing |
-| Notification settings | missing |
-| Language | missing — the UI is English only |
-| Premium | missing |
-
-## Platform integration
-
-Deep links (`t.me/...`), the system share sheet, biometric or passcode lock,
-widgets and backup are all missing.
+- **Chat list** — archived chats, swipe actions, selection mode and forum
+  topics are missing; folders are a fixed set rather than the account's own.
+- **Search** — local only; no server-side search across messages, people or
+  public chats.
+- **Groups and channels** — read-only. No member lists, admin tools,
+  permissions, invite links, joining or leaving.
+- **Notifications** — none at all. No FCM, no background service: messages
+  arrive only while the app is open. This is the largest single gap.
+- **Privacy and sessions** — the rows exist, nothing stands behind them.
+- **Calls** — impossible through TDLib, which carries neither voice nor video.
+  They need `tgcalls` with its own native build for every ABI: a project in
+  itself.
+- **Platform** — no deep links, share-sheet integration, or passcode lock.
 
 ## Engineering
 
-- Never run on a physical device or emulator: verification so far is
-  `flutter analyze`, ten tests and a successful APK build.
-- Release APKs are signed with the debug key; no keystore is configured.
+- Release APKs are signed with the committed development key; a store release
+  needs its own.
 - No ProGuard/R8 rules for the TDLib JNI surface.
-- TDLib errors are not surfaced in the UI.
 - The app name and icon reuse Telegram branding and must change before any
   public distribution.
 
-## What is worth doing next
+## Nekogram's own additions
 
-1. **Attachments that actually attach** — an image picker and a voice recorder
-   wired to `inputFileLocal`, plus file download and display. Without this the
-   client cannot be used as a daily driver.
-2. **Real avatars and photos** — download chat photos and message media through
-   TDLib's file API.
-3. **Notifications** — FCM plus a background connection, otherwise messages
-   only arrive while the app is open.
-4. **Server-side search and the account's own folders.**
-5. **Text formatting and link previews** — the most visible gap in everyday
-   conversation.
+These are what Nekogram adds *on top of* a complete client. Most are small
+client-side behaviours, which makes them cheap here — but they are a layer over
+a base this client does not have yet, so they are listed after it.
 
-Calls, stickers and group administration are each large enough to be their own
-milestone, and calls in particular require a second native stack.
+Feasible now, since they touch only what is already implemented:
+
+| Feature | Notes |
+|---|---|
+| Configurable double-tap action | we hardcode "react with ❤️" |
+| Message details | date, id, sender, shown from the context menu |
+| Copy photo, save file, open in browser | menu entries over existing media |
+| Forward without quoting | a flag on the forward we already do |
+| Time with seconds, no number rounding | formatting switches |
+| Sticker size, system emoji | rendering preferences |
+| Hide stories, hide the all-chats tab | visibility toggles |
+| Show RPC errors | our diagnostics log already collects them |
+| Prefer IPv6, download speed boost | TDLib options |
+| Confirm before sending a voice message | a dialog before the send we have |
+
+Need the base first:
+
+| Feature | Blocked on |
+|---|---|
+| Message translation, auto-translate | a translation backend, and entities per message |
+| Voice transcription | audio playback and a transcription service |
+| Tablet / two-column layout | nothing structural, but a second layout to maintain |
+| Ignore content restrictions | channel and group handling |
+| Markdown parser options | a composer that parses markdown at all |
+| QR login | an auth path we do not implement |
+
+## Where to go next
+
+1. **Notifications.** Without them this is not a messenger you can leave
+   closed.
+2. **Voice messages** — recording and playback; they are everywhere in real
+   chats.
+3. **Server-side search and the account's own folders.**
+4. **Link previews**, the most visible remaining gap in ordinary conversation.
+5. Then Nekogram's cheap toggles, which are a pleasant layer once the base
+   holds.
+
+Stickers, group administration and calls are each their own milestone, and
+calls need a second native stack.

@@ -22,7 +22,7 @@ cp pubspec.yaml pubspec.yaml.preview-bak
 python3 tool/preview_fonts.py
 
 flutter pub get
-flutter build web --release 
+flutter build web --release --dart-define=DEMO_AUTOLOGIN=true
 
 # Point CanvasKit at the copy Flutter already bundled instead of the CDN.
 python3 tool/preview_canvaskit.py

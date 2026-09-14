@@ -1,12 +1,13 @@
 # Telegram Liquid
 
-A Flutter Telegram client for Android that presents as a native iOS 26 app,
-built on the [`liquid_glass_widgets`](https://pub.dev/packages/liquid_glass_widgets)
-shader-based Liquid Glass material.
+A Flutter Telegram client for Android that presents as a native iOS app: stock
+Cupertino controls throughout, with Apple's iOS 26 *Liquid Glass* material —
+via [`liquid_glass_widgets`](https://pub.dev/packages/liquid_glass_widgets) —
+on the chrome that floats above content.
 
-Every surface that floats — nav bars, the tab bar, message bubbles, menus,
-sheets, badges — is real refracting glass rendered by a fragment shader, over
-an animated mesh-gradient wallpaper that gives the material something to bend.
+It talks to real Telegram servers through the official TDLib JSON interface
+over `dart:ffi`, and falls back to a generated demo account when credentials or
+the native library are missing.
 
 ## What it looks like
 
@@ -19,53 +20,50 @@ an animated mesh-gradient wallpaper that gives the material something to bend.
   <tr>
     <td align="center"><img src="docs/screenshots/03-contacts-dark.png" width="240"><br><sub>Contacts</sub></td>
     <td align="center"><img src="docs/screenshots/04-calls-dark.png" width="240"><br><sub>Calls</sub></td>
-    <td align="center"><img src="docs/screenshots/09-sent-dark.png" width="240"><br><sub>Sending</sub></td>
+    <td align="center"><img src="docs/screenshots/01-chats-light.png" width="240"><br><sub>Light appearance</sub></td>
   </tr>
 </table>
 
-Light appearance:
+> Captured from the **web preview build**, where glass falls back to the
+> package's lightweight renderer — Impeller, and with it the real refraction, is
+> Android and iOS only. Layout, colour and chrome are what the app draws; the
+> material is richer on a phone. Regenerate with `tool/preview.sh`.
 
-<table>
-  <tr>
-    <td align="center"><img src="docs/screenshots/01-chats-light.png" width="240"></td>
-    <td align="center"><img src="docs/screenshots/07-chat-light.png" width="240"></td>
-    <td align="center"><img src="docs/screenshots/05-settings-light.png" width="240"></td>
-  </tr>
-</table>
+## Design rules
 
-> These are captured from the **web preview build**, where the glass falls back
-> to the package's lightweight renderer — Impeller, and with it the real
-> refraction and specular highlights, is Android and iOS only. So the layout,
-> colour and chrome are exactly what the app draws; the material is richer on a
-> phone. Regenerate them with `tool/preview.sh`. A few emoji render as boxes
-> because the preview deliberately bundles no emoji font (see the script).
+The split is deliberate, and worth stating because it is easy to get wrong in
+both directions:
 
+- **Controls are stock Cupertino.** `CupertinoTextField`, `CupertinoButton`,
+  `CupertinoListSection.insetGrouped`, `CupertinoListTile`,
+  `CupertinoSearchTextField`, `CupertinoSlidingSegmentedControl`,
+  `CupertinoActivityIndicator`. Forms are not a place for invented widgets.
+- **Glass is for what floats.** Nav bars, the tab bar, sheets, context menus,
+  the composer surface, the unread badge — surfaces that sit above scrolling
+  content and refract it.
+- **Bubbles are iMessage's**, not glass: solid blue and grey, with a tail on
+  the last message of a run. A translucent bubble makes text fight the
+  wallpaper behind it.
+- **Custom code only where iOS has no widget and Telegram does have the
+  thing**: gradient monogram avatars, delivery ticks, the voice waveform, the
+  typing dots, the bubble outline, the chat wallpaper.
 
-## iOS experience on Android
+Icons are SF Symbols 6 via `flutter_cupertino_symbols`, mapped semantically in
+`lib/core/tg_icons.dart`. Apple licenses SF Symbols for Apple platforms;
+shipping the font in an Android APK is outside that licence and is a deliberate
+choice here. That one file is the swap-back point.
 
-- `CupertinoApp` throughout: iOS page transitions, swipe-back, iOS-native
-  scroll physics and modal presentation.
-- **SF Symbols 6** icons via `flutter_cupertino_symbols`, mapped semantically
-  in `lib/core/tg_icons.dart`.
-- Large titles that collapse into the nav bar, grouped inset lists, action
-  sheets, pull-down menus and detented modal sheets.
-- iMessage touches in the conversation: bubbles spring in from the side they
-  belong to (a real `SpringSimulation`, not a curve), a "Delivered" / "Read"
-  footnote under the last outgoing message, double-tap to react, and
-  **drag the thread left to reveal per-message timestamps**.
+## iOS behaviour
 
-> **Licence note on icons.** Apple licenses SF Symbols for use on Apple
-> platforms; shipping the font inside an Android APK falls outside that
-> licence. This project does it deliberately, at the publisher's discretion.
-> `lib/core/tg_icons.dart` is the single place to swap back to
-> `CupertinoIcons` if that is not acceptable for a given release.
+`CupertinoApp` throughout, so page transitions, swipe-back, scroll physics and
+modal presentation are the iOS ones. In a conversation: bubbles spring in on a
+real `SpringSimulation` from the side they belong to, the last outgoing message
+carries a Delivered/Read footnote, double-tap reacts, and **dragging the thread
+left reveals per-message timestamps**.
 
-## Requirements
+## Running it
 
-- Flutter **3.47.3** or newer (the glass package needs ≥ 3.41 and Impeller)
-- Android device or emulator; Impeller is the default renderer
-
-## Run
+Requires Flutter **3.47.3+** (the glass package needs ≥ 3.41 and Impeller).
 
 ```bash
 flutter pub get
@@ -76,42 +74,29 @@ That starts **demo mode**: a generated account with conversations, typing
 indicators, delivery ticks and background traffic. The login code is `12345`;
 a phone number ending in `0` also asks for the two-step password `telegram`.
 
-## Live Telegram (TDLib)
+## Live Telegram
 
-The app speaks the official [TDLib JSON interface](https://core.telegram.org/tdlib/getting-started)
-over `dart:ffi`, with the blocking `td_receive` loop in its own isolate.
+Two things are needed. Either one missing drops the app back to demo mode
+rather than failing to start, and the login screen says which mode it is in.
 
-Two things are needed, and the app falls back to demo mode if either is
-missing rather than failing to start:
-
-**1. Your own API credentials.** Only the account holder can create these:
-sign in at [my.telegram.org](https://my.telegram.org) → *API development
-tools* → create an application. You get an `api_id` and an `api_hash`. They
-identify your client to Telegram, so treat the hash as a secret — never commit
-it.
+**1. Your own API credentials.** Only the account holder can create them: sign
+in at [my.telegram.org](https://my.telegram.org) → *API development tools*.
+Treat the hash as a secret.
 
 **2. `libtdjson.so` for Android.** TDLib publishes no prebuilt Android
-binaries, so `.github/workflows/build-tdlib.yml` compiles it: run that
-workflow once (Actions → *Build TDLib* → *Run workflow*). It builds OpenSSL
-and TDLib for every Android ABI — expect a couple of hours — and publishes the
-result as a `tdlib-<sha>` release. Every later APK build picks that up
-automatically and unpacks it into `android/app/src/main/jniLibs/`.
+binaries, so `.github/workflows/build-tdlib.yml` compiles it — run that
+workflow once (Actions → *Build TDLib* → *Run workflow*). It builds OpenSSL and
+TDLib for every Android ABI, takes a bit over an hour, and publishes a
+`tdlib-<sha>` release. Every later APK build picks it up automatically.
 
-### Building a live APK in CI
+### CI
 
-Add the credentials as repository secrets (Settings → Secrets and variables →
-Actions):
+Add repository secrets `TELEGRAM_API_ID` and `TELEGRAM_API_HASH`; with both
+set and a TDLib release present, `Build APK` produces a live client, and
+publishes debug and release APKs as a GitHub release. With neither it produces
+the demo build, so forks and pull requests still build.
 
-| Secret | Value |
-|---|---|
-| `TELEGRAM_API_ID` | the numeric `api_id` |
-| `TELEGRAM_API_HASH` | the `api_hash` string |
-
-With both set and a TDLib release present, `Build APK` produces a client that
-talks to real Telegram servers. With neither, it produces the demo build — so
-forks and pull requests still build.
-
-### Running locally
+### Locally
 
 ```bash
 flutter run \
@@ -119,60 +104,79 @@ flutter run \
   --dart-define=TELEGRAM_API_HASH=your_api_hash
 ```
 
-### Naming
+### When no code arrives
 
-Telegram's terms for third-party clients ask that you not reuse the Telegram
-name or logo. The current app name and icon are placeholders for private use
-and should be changed before any public distribution.
+TDLib speaks MTProto over raw TCP. Where that is filtered the connection sits
+in `connectionStateConnecting` forever and no login code is ever sent. The
+login screen has a **Diagnostics** sheet — whether the library loaded, whether
+credentials were compiled in, every authorization and connection state, every
+error — and a **Proxy** sheet next to it for MTProto or SOCKS5.
 
-## Build an APK
+## Installing builds
 
-CI builds both APKs on every push to `main` and uploads them as the
-`telegram-liquid-apk` artifact — see `.github/workflows/build-apk.yml`.
-Locally:
-
-```bash
-flutter build apk --release
-```
+Both variants are signed with the committed development key in
+`android/keystore`, so a new build installs over the previous one instead of
+being rejected for a changed signature, and the CI run number becomes the
+`versionCode`. It is a development key with a known password: a store release
+needs its own private keystore.
 
 ## Project map
 
 ```
 lib/
-  core/          glass tokens, colour + type scale, formatters
+  core/          glass tokens, colour and type scale, icons, formatters
+  l10n/          English and Russian ARB files
   data/
-    models.dart        transport-agnostic view models
-    telegram_client.dart   backend interface
-    demo_client.dart       offline backend
-    tdlib/                 FFI bindings + live TDLib backend
-    app_state.dart         ChangeNotifier state, folders, search, preferences
+    models.dart          transport-agnostic view models
+    telegram_client.dart backend interface
+    demo_client.dart     offline backend
+    diagnostics.dart     in-app log
+    tdlib/               FFI bindings, live backend, web stub
+    app_state.dart       ChangeNotifier state, folders, search, preferences
   ui/
-    auth/          phone → code → 2FA
-    shell/         four-tab GlassScaffold + GlassTabBar
-    chats/         chat list, folders, stories, context menus
-    chat/          conversation, bubbles, composer
-    contacts/ calls/ settings/ stories/
-    common/        wallpaper, avatars
+    auth/ shell/ chats/ chat/ contacts/ calls/ settings/ stories/ common/
+tool/
+  preview.sh           web preview + screenshots
+  tdlib_probe.dart     drives the real client against a native libtdjson
 ```
 
-## Screens
+## Development
 
-| Tab | What it shows |
-|---|---|
-| **Chats** | Large title that collapses into the bar, search, scrollable folder control with live unread counts, stories rail, rows with glass unread badges and a long-press menu |
-| **Chat** | Glass bubbles (outgoing tinted with the accent), reply quotes, photo/voice/file messages, reactions, upload progress, day separators, animated typing bubble, attachment sheet |
-| **Contacts** | Alphabetically grouped glass sections |
-| **Calls** | All / Missed segmented control, call history |
-| **Settings** | Profile card, wallpaper picker, glass intensity slider, text-size stepper, privacy switches, backend mode, log out |
+```bash
+flutter analyze
+flutter test
+bash tool/preview.sh     # web preview and screenshots
+```
 
-Preferences persist through `shared_preferences`. The glass intensity slider
-and the reduce-transparency switch feed `GlassPreferencesScope`, which scales
-the shader's thickness, blur, Fresnel and specular response — the setting
-changes the material itself, not a label. Appearance follows the system when
-*Auto night mode* is on, and the Dark mode switch otherwise; both light and
-dark palettes are defined.
+`tool/tdlib_probe.dart` runs the actual TDLib backend outside Flutter, which is
+how the client's protocol handling can be checked without a device or an
+account:
+
+```bash
+LD_LIBRARY_PATH=<dir with libtdjson.so> \
+  dart run tool/tdlib_probe.dart <api_id> <api_hash>
+```
+
+## State of it
+
+Working: login with two-factor, chat list with folders, search, stories and
+context menus, conversations with replies, editing, deletion, reactions,
+drafts, forwarding, formatted text and tappable links, attachments that really
+attach (gallery strip, camera, files), downloaded avatars and photos, a
+full-screen photo viewer, contacts, call history, and settings that persist.
+
+Not working yet, in rough order of how much they are missed: push
+notifications, voice recording and playback, server-side search, group and
+channel administration, stickers beyond static ones, and calls — which TDLib
+cannot carry at all and which need the separate `tgcalls` WebRTC stack.
+
+[ROADMAP.md](ROADMAP.md) has the full account, compared against both the
+official client and Nekogram.
 
 ## Licence
 
-The Liquid Glass widgets are MIT-licensed by their author. This client is an
-independent project and is not affiliated with Telegram.
+`liquid_glass_widgets` is MIT-licensed by its author. This client is an
+independent project, not affiliated with Telegram. Telegram's terms for
+third-party clients ask that you not reuse the Telegram name or logo — the
+current app name and icon are placeholders for private use and must change
+before any public distribution.
