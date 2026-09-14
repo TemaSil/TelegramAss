@@ -63,6 +63,10 @@ class TdlibTelegramClient implements TelegramClient {
   /// the download without re-reading the message from TDLib.
   final _playableOfMessage = <(int, int), int>{};
 
+  /// Playable media awaiting download, kept apart from thumbnails so a
+  /// finished video does not overwrite its own poster frame.
+  final _playablePathOfFile = <int, (int chatId, int messageId)>{};
+
   /// The account's own folders, filled in by updateChatFolders.
   List<TgFolder> _folders = const [];
 
@@ -396,6 +400,14 @@ class TdlibTelegramClient implements TelegramClient {
     return null;
   }
 
+  /// The local path of a file TDLib already has, without starting a download.
+  static String? _readyPath(Map<String, dynamic>? file) {
+    final local = file?['local'] as Map<String, dynamic>?;
+    if ((local?['is_downloading_completed'] as bool?) != true) return null;
+    final path = local?['path'] as String?;
+    return path == null || path.isEmpty ? null : path;
+  }
+
   void _onFile(Map<String, dynamic> file) {
     final local = file['local'] as Map<String, dynamic>?;
     if ((local?['is_downloading_completed'] as bool?) != true) return;
@@ -425,6 +437,17 @@ class TdlibTelegramClient implements TelegramClient {
           linkPreview: existing.withImage(path),
         );
         _controllerFor(previewChatId).add(currentMessagesOf(previewChatId));
+      }
+    }
+
+    final playable = _playablePathOfFile.remove(id);
+    if (playable != null) {
+      final (playableChatId, playableMessageId) = playable;
+      final list = _messages[playableChatId];
+      final index = list?.indexWhere((m) => m.id == playableMessageId) ?? -1;
+      if (list != null && index != -1) {
+        list[index] = list[index].copyWith(playablePath: path);
+        _controllerFor(playableChatId).add(currentMessagesOf(playableChatId));
       }
     }
 
@@ -698,13 +721,16 @@ class TdlibTelegramClient implements TelegramClient {
         ? null
         : (sizes.last as Map<String, dynamic>)['photo']
               as Map<String, dynamic>?;
-    // Stickers are a file too. Only the static WebP ones can be shown as an
-    // image; animated formats fall back to the emoji they stand for.
+    // Stickers are a file too. WebP ones are an image; TGS ones are gzipped
+    // Lottie and are played. WebM video stickers would need a video decoder,
+    // so those still fall back to the emoji they stand for.
     final sticker = content?['sticker'] as Map<String, dynamic>?;
     final stickerFormat =
         (sticker?['format'] as Map<String, dynamic>?)?['@type'] as String?;
-    final isStaticSticker = stickerFormat == 'stickerFormatWebp';
-    final stickerFile = isStaticSticker
+    final isAnimatedSticker = stickerFormat == 'stickerFormatTgs';
+    final isDrawableSticker =
+        stickerFormat == 'stickerFormatWebp' || isAnimatedSticker;
+    final stickerFile = isDrawableSticker
         ? (sticker?['sticker'] as Map<String, dynamic>?)
         : null;
 
@@ -725,24 +751,26 @@ class TdlibTelegramClient implements TelegramClient {
     );
 
     // Voice notes are a few tens of kilobytes; fetching them up front costs
-    // nothing and means a tap plays immediately. Music and documents are not
-    // fetched until asked for — see downloadMessageMedia.
+    // nothing and means a tap plays immediately. Music, video and documents
+    // wait to be asked for — see downloadMessageMedia.
     final voice =
         (content?['voice_note'] as Map<String, dynamic>?)?['voice']
             as Map<String, dynamic>?;
     final playable =
-        (audio?['audio'] ?? document?['document']) as Map<String, dynamic>?;
+        (voice ?? audio?['audio'] ?? video?['video'] ?? document?['document'])
+            as Map<String, dynamic>?;
+    final playablePath = voice != null
+        ? _resolveFile(voice, priority: 24)
+        : _readyPath(playable);
     final playableId = (playable?['id'] as num?)?.toInt();
     if (playableId != null) {
       _playableOfMessage[(chatId, messageId)] = playableId;
-      final ready =
-          (playable?['local']
-              as Map<String, dynamic>?)?['is_downloading_completed'] ==
-          true;
-      if (!ready) _messageOfFile[playableId] = (chatId, messageId);
+      if (playablePath == null) {
+        _playablePathOfFile[playableId] = (chatId, messageId);
+      }
     }
 
-    final previewFile = largest ?? stickerFile ?? videoThumb ?? voice;
+    final previewFile = largest ?? stickerFile ?? videoThumb;
     final mediaPath = _resolveFile(previewFile, priority: 16);
     final mediaFileId = (previewFile?['id'] as num?)?.toInt();
     if (mediaPath == null && mediaFileId != null) {
@@ -766,6 +794,8 @@ class TdlibTelegramClient implements TelegramClient {
       reactions: _reactionsFrom(json['interaction_info']),
       entities: _entitiesOf(content),
       localPath: mediaPath,
+      playablePath: playablePath,
+      isAnimatedSticker: isAnimatedSticker,
       linkPreview: linkPreview,
       voiceSeconds:
           ((content?['voice_note'] as Map<String, dynamic>?)?['duration']
@@ -1039,7 +1069,7 @@ class TdlibTelegramClient implements TelegramClient {
   Future<void> downloadMessageMedia(int chatId, int messageId) async {
     final fileId = _playableOfMessage[(chatId, messageId)];
     if (fileId == null) return;
-    _messageOfFile[fileId] = (chatId, messageId);
+    _playablePathOfFile[fileId] = (chatId, messageId);
     _send({
       '@type': 'downloadFile',
       'file_id': fileId,

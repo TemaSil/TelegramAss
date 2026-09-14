@@ -168,16 +168,16 @@ formatted text with tappable links and spoilers; unfurled link previews; the
 unread divider and jump-to-latest; pinned messages; attachments that really
 attach (gallery strip, camera, files); downloaded avatars and photos with a
 full-screen viewer; voice notes and music that play, and voice messages you
-record by holding the mic; notifications while the app is closed, carried by a
+record by holding the mic; animated stickers and full-screen video; notifications while the app is closed, carried by a
 foreground service rather than Firebase; contacts, call history, and settings
 that persist.
 
 Also, from the Telegram mods: a configurable double-tap reaction, forwarding
 without quoting, message details, and a hideable story rail.
 
-Not working yet, in rough order of how much they are missed: animated and
-custom-emoji stickers, group and channel administration, polls and locations,
-video playback, forum topics, and calls — which TDLib cannot carry at all and
+Not working yet, in rough order of how much they are missed: custom emoji,
+group and channel administration, polls and locations, WebM video stickers,
+forum topics, and calls — which TDLib cannot carry at all and
 which need the separate `tgcalls` WebRTC stack.
 
 [ROADMAP.md](ROADMAP.md) has the full account, compared against both the

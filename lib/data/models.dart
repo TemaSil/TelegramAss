@@ -271,6 +271,8 @@ class TgMessage {
     this.fileSize,
     this.uploadProgress,
     this.localPath,
+    this.playablePath,
+    this.isAnimatedSticker = false,
     this.linkPreview,
   });
 
@@ -308,6 +310,15 @@ class TgMessage {
   /// picked, so the bubble can show the real image instead of a placeholder.
   final String? localPath;
 
+  /// The media itself, once it is on disk: the voice note, the track, the
+  /// video file. Kept apart from [localPath] because a video's [localPath] is
+  /// its poster frame, not something that can be played.
+  final String? playablePath;
+
+  /// True when [localPath] is a `.tgs`: gzipped Lottie, which is played
+  /// rather than drawn as an image.
+  final bool isAnimatedSticker;
+
   /// Unfurled link card, for text messages that carry one.
   final TgLinkPreview? linkPreview;
 
@@ -318,6 +329,7 @@ class TgMessage {
     bool? isEdited,
     double? uploadProgress,
     String? localPath,
+    String? playablePath,
     TgLinkPreview? linkPreview,
   }) {
     return TgMessage(
@@ -343,6 +355,8 @@ class TgMessage {
       fileSize: fileSize,
       uploadProgress: uploadProgress,
       localPath: localPath ?? this.localPath,
+      playablePath: playablePath ?? this.playablePath,
+      isAnimatedSticker: isAnimatedSticker,
       linkPreview: linkPreview ?? this.linkPreview,
     );
   }

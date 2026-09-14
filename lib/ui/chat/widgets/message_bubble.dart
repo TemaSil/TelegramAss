@@ -11,10 +11,12 @@ import '../../../core/tg_theme.dart';
 import '../../../app.dart';
 import '../../../data/models.dart';
 import '../../chats/widgets/chat_row.dart' show MessageStatusTicks;
+import 'animated_sticker.dart';
 import 'attachment_image.dart';
 import 'bubble_shape.dart';
 import 'message_text.dart';
 import 'photo_viewer.dart';
+import 'video_viewer.dart';
 import '../../../core/tg_icons.dart';
 import '../../../data/audio_player.dart';
 import '../../../l10n/app_localizations.dart';
@@ -354,7 +356,7 @@ class MessageBubble extends StatelessWidget {
 
       case TgMessageKind.video:
         return _VideoContent(
-          path: message.localPath,
+          message: message,
           seconds: message.voiceSeconds,
           tint: textColor,
           caption: message.text,
@@ -385,16 +387,24 @@ class MessageBubble extends StatelessWidget {
         );
 
       case TgMessageKind.sticker:
-        if (message.localPath != null) {
+        final stickerPath = message.localPath;
+        if (stickerPath != null && message.isAnimatedSticker) {
+          return AnimatedSticker(
+            path: stickerPath,
+            size: 140,
+            fallbackEmoji: message.text,
+          );
+        }
+        if (stickerPath != null) {
           return AttachmentImage(
-            path: message.localPath!,
+            path: stickerPath,
             width: 140,
             height: 140,
             fit: BoxFit.contain,
           );
         }
-        // Animated stickers are not decoded yet; show the emoji they stand for
-        // rather than an empty bubble.
+        // WebM video stickers would need a decoder; show the emoji they stand
+        // for rather than an empty bubble.
         return Text(
           message.text.isEmpty ? '🎨' : message.text,
           style: const TextStyle(fontSize: 54),
@@ -629,7 +639,7 @@ class _VoiceContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final seconds = message.voiceSeconds ?? 0;
-    final path = message.localPath;
+    final path = message.playablePath;
 
     return ListenableBuilder(
       listenable: TgAudio.instance,
@@ -694,14 +704,14 @@ class _VoiceContent extends StatelessWidget {
 /// full screen. Playing the video itself is not wired up yet.
 class _VideoContent extends StatelessWidget {
   const _VideoContent({
-    required this.path,
+    required this.message,
     required this.seconds,
     required this.tint,
     required this.caption,
     required this.fontSize,
   });
 
-  final String? path;
+  final TgMessage message;
   final int? seconds;
   final Color tint;
   final String caption;
@@ -709,49 +719,73 @@ class _VideoContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // localPath is the poster frame; playablePath is the video itself, which
+    // only arrives once it has been asked for.
+    final poster = message.localPath;
+    final video = message.playablePath;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              if (path != null)
-                AttachmentImage(path: path!, width: 220, height: 150)
-              else
-                Container(
-                  width: 220,
-                  height: 150,
-                  color: CupertinoColors.black.withValues(alpha: 0.35),
+        GestureDetector(
+          onTap: () {
+            if (video != null) {
+              Navigator.of(context).push(
+                CupertinoPageRoute<void>(
+                  fullscreenDialog: true,
+                  builder: (_) => VideoViewerScreen(path: video),
                 ),
-              const Icon(TgIcons.play, size: 34, color: CupertinoColors.white),
-              if (seconds != null)
-                Positioned(
-                  left: 8,
-                  bottom: 8,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: CupertinoColors.black.withValues(alpha: 0.55),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+              );
+            } else {
+              AppScope.read(context).client
+                  .downloadMessageMedia(message.chatId, message.id);
+            }
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (poster != null)
+                  AttachmentImage(path: poster, width: 220, height: 150)
+                else
+                  Container(
+                    width: 220,
+                    height: 150,
+                    color: CupertinoColors.black.withValues(alpha: 0.35),
+                  ),
+                Icon(
+                  video == null ? TgIcons.download : TgIcons.play,
+                  size: 34,
+                  color: CupertinoColors.white,
+                ),
+                if (seconds != null)
+                  Positioned(
+                    left: 8,
+                    bottom: 8,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        TgFormat.duration(Duration(seconds: seconds!)),
-                        style: const TextStyle(
-                          fontSize: 11.5,
-                          color: CupertinoColors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          TgFormat.duration(Duration(seconds: seconds!)),
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: CupertinoColors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
         if (caption.isNotEmpty) ...[
@@ -792,7 +826,7 @@ class _AudioContent extends StatelessWidget {
       listenable: TgAudio.instance,
       builder: (context, _) {
         final audio = TgAudio.instance;
-        final path = message.localPath;
+        final path = message.playablePath;
         final isCurrent = audio.currentMessageId == message.id;
         final playing = audio.isPlayingMessage(message.id);
 

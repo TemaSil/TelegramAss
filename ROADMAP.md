@@ -53,12 +53,11 @@ SOCKS5 proxy support; and an in-app diagnostics log.
 | Pinned messages, with a bar and jump-to-message | done |
 | Unread divider and jump-to-latest | done |
 | Multi-select and multi-forward, with attribution | done |
-| Video shown with title, duration and size | partial — poster only, no playback |
-| Stickers | partial — static WebP only; animated fall back to their emoji |
+| Video — poster, then full-screen playback with a scrubber | done |
+| Stickers | partial — static WebP and animated TGS play; WebM video stickers fall back to their emoji |
 | Custom emoji | partial — the fallback emoji renders, the custom image does not |
 | In-chat search | partial — local text, but results jump to the message |
 | Shared media grid | partial — placeholders, not real files |
-| Video playback | missing |
 | Polls, locations, contacts, albums | missing |
 | Scheduled and silent send | missing |
 | Threads and channel comments | missing |
@@ -129,12 +128,12 @@ Need the base first:
 
 ## Where to go next
 
-1. **Animated stickers and custom emoji.** The most visible thing left in an
-   ordinary conversation: both currently fall back to an emoji.
-2. **Video playback**, which needs a player and TDLib's streaming download.
-3. **Group and channel administration** — member lists, permissions, invite
+1. **Custom emoji.** Still the most visible thing left in ordinary text: the
+   fallback emoji renders, the custom image does not.
+2. **Group and channel administration** — member lists, permissions, invite
    links, joining and leaving.
-4. **Polls, locations and albums.**
+3. **Polls, locations and albums.**
+4. **WebM video stickers**, now that a video player is in the app.
 5. Then the rest of the mod toggles, which are a pleasant layer now that the
    base holds.
 

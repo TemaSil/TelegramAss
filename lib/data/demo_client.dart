@@ -404,7 +404,7 @@ class DemoTelegramClient implements TelegramClient {
       kind: TgMessageKind.voice,
       status: TgMessageStatus.sending,
       voiceSeconds: seconds,
-      localPath: path,
+      playablePath: path,
     );
     _append(chatId, message);
     _advanceStatus(chatId, message.id);
