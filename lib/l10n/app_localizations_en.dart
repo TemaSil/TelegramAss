@@ -354,7 +354,19 @@ class AppL10nEn extends AppL10n {
   String get reduceTransparencySubtitle => 'Stops the wallpaper animation';
 
   @override
-  String get glassIntensity => 'Glass intensity';
+  String get surfaceMaterial => 'Surface material';
+
+  @override
+  String get materialGlass => 'Glass';
+
+  @override
+  String get materialBlur => 'Blur';
+
+  @override
+  String get materialGlassSubtitle => 'Refraction, bevel and highlights';
+
+  @override
+  String get materialBlurSubtitle => 'A plain frosted blur, lighter on the GPU';
 
   @override
   String get messageTextSize => 'Message text size';

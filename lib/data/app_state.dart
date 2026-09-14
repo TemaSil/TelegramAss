@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/glass_preferences.dart';
 import 'custom_emoji.dart';
 import 'demo_client.dart';
 import 'diagnostics.dart';
@@ -53,7 +54,7 @@ class AppState extends ChangeNotifier {
 
   /// Emoji a double-tap sends, or empty for no double-tap reaction at all.
   String _doubleTapReaction = '❤️';
-  double _glassIntensity = 1.0;
+  GlassMaterial _glassMaterial = GlassMaterial.glass;
   int _messageFontSize = 16;
 
   /// Applies to open conversations only; the tab screens use the system
@@ -85,7 +86,7 @@ class AppState extends ChangeNotifier {
 
   /// Used only when [autoNightMode] is off.
   bool get darkMode => _darkMode;
-  double get glassIntensity => _glassIntensity;
+  GlassMaterial get glassMaterial => _glassMaterial;
   int get messageFontSize => _messageFontSize;
   String get wallpaper => _wallpaper;
 
@@ -169,7 +170,7 @@ class AppState extends ChangeNotifier {
   static const _kShowStories = 'show_stories';
   static const _kDoubleTapReaction = 'double_tap_reaction';
   static const _kDarkMode = 'dark_mode';
-  static const _kGlassIntensity = 'glass_intensity';
+  static const _kGlassMaterial = 'glass_material';
   static const _kMessageFontSize = 'message_font_size';
   static const _kWallpaper = 'wallpaper';
   static const _kLanguage = 'language';
@@ -187,7 +188,10 @@ class AppState extends ChangeNotifier {
     _doubleTapReaction =
         prefs.getString(_kDoubleTapReaction) ?? _doubleTapReaction;
     _darkMode = prefs.getBool(_kDarkMode) ?? _darkMode;
-    _glassIntensity = prefs.getDouble(_kGlassIntensity) ?? _glassIntensity;
+    _glassMaterial = GlassMaterial.values.firstWhere(
+      (value) => value.name == prefs.getString(_kGlassMaterial),
+      orElse: () => _glassMaterial,
+    );
     _messageFontSize = prefs.getInt(_kMessageFontSize) ?? _messageFontSize;
     _wallpaper = prefs.getString(_kWallpaper) ?? _wallpaper;
     _language = prefs.getString(_kLanguage) ?? _language;
@@ -365,9 +369,9 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setGlassIntensity(double value) {
-    _glassIntensity = value;
-    _prefs?.setDouble(_kGlassIntensity, value);
+  void setGlassMaterial(GlassMaterial value) {
+    _glassMaterial = value;
+    _prefs?.setString(_kGlassMaterial, value.name);
     notifyListeners();
   }
 

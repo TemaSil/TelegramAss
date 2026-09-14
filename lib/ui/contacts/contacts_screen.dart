@@ -32,12 +32,12 @@ class ContactsAppBar extends StatelessWidget {
           icon: const Icon(TgIcons.addContact, size: 20),
           size: 44,
           settings: GlassTokens.chrome(context),
-          quality: GlassQuality.premium,
+          quality: GlassTokens.quality(context),
           onPressed: () => GlassModalSheet.show<void>(
             context: context,
             halfSize: 0.6,
             settings: GlassTokens.panel(context),
-            quality: GlassQuality.premium,
+            quality: GlassTokens.quality(context),
             builder: (sheetContext) => AddContactSheet(
               onAdded: (chatId) {
                 Navigator.of(sheetContext).pop();

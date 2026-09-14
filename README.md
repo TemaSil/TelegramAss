@@ -40,7 +40,9 @@ both directions:
   `CupertinoActivityIndicator`. Forms are not a place for invented widgets.
 - **Glass is for what floats.** Nav bars, the tab bar, sheets, context menus,
   the composer surface, the unread badge — surfaces that sit above scrolling
-  content and refract it.
+  content and refract it. Settings can trade the refraction for a plain
+  frosted blur, which is what the package renders with no shader at all;
+  where the glass surfaces are is the same either way.
 - **Bubbles are iMessage's**, not glass: solid blue and grey, with a tail on
   the last message of a run. A translucent bubble makes text fight the
   wallpaper behind it.

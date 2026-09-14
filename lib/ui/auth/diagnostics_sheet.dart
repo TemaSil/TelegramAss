@@ -18,7 +18,7 @@ Future<void> showDiagnosticsSheet(BuildContext context) {
     context: context,
     halfSize: 0.7,
     settings: GlassTokens.panel(context),
-    quality: GlassQuality.premium,
+    quality: GlassTokens.quality(context),
     builder: (_) => const _DiagnosticsSheet(),
   );
 }

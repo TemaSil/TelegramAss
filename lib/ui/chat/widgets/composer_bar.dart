@@ -165,7 +165,7 @@ class _ComposerBarState extends State<ComposerBar> {
                 icon: const Icon(TgIcons.attach, size: 22),
                 size: 46,
                 settings: GlassTokens.composer(context),
-                quality: GlassQuality.premium,
+                quality: GlassTokens.quality(context),
                 onPressed: widget.onAttach,
               ),
               const SizedBox(width: 8),
@@ -178,7 +178,7 @@ class _ComposerBarState extends State<ComposerBar> {
                     : GlassContainer(
                         shape: const LiquidRoundedRectangle(borderRadius: 23),
                         settings: GlassTokens.composer(context),
-                        quality: GlassQuality.premium,
+                        quality: GlassTokens.quality(context),
                         child: CupertinoTextField(
                           controller: widget.controller,
                           placeholder: widget.editing != null
@@ -236,7 +236,7 @@ class _ComposerBarState extends State<ComposerBar> {
                                     .withValues(alpha: 0.78)
                               : null),
                   ),
-                  quality: GlassQuality.premium,
+                  quality: GlassTokens.quality(context),
                   glowColor: _recording
                       ? CupertinoColors.systemRed.resolveFrom(context)
                       : TgColors.accent.resolveFrom(context),

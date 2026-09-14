@@ -43,7 +43,7 @@ class ChatRow extends StatelessWidget {
       autoAdjustToScreen: true,
       menuWidth: 250,
       menuBorderRadius: 28,
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       settings: GlassTokens.menu(context),
       menuAlignment: GlassMenuAlignment.bottomLeft,
       triggerBuilder: (context, toggleMenu) => GestureDetector(

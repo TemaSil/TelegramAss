@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../app.dart';
+import '../../core/glass_preferences.dart';
 import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
 import '../../data/app_state.dart';
@@ -32,13 +33,13 @@ class SettingsAppBar extends StatelessWidget {
         GlassPopover(
           popoverWidth: 250,
           popoverHeight: 150,
-          quality: GlassQuality.premium,
+          quality: GlassTokens.quality(context),
           settings: GlassTokens.menu(context),
           triggerBuilder: (context, toggle) => GlassIconButton(
             icon: const Icon(TgIcons.help, size: 20),
             size: 44,
             settings: GlassTokens.chrome(context),
-            quality: GlassQuality.premium,
+            quality: GlassTokens.quality(context),
             onPressed: toggle,
           ),
           contentBuilder: (context, close) => Padding(
@@ -166,7 +167,7 @@ class SettingsBody extends StatelessWidget {
                 borderRadius: GlassTokens.cardRadius,
               ),
               settings: GlassTokens.panel(context),
-              quality: GlassQuality.premium,
+              quality: GlassTokens.quality(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
@@ -180,21 +181,31 @@ class SettingsBody extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        l10n.glassIntensity,
+                        l10n.surfaceMaterial,
                         style: TgText.rowTitle(context),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${(state.glassIntensity * 100).round()}%',
-                        style: TgText.rowPreview(context),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: CupertinoSlidingSegmentedControl<GlassMaterial>(
+                      groupValue: state.glassMaterial,
+                      children: {
+                        GlassMaterial.glass: Text(l10n.materialGlass),
+                        GlassMaterial.blur: Text(l10n.materialBlur),
+                      },
+                      onValueChanged: (value) {
+                        if (value != null) state.setGlassMaterial(value);
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 6),
-                  CupertinoSlider(
-                    value: state.glassIntensity,
-                    min: 0.2,
-                    onChanged: state.setGlassIntensity,
+                  Text(
+                    state.glassMaterial == GlassMaterial.blur
+                        ? l10n.materialBlurSubtitle
+                        : l10n.materialGlassSubtitle,
+                    style: TgText.rowPreview(context),
                   ),
                   const GlassDivider(height: 22),
                   Row(
@@ -413,7 +424,7 @@ class SettingsBody extends StatelessWidget {
       context: context,
       title: l10n.language,
       settings: GlassTokens.menu(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       actions: [
         for (final code in const ['system', 'en', 'ru'])
           GlassActionSheetAction(
@@ -440,7 +451,7 @@ class SettingsBody extends StatelessWidget {
       context: context,
       title: l10n.doubleTapReaction,
       settings: GlassTokens.menu(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       actions: [
         for (final emoji in const ['❤️', '👍', '🔥', '😂', '😮', ''])
           GlassActionSheetAction(
@@ -465,7 +476,7 @@ class SettingsBody extends StatelessWidget {
       title: AppL10n.of(context).logOutTitle,
       message: AppL10n.of(context).logOutMessage,
       settings: GlassTokens.menu(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       actions: [
         GlassDialogAction(
           label: AppL10n.of(context).cancel,
@@ -499,7 +510,7 @@ class _ProfileCard extends StatelessWidget {
         borderRadius: GlassTokens.cardRadius,
       ),
       settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       child: Row(
         children: [
           TgAvatar(
@@ -555,12 +566,12 @@ class _ProfileCard extends StatelessWidget {
             icon: const Icon(TgIcons.edit, size: 18),
             size: 40,
             settings: GlassTokens.chrome(context),
-            quality: GlassQuality.premium,
+            quality: GlassTokens.quality(context),
             onPressed: () => GlassModalSheet.show<void>(
               context: context,
               halfSize: 0.62,
               settings: GlassTokens.panel(context),
-              quality: GlassQuality.premium,
+              quality: GlassTokens.quality(context),
               builder: (_) => const EditProfileSheet(),
             ),
           ),

@@ -42,7 +42,7 @@ class ChatsAppBar extends StatelessWidget {
         GlassPullDownButton(
           icon: const Icon(TgIcons.filter, size: 19),
           menuWidth: 240,
-          quality: GlassQuality.premium,
+          quality: GlassTokens.quality(context),
           // The callback reports the item title, which is also the folder name.
           onSelected: (title) {
             final folder = state.folders.firstWhere(
@@ -69,12 +69,12 @@ class ChatsAppBar extends StatelessWidget {
           icon: const Icon(TgIcons.compose, size: 20),
           size: 44,
           settings: GlassTokens.chrome(context),
-          quality: GlassQuality.premium,
+          quality: GlassTokens.quality(context),
           onPressed: () => GlassModalSheet.show<void>(
             context: context,
             halfSize: 0.7,
             settings: GlassTokens.panel(context),
-            quality: GlassQuality.premium,
+            quality: GlassTokens.quality(context),
             builder: (sheetContext) => NewMessageSheet(
               onPick: (chatId) {
                 Navigator.of(sheetContext).pop();
@@ -104,7 +104,7 @@ class _EditMenu extends StatelessWidget {
       autoAdjustToScreen: true,
       menuWidth: 250,
       menuBorderRadius: 30,
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       settings: GlassTokens.menu(context),
       menuAlignment: GlassMenuAlignment.bottomLeft,
       triggerBuilder: (context, toggleMenu) => GlassButton.custom(
@@ -114,7 +114,7 @@ class _EditMenu extends StatelessWidget {
         height: 44,
         shape: const LiquidRoundedRectangle(borderRadius: 22),
         settings: GlassTokens.chrome(context),
-        quality: GlassQuality.premium,
+        quality: GlassTokens.quality(context),
         useOwnLayer: true,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -213,7 +213,7 @@ class _ChatsBodyState extends State<ChatsBody> {
       title: chat.title,
       message: AppL10n.of(context).deleteChatMessage,
       settings: GlassTokens.menu(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       actions: [
         GlassActionSheetAction(
           label: AppL10n.of(context).deleteChat,

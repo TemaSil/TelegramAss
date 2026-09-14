@@ -28,7 +28,7 @@ class CallsAppBar extends StatelessWidget {
           icon: const Icon(TgIcons.newCall, size: 20),
           size: 44,
           settings: GlassTokens.chrome(context),
-          quality: GlassQuality.premium,
+          quality: GlassTokens.quality(context),
           onPressed: () => _explainCalls(context),
         ),
       ],

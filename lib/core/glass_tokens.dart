@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
@@ -13,25 +15,45 @@ import 'tg_theme.dart';
 class GlassTokens {
   GlassTokens._();
 
-  /// Applies the user's glass intensity to a finished settings object.
+  /// The rendering tier every glass surface in the app asks for.
   ///
-  /// Thickness and blur carry most of the perceived "amount of glass", so they
-  /// scale directly; the light response is eased towards flat so a low setting
-  /// reads as a plain translucent panel rather than a dim, muddy one.
+  /// Call sites pass this rather than a literal so the Settings choice reaches
+  /// all of them: a widget's own `quality` argument wins over any scope, so a
+  /// hard-coded one would quietly ignore the preference.
+  static GlassQuality quality(BuildContext context) =>
+      GlassPreferencesScope.of(context).quality;
+
+  /// Adapts a finished settings object to the user's preferences.
+  ///
+  /// Two things can change it. Reduced transparency scales the material
+  /// towards flat — thickness and blur carry most of the perceived "amount of
+  /// glass", so they scale directly, while the light response is eased so a
+  /// low setting reads as a plain translucent panel rather than a dim, muddy
+  /// one. The simplified material then re-reads what is left: with the shader
+  /// gone the frost is the whole effect, and the blur radii tuned for a
+  /// refracting pane are far too small to stand on their own.
   static LiquidGlassSettings _scaled(
     BuildContext context,
     LiquidGlassSettings settings,
   ) {
-    final factor = GlassPreferencesScope.of(context).factor;
-    if (factor >= 0.999) return settings;
+    final preferences = GlassPreferencesScope.of(context);
+    final factor = preferences.factor;
 
-    return settings.copyWith(
-      thickness: settings.thickness * factor,
-      blur: settings.blur * factor,
-      chromaticAberration: settings.chromaticAberration * factor,
-      fresnelStrength: settings.fresnelStrength * factor,
-      lightIntensity: settings.lightIntensity * (0.4 + 0.6 * factor),
-      shadowElevation: settings.shadowElevation * factor,
+    var scaled = settings;
+    if (factor < 0.999) {
+      scaled = settings.copyWith(
+        thickness: settings.thickness * factor,
+        blur: settings.blur * factor,
+        chromaticAberration: settings.chromaticAberration * factor,
+        fresnelStrength: settings.fresnelStrength * factor,
+        lightIntensity: settings.lightIntensity * (0.4 + 0.6 * factor),
+        shadowElevation: settings.shadowElevation * factor,
+      );
+    }
+
+    if (preferences.material != GlassMaterial.blur) return scaled;
+    return scaled.copyWith(
+      blur: math.max(scaled.blur * 2.4, factor < 0.999 ? 8 : 14),
     );
   }
 

@@ -352,7 +352,19 @@ class AppL10nRu extends AppL10n {
   String get reduceTransparencySubtitle => 'Останавливает анимацию обоев';
 
   @override
-  String get glassIntensity => 'Интенсивность стекла';
+  String get surfaceMaterial => 'Материал поверхностей';
+
+  @override
+  String get materialGlass => 'Стекло';
+
+  @override
+  String get materialBlur => 'Блюр';
+
+  @override
+  String get materialGlassSubtitle => 'Преломление, фаска и блики';
+
+  @override
+  String get materialBlurSubtitle => 'Простое матовое размытие, легче для GPU';
 
   @override
   String get messageTextSize => 'Размер текста сообщений';

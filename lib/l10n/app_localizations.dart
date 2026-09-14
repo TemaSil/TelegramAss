@@ -739,11 +739,35 @@ abstract class AppL10n {
   /// **'Stops the wallpaper animation'**
   String get reduceTransparencySubtitle;
 
-  /// No description provided for @glassIntensity.
+  /// No description provided for @surfaceMaterial.
   ///
   /// In en, this message translates to:
-  /// **'Glass intensity'**
-  String get glassIntensity;
+  /// **'Surface material'**
+  String get surfaceMaterial;
+
+  /// No description provided for @materialGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass'**
+  String get materialGlass;
+
+  /// No description provided for @materialBlur.
+  ///
+  /// In en, this message translates to:
+  /// **'Blur'**
+  String get materialBlur;
+
+  /// No description provided for @materialGlassSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refraction, bevel and highlights'**
+  String get materialGlassSubtitle;
+
+  /// No description provided for @materialBlurSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A plain frosted blur, lighter on the GPU'**
+  String get materialBlurSubtitle;
 
   /// No description provided for @messageTextSize.
   ///

@@ -76,7 +76,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
           icon: const Icon(TgIcons.back, size: 22),
           size: 42,
           settings: GlassTokens.chrome(context),
-          quality: GlassQuality.premium,
+          quality: GlassTokens.quality(context),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),

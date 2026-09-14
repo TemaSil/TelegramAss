@@ -101,7 +101,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
                   shape: const LiquidRoundedSuperellipse(borderRadius: 34),
                   settings: GlassTokens.panel(context),
-                  quality: GlassQuality.premium,
+                  quality: GlassTokens.quality(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
@@ -298,7 +298,7 @@ class _Logo extends StatelessWidget {
       height: 96,
       shape: const LiquidRoundedSuperellipse(borderRadius: 30),
       settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       useOwnLayer: true,
       child: Center(
         child: Icon(

@@ -1,56 +1,77 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:telegram_liquid/core/glass_preferences.dart';
 import 'package:telegram_liquid/core/glass_tokens.dart';
 
-/// The intensity slider has to reach the shader, not just the setting object.
+/// The material choice has to reach the shader, not just the setting object.
 void main() {
-  testWidgets('glass intensity scales the shader settings', (tester) async {
-    late final double fullThickness;
-    late final double dimmedThickness;
-    late final double dimmedBlur;
-    late final double fullBlur;
-
-    Future<void> pumpWith(
-      GlassPreferences preferences,
-      void Function(BuildContext) probe,
-    ) {
-      return tester.pumpWidget(
-        CupertinoApp(
-          home: GlassPreferencesScope(
-            preferences: preferences,
-            child: Builder(
-              builder: (context) {
-                probe(context);
-                return const SizedBox.shrink();
-              },
-            ),
+  Future<void> pumpWith(
+    WidgetTester tester,
+    GlassPreferences preferences,
+    void Function(BuildContext) probe,
+  ) {
+    return tester.pumpWidget(
+      CupertinoApp(
+        home: GlassPreferencesScope(
+          preferences: preferences,
+          child: Builder(
+            builder: (context) {
+              probe(context);
+              return const SizedBox.shrink();
+            },
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    await pumpWith(const GlassPreferences(), (context) {
-      final settings = GlassTokens.chrome(context);
-      fullThickness = settings.thickness;
-      fullBlur = settings.blur;
+  testWidgets('the simplified material asks for a real frost', (tester) async {
+    late final double glassBlur;
+    late final double blurBlur;
+    late final GlassQuality glassQuality;
+    late final GlassQuality blurQuality;
+
+    await pumpWith(tester, const GlassPreferences(), (context) {
+      glassBlur = GlassTokens.chrome(context).blur;
+      glassQuality = GlassTokens.quality(context);
     });
 
-    await pumpWith(const GlassPreferences(intensity: 0.4), (context) {
-      final settings = GlassTokens.chrome(context);
-      dimmedThickness = settings.thickness;
-      dimmedBlur = settings.blur;
+    await pumpWith(
+      tester,
+      const GlassPreferences(material: GlassMaterial.blur),
+      (context) {
+        blurBlur = GlassTokens.chrome(context).blur;
+        blurQuality = GlassTokens.quality(context);
+      },
+    );
+
+    // Without the shader the frost is the whole effect, so it has to grow.
+    expect(blurBlur, greaterThan(glassBlur));
+    expect(glassQuality, GlassQuality.premium);
+    expect(blurQuality, GlassQuality.minimal);
+  });
+
+  testWidgets('reduce transparency flattens either material', (tester) async {
+    late final double fullThickness;
+    late final double dimmedThickness;
+
+    await pumpWith(tester, const GlassPreferences(), (context) {
+      fullThickness = GlassTokens.chrome(context).thickness;
+    });
+
+    await pumpWith(tester, const GlassPreferences(reduceTransparency: true), (
+      context,
+    ) {
+      dimmedThickness = GlassTokens.chrome(context).thickness;
     });
 
     expect(dimmedThickness, lessThan(fullThickness));
-    expect(dimmedBlur, lessThan(fullBlur));
   });
 
-  test('reduce transparency overrides the intensity slider', () {
-    const preferences = GlassPreferences(
-      intensity: 1.0,
-      reduceTransparency: true,
-    );
+  test('reduce transparency still collapses the scale factor', () {
+    const preferences = GlassPreferences(reduceTransparency: true);
     expect(preferences.factor, lessThan(1.0));
+    expect(const GlassPreferences().factor, 1.0);
   });
 }

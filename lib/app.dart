@@ -45,7 +45,7 @@ class TelegramLiquidApp extends StatelessWidget {
 
           return GlassPreferencesScope(
             preferences: GlassPreferences(
-              intensity: state.glassIntensity,
+              material: state.glassMaterial,
               reduceTransparency: state.reduceTransparency,
             ),
             child: CupertinoApp(

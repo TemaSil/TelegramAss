@@ -18,7 +18,7 @@ Future<void> showProxySheet(BuildContext context, AppState state) {
     context: context,
     halfSize: 0.72,
     settings: GlassTokens.panel(context),
-    quality: GlassQuality.premium,
+    quality: GlassTokens.quality(context),
     builder: (_) => _ProxySheet(state: state),
   );
 }

@@ -358,7 +358,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.55,
       settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       builder: (_) => _ChatInfoSheet(
         chat: chat,
         onMedia: () {
@@ -393,7 +393,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.65,
       settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       builder: (_) => _MembersSheet(members: members),
     );
   }
@@ -432,7 +432,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.6,
       settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       builder: (sheetContext) => _SearchSheet(
         chatId: widget.chatId,
         onOpen: (message) {
@@ -456,7 +456,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.55,
       settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       builder: (sheetContext) => _ForwardSheet(
         chats: state.chats.where((chat) => chat.id != widget.chatId).toList(),
         onPick: (chat) {
@@ -488,7 +488,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       halfSize: 0.55,
       settings: GlassTokens.panel(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       builder: (_) => _MediaSheet(photos: photos),
     );
   }
@@ -499,7 +499,7 @@ class _ChatScreenState extends State<ChatScreen> {
       title: AppL10n.of(context).clearHistoryTitle,
       message: AppL10n.of(context).clearHistoryMessage,
       settings: GlassTokens.menu(context),
-      quality: GlassQuality.premium,
+      quality: GlassTokens.quality(context),
       actions: [
         GlassDialogAction(
           label: AppL10n.of(context).cancel,
@@ -667,7 +667,7 @@ class _ChatAppBar extends StatelessWidget {
         icon: const Icon(TgIcons.back, size: 22),
         size: 42,
         settings: GlassTokens.chrome(context),
-        quality: GlassQuality.premium,
+        quality: GlassTokens.quality(context),
         onPressed: onBack,
       ),
       title: GestureDetector(
@@ -714,14 +714,14 @@ class _ChatAppBar extends StatelessWidget {
           autoAdjustToScreen: true,
           menuWidth: 235,
           menuBorderRadius: 26,
-          quality: GlassQuality.premium,
+          quality: GlassTokens.quality(context),
           settings: GlassTokens.menu(context),
           menuAlignment: GlassMenuAlignment.bottomRight,
           triggerBuilder: (context, toggleMenu) => GlassIconButton(
             icon: const Icon(TgIcons.more, size: 20),
             size: 42,
             settings: GlassTokens.chrome(context),
-            quality: GlassQuality.premium,
+            quality: GlassTokens.quality(context),
             onPressed: toggleMenu,
           ),
           items: [
@@ -1257,7 +1257,7 @@ class _JumpToLatest extends StatelessWidget {
               icon: const Icon(TgIcons.chevronDown, size: 20),
               size: 44,
               settings: GlassTokens.chrome(context),
-              quality: GlassQuality.premium,
+              quality: GlassTokens.quality(context),
               onPressed: onPressed,
             ),
           ),
@@ -1736,7 +1736,7 @@ class _ChatInfoSheet extends StatelessWidget {
           const SizedBox(height: 20),
           GlassButtonGroup.icons(
             direction: Axis.horizontal,
-            quality: GlassQuality.premium,
+            quality: GlassTokens.quality(context),
             settings: GlassTokens.chrome(context),
             items: [
               // Calls need tgcalls, a second native stack TDLib does not
