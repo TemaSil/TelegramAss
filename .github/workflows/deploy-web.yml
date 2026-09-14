@@ -1,0 +1,69 @@
+name: Deploy web
+
+# The web build is the "try it without installing anything" copy. TDLib has no
+# web backend — `tdlib_client_web.dart` is a stub — so the site always runs the
+# generated demo account, and it signs itself in rather than showing a login
+# screen nobody can get past.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push supersedes one still running.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.3'
+          channel: stable
+          cache: true
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # No API credentials here, deliberately. A web build compiles its
+      # --dart-define values into JavaScript that is then served to anyone who
+      # opens the page, so an api_hash put here would be public the moment it
+      # deployed. The demo backend needs none.
+      - name: Build
+        run: |
+          flutter build web --release \
+            --base-href "/${GITHUB_REPOSITORY#*/}/" \
+            --dart-define=DEMO_AUTOLOGIN=true
+
+      # CanvasKit is fetched from a CDN by default; the build already carries a
+      # copy, and using it keeps the page working when the CDN does not.
+      - name: Point CanvasKit at the bundled copy
+        run: python3 tool/preview_canvaskit.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

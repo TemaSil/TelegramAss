@@ -86,9 +86,15 @@ is how protocol handling gets checked without a device or an account.
 
 ## Builds and releases
 
-Pushing to `main` triggers `.github/workflows/build-apk.yml`, which publishes
-a `build-<run number>` GitHub release with debug and release APKs. Bear that
-in mind: every push costs a build and a release.
+Work lands on `main`, and that is what the builds are for. Pushing there runs
+two workflows: `.github/workflows/build-apk.yml`, which publishes a
+`build-<run number>` GitHub release with debug and release APKs, and
+`.github/workflows/deploy-web.yml`, which puts the web build on GitHub Pages
+so a change can be looked at without installing anything.
+
+The web copy always runs the demo account — TDLib has no web backend — and it
+is built with no API credentials on purpose: a `--dart-define` becomes plain
+JavaScript served to whoever opens the page.
 
 - `.github/workflows/build-tdlib.yml` compiles `libtdjson` for the Android
   ABIs and publishes a `tdlib-<sha>` release. It takes over an hour and is
