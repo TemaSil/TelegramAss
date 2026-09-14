@@ -30,6 +30,26 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Pull the most recent TDLib build, if one has been published. Without it
+      # the APK still runs, on the demo backend.
+      - name: Fetch libtdjson.so
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --limit 50 \
+                  --json tagName --jq '[.[] | select(.tagName | startswith("tdlib-"))][0].tagName' \
+                || true)
+          if [ -z "$tag" ] || [ "$tag" = "null" ]; then
+            echo "No TDLib release yet — the APK will ship demo mode only."
+            exit 0
+          fi
+          echo "Using TDLib release $tag"
+          gh release download "$tag" --pattern 'tdlib-jnilibs.zip' --clobber
+          unzip -o tdlib-jnilibs.zip -d tdlib-native
+          mkdir -p android/app/src/main/jniLibs
+          cp -r tdlib-native/jniLibs/* android/app/src/main/jniLibs/
+          find android/app/src/main/jniLibs -name '*.so' -exec ls -lh {} +
+
       - name: Analyze
         run: flutter analyze
 

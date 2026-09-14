@@ -48,12 +48,37 @@ a phone number ending in `0` also asks for the two-step password `telegram`.
 The app speaks the official [TDLib JSON interface](https://core.telegram.org/tdlib/getting-started)
 over `dart:ffi`, with the blocking `td_receive` loop in its own isolate.
 
-1. Create an application at [my.telegram.org](https://my.telegram.org) →
-   *API development tools*.
-2. Drop `libtdjson.so` for each ABI into
-   `android/app/src/main/jniLibs/<abi>/` (`arm64-v8a`, `armeabi-v7a`,
-   `x86_64`).
-3. Run with the credentials:
+Two things are needed, and the app falls back to demo mode if either is
+missing rather than failing to start:
+
+**1. Your own API credentials.** Only the account holder can create these:
+sign in at [my.telegram.org](https://my.telegram.org) → *API development
+tools* → create an application. You get an `api_id` and an `api_hash`. They
+identify your client to Telegram, so treat the hash as a secret — never commit
+it.
+
+**2. `libtdjson.so` for Android.** TDLib publishes no prebuilt Android
+binaries, so `.github/workflows/build-tdlib.yml` compiles it: run that
+workflow once (Actions → *Build TDLib* → *Run workflow*). It builds OpenSSL
+and TDLib for every Android ABI — expect a couple of hours — and publishes the
+result as a `tdlib-<sha>` release. Every later APK build picks that up
+automatically and unpacks it into `android/app/src/main/jniLibs/`.
+
+### Building a live APK in CI
+
+Add the credentials as repository secrets (Settings → Secrets and variables →
+Actions):
+
+| Secret | Value |
+|---|---|
+| `TELEGRAM_API_ID` | the numeric `api_id` |
+| `TELEGRAM_API_HASH` | the `api_hash` string |
+
+With both set and a TDLib release present, `Build APK` produces a client that
+talks to real Telegram servers. With neither, it produces the demo build — so
+forks and pull requests still build.
+
+### Running locally
 
 ```bash
 flutter run \
@@ -61,8 +86,11 @@ flutter run \
   --dart-define=TELEGRAM_API_HASH=your_api_hash
 ```
 
-Without credentials, or when the native library is missing, the app falls
-back to demo mode instead of failing to start.
+### Naming
+
+Telegram's terms for third-party clients ask that you not reuse the Telegram
+name or logo. The current app name and icon are placeholders for private use
+and should be changed before any public distribution.
 
 ## Build an APK
 
