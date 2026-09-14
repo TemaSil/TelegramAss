@@ -1,0 +1,110 @@
+name: Clean up old builds
+
+# Run by hand: Actions → Clean up old builds → Run workflow.
+#
+# Deletes the workflow runs and APK releases that have piled up, keeping the
+# most recent ones. Nothing here runs on a schedule or on push: removing a
+# release cannot be undone, so it happens only when somebody asks for it.
+on:
+  workflow_dispatch:
+    inputs:
+      keep:
+        description: 'How many of the newest build-N releases to keep'
+        required: true
+        default: '5'
+      delete_failed_runs:
+        description: 'Delete failed workflow runs'
+        type: boolean
+        default: true
+      delete_old_runs:
+        description: 'Delete successful runs older than the kept releases'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      # Releases are matched on the exact shape the build workflow publishes,
+      # `build-<number>`. The TDLib release is tagged `tdlib-<sha>` and so can
+      # never match — which matters, because every APK build downloads
+      # libtdjson from it and deleting it would break all of them.
+      - name: Delete old build releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          KEEP: ${{ inputs.keep }}
+        run: |
+          set -euo pipefail
+
+          gh release list --limit 200 --json tagName --jq '.[].tagName' \
+            | grep -E '^build-[0-9]+$' \
+            | sort -t- -k2 -n -r \
+            > all-builds.txt || true
+
+          total=$(wc -l < all-builds.txt)
+          echo "Found $total build releases; keeping the newest $KEEP."
+
+          tail -n +$((KEEP + 1)) all-builds.txt > doomed.txt || true
+          if [ ! -s doomed.txt ]; then
+            echo "Nothing to remove."
+            exit 0
+          fi
+
+          while read -r tag; do
+            echo "Deleting release $tag"
+            # --cleanup-tag takes the git tag with it; a tag pointing at a
+            # release that no longer exists is just litter.
+            gh release delete "$tag" --yes --cleanup-tag
+          done < doomed.txt
+
+      - name: Delete failed workflow runs
+        if: ${{ inputs.delete_failed_runs }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh run list --limit 200 --status failure --json databaseId \
+            --jq '.[].databaseId' > failed.txt || true
+          while read -r id; do
+            [ -n "$id" ] || continue
+            echo "Deleting failed run $id"
+            gh run delete "$id" || echo "  could not delete $id, skipping"
+          done < failed.txt
+
+      - name: Delete superseded successful runs
+        if: ${{ inputs.delete_old_runs }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          KEEP: ${{ inputs.keep }}
+          THIS_RUN: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          # Only the APK builds, and never this run — deleting the job that is
+          # doing the deleting ends it halfway through.
+          gh run list --workflow 'Build APK' --limit 200 --status success \
+            --json databaseId --jq '.[].databaseId' > runs.txt || true
+
+          tail -n +$((KEEP + 1)) runs.txt > old-runs.txt || true
+          while read -r id; do
+            [ -n "$id" ] || continue
+            [ "$id" = "$THIS_RUN" ] && continue
+            echo "Deleting run $id"
+            gh run delete "$id" || echo "  could not delete $id, skipping"
+          done < old-runs.txt
+
+      - name: What is left
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          echo "### Releases still here" >> "$GITHUB_STEP_SUMMARY"
+          gh release list --limit 50 \
+            | sed 's/^/    /' >> "$GITHUB_STEP_SUMMARY"
