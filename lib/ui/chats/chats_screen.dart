@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../app.dart';
+import '../../core/formatters.dart';
 import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
 import '../../data/app_state.dart';
 import '../../data/models.dart';
 import '../chat/chat_screen.dart';
+import '../common/tg_avatar.dart';
 import '../stories/story_viewer.dart';
 import 'archive_screen.dart';
 import 'widgets/chat_row.dart';
@@ -145,10 +149,37 @@ class ChatsBody extends StatefulWidget {
 class _ChatsBodyState extends State<ChatsBody> {
   final _searchController = TextEditingController();
 
+  /// What the server found for the current query. The loaded chat list can
+  /// only match what has already been pulled down, which on a busy account is
+  /// a small fraction of it.
+  TgSearchResults _results = TgSearchResults.empty;
+  Timer? _debounce;
+  int _searchSeq = 0;
+
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged(String query) {
+    AppScope.read(context).setSearchQuery(query);
+    _debounce?.cancel();
+    if (query.trim().isEmpty) {
+      setState(() => _results = TgSearchResults.empty);
+      return;
+    }
+    // One request per pause in typing, not one per keystroke.
+    _debounce = Timer(const Duration(milliseconds: 350), () => _search(query));
+  }
+
+  Future<void> _search(String query) async {
+    final seq = ++_searchSeq;
+    final results = await AppScope.read(context).client.searchGlobal(query);
+    // A slower earlier search must not overwrite a newer one's results.
+    if (!mounted || seq != _searchSeq) return;
+    setState(() => _results = results);
   }
 
   void _openChat(BuildContext context, TgChat chat) {
@@ -190,7 +221,16 @@ class _ChatsBodyState extends State<ChatsBody> {
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final l10n = AppL10n.of(context);
-    final chats = state.visibleChats;
+    // While searching, chats the server found are merged in behind the ones
+    // already loaded, so a conversation that was never pulled down still
+    // appears.
+    final chats = state.searchQuery.trim().isEmpty
+        ? state.visibleChats
+        : <TgChat>[
+            ...state.visibleChats,
+            for (final chat in _results.chats)
+              if (!state.visibleChats.any((known) => known.id == chat.id)) chat,
+          ];
     final bottomPad = MediaQuery.paddingOf(context).bottom;
     final topPad = MediaQuery.paddingOf(context).top;
 
@@ -208,10 +248,10 @@ class _ChatsBodyState extends State<ChatsBody> {
           searchBar: CupertinoSearchTextField(
             controller: _searchController,
             placeholder: l10n.searchChats,
-            onChanged: state.setSearchQuery,
+            onChanged: _onQueryChanged,
             onSuffixTap: () {
               _searchController.clear();
-              state.setSearchQuery('');
+              _onQueryChanged('');
             },
           ),
         ),
@@ -247,7 +287,7 @@ class _ChatsBodyState extends State<ChatsBody> {
               ),
             ),
         ],
-        if (chats.isEmpty)
+        if (chats.isEmpty && _results.messages.isEmpty)
           SliverToBoxAdapter(child: _EmptyState(query: state.searchQuery))
         else
           SliverList(
@@ -274,6 +314,32 @@ class _ChatsBodyState extends State<ChatsBody> {
               );
             }, childCount: chats.length),
           ),
+        if (_results.messages.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+              child: Text(
+                l10n.messagesSection,
+                style: TgText.sectionHeader(context),
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final message = _results.messages[index];
+              final chat = state.chatById(message.chatId);
+              return _MessageResultRow(
+                message: message,
+                chatTitle: chat?.title ?? l10n.chats,
+                onTap: () => Navigator.of(context).push(
+                  CupertinoPageRoute<void>(
+                    builder: (_) => ChatScreen(chatId: message.chatId),
+                  ),
+                ),
+              );
+            }, childCount: _results.messages.length),
+          ),
+        ],
         SliverToBoxAdapter(child: SizedBox(height: 96 + bottomPad)),
       ],
     );
@@ -286,6 +352,71 @@ class _ChatsBodyState extends State<ChatsBody> {
 /// and the glass one mis-measured segments whose labels carry a count — the
 /// indicator drifted off its label. This is the plain iOS reading: a scrolling
 /// row of labels, the selected one in a pill, the unread count beside it.
+/// One message from a search, under the chat it came from.
+class _MessageResultRow extends StatelessWidget {
+  const _MessageResultRow({
+    required this.message,
+    required this.chatTitle,
+    required this.onTap,
+  });
+
+  final TgMessage message;
+  final String chatTitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Row(
+          children: [
+            TgAvatar(
+              seed: message.chatId,
+              initials: chatTitle.isEmpty ? '?' : chatTitle[0].toUpperCase(),
+              size: 40,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    chatTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TgText.rowTitle(context),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    message.text,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: TgColors.secondaryLabel.resolveFrom(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              TgFormat.listStamp(message.date),
+              style: TextStyle(
+                fontSize: 12.5,
+                color: TgColors.tertiaryLabel.resolveFrom(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// The row above the chat list that leads into the archive, the way iOS
 /// Telegram surfaces it.
 class _ArchiveRow extends StatelessWidget {

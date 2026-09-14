@@ -126,6 +126,7 @@
   "unarchive": "Из архива",
   "archivedChats": "Архив",
   "archiveEmpty": "В архиве пусто",
+  "messagesSection": "Сообщения",
   "privacy": "Конфиденциальность",
   "messageNotifications": "Уведомления о сообщениях",
   "messageNotificationsSubtitle": "Держит соединение, чтобы сообщения приходили при закрытом приложении",

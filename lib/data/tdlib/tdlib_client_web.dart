@@ -159,6 +159,10 @@ class TdlibTelegramClient implements TelegramClient {
   Future<void> toggleMute(int chatId) async {}
 
   @override
+  Future<TgSearchResults> searchGlobal(String query) async =>
+      TgSearchResults.empty;
+
+  @override
   Future<void> toggleArchive(int chatId) async {}
 
   @override

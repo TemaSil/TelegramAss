@@ -853,6 +853,12 @@ abstract class AppL10n {
   /// **'No archived chats'**
   String get archiveEmpty;
 
+  /// No description provided for @messagesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messagesSection;
+
   /// No description provided for @privacy.
   ///
   /// In en, this message translates to:

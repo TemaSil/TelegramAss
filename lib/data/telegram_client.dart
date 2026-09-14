@@ -108,6 +108,14 @@ abstract class TelegramClient {
   /// a tap would only add latency — so this is for music and documents.
   Future<void> downloadMessageMedia(int chatId, int messageId) async {}
 
+  /// Searches the server: conversations the account has, public chats found
+  /// by name, and messages from every chat at once.
+  ///
+  /// Filtering the loaded chat list can only find what has already been
+  /// pulled down, which for a busy account is a fraction of it.
+  Future<TgSearchResults> searchGlobal(String query) async =>
+      TgSearchResults.empty;
+
   /// Messages of [chatId] whose text matches [query], newest first.
   List<TgMessage> searchMessages(int chatId, String query);
 

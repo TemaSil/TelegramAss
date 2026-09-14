@@ -414,6 +414,9 @@ class AppL10nRu extends AppL10n {
   String get archiveEmpty => 'В архиве пусто';
 
   @override
+  String get messagesSection => 'Сообщения';
+
+  @override
   String get privacy => 'Конфиденциальность';
 
   @override

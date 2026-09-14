@@ -348,6 +348,21 @@ class TgMessage {
   }
 }
 
+/// What a search of the server came back with.
+class TgSearchResults {
+  const TgSearchResults({this.chats = const [], this.messages = const []});
+
+  static const empty = TgSearchResults();
+
+  /// Conversations the account already has, plus public chats found by name.
+  final List<TgChat> chats;
+
+  /// Matching messages from across every conversation.
+  final List<TgMessage> messages;
+
+  bool get isEmpty => chats.isEmpty && messages.isEmpty;
+}
+
 class TgFolder {
   const TgFolder({required this.id, required this.title, this.unreadCount = 0});
 

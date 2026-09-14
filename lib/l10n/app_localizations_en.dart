@@ -415,6 +415,9 @@ class AppL10nEn extends AppL10n {
   String get archiveEmpty => 'No archived chats';
 
   @override
+  String get messagesSection => 'Messages';
+
+  @override
   String get privacy => 'Privacy';
 
   @override

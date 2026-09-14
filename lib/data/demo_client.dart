@@ -506,6 +506,25 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<TgSearchResults> searchGlobal(String query) async {
+    final needle = query.trim().toLowerCase();
+    if (needle.isEmpty) return TgSearchResults.empty;
+
+    final messages = <TgMessage>[
+      for (final thread in _messages.values)
+        for (final message in thread)
+          if (message.text.toLowerCase().contains(needle)) message,
+    ]..sort((a, b) => b.date.compareTo(a.date));
+
+    return TgSearchResults(
+      chats: _chats
+          .where((chat) => chat.title.toLowerCase().contains(needle))
+          .toList(),
+      messages: messages.take(40).toList(),
+    );
+  }
+
+  @override
   Future<void> toggleArchive(int chatId) async {
     _updateChat(chatId, (chat) {
       final lists = Set<String>.from(chat.lists);

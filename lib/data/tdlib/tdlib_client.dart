@@ -1291,6 +1291,52 @@ class TdlibTelegramClient implements TelegramClient {
   }
 
   @override
+  Future<TgSearchResults> searchGlobal(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return TgSearchResults.empty;
+
+    // Three questions at once: chats already known, public chats by name, and
+    // message text across every conversation.
+    final responses = await Future.wait([
+      _request({'@type': 'searchChats', 'query': trimmed, 'limit': 30}),
+      _request({'@type': 'searchPublicChats', 'query': trimmed}),
+      _request({
+        '@type': 'searchMessages',
+        'query': trimmed,
+        'offset': '',
+        'limit': 40,
+      }),
+    ]);
+
+    final chats = <int, TgChat>{};
+    for (final response in responses.take(2)) {
+      final ids = response['chat_ids'] as List?;
+      if (ids == null) continue;
+      for (final raw in ids) {
+        final id = (raw as num).toInt();
+        final known = _chatIndex[id];
+        if (known != null) {
+          chats[id] = known;
+        } else {
+          // A public chat the account has never opened: ask for it, and it
+          // arrives as an updateNewChat for the next search.
+          _send({'@type': 'getChat', 'chat_id': id});
+        }
+      }
+    }
+
+    final found = responses[2];
+    final messages = <TgMessage>[
+      if (found['messages'] is List)
+        for (final raw
+            in (found['messages'] as List).cast<Map<String, dynamic>>())
+          _messageFrom(raw),
+    ];
+
+    return TgSearchResults(chats: chats.values.toList(), messages: messages);
+  }
+
+  @override
   Future<void> toggleArchive(int chatId) async {
     final chat = _chatIndex[chatId];
     if (chat == null) return;
