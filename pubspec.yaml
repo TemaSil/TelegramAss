@@ -13,6 +13,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_cupertino_symbols: ^1.0.3
+  flutter_foreground_task: ^11.0.3
+  flutter_local_notifications: ^22.3.1
   flutter_localizations:
     sdk: flutter
   image_picker: ^1.2.3

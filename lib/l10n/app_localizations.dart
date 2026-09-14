@@ -799,6 +799,18 @@ abstract class AppL10n {
   /// **'Privacy'**
   String get privacy;
 
+  /// No description provided for @messageNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Message notifications'**
+  String get messageNotifications;
+
+  /// No description provided for @messageNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the connection alive so messages arrive while the app is closed'**
+  String get messageNotificationsSubtitle;
+
   /// No description provided for @readReceipts.
   ///
   /// In en, this message translates to:

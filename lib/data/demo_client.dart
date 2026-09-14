@@ -22,6 +22,7 @@ class DemoTelegramClient implements TelegramClient {
   final _authController = StreamController<TgAuthStage>.broadcast();
   final _chatsController = StreamController<List<TgChat>>.broadcast();
   final _typingController = StreamController<int?>.broadcast();
+  final _incomingController = StreamController<TgMessage>.broadcast();
   final _messageControllers = <int, StreamController<List<TgMessage>>>{};
   final _messages = <int, List<TgMessage>>{};
 
@@ -70,6 +71,9 @@ class DemoTelegramClient implements TelegramClient {
   Stream<int?> get typingChatId => _typingController.stream;
 
   @override
+  Stream<TgMessage> get incomingMessages => _incomingController.stream;
+
+  @override
   Future<void> start() async {
     _seed();
     if (autoLogin) {
@@ -100,6 +104,7 @@ class DemoTelegramClient implements TelegramClient {
     await _authController.close();
     await _chatsController.close();
     await _typingController.close();
+    await _incomingController.close();
     for (final controller in _messageControllers.values) {
       await controller.close();
     }
@@ -508,6 +513,7 @@ class DemoTelegramClient implements TelegramClient {
     _messages.putIfAbsent(chatId, () => []).add(message);
     _controllerFor(chatId).add(currentMessagesOf(chatId));
     _syncPreview(chatId);
+    if (!_incomingController.isClosed) _incomingController.add(message);
   }
 
   void _mutate(

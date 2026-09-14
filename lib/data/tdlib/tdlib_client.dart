@@ -37,6 +37,7 @@ class TdlibTelegramClient implements TelegramClient {
   final _authController = StreamController<TgAuthStage>.broadcast();
   final _chatsController = StreamController<List<TgChat>>.broadcast();
   final _typingController = StreamController<int?>.broadcast();
+  final _incomingController = StreamController<TgMessage>.broadcast();
   final _messageControllers = <int, StreamController<List<TgMessage>>>{};
   final _messages = <int, List<TgMessage>>{};
   final _chatIndex = <int, TgChat>{};
@@ -114,6 +115,9 @@ class TdlibTelegramClient implements TelegramClient {
   @override
   Stream<int?> get typingChatId => _typingController.stream;
 
+  @override
+  Stream<TgMessage> get incomingMessages => _incomingController.stream;
+
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   @override
@@ -153,6 +157,7 @@ class TdlibTelegramClient implements TelegramClient {
     await _authController.close();
     await _chatsController.close();
     await _typingController.close();
+    await _incomingController.close();
     for (final controller in _messageControllers.values) {
       await controller.close();
     }
@@ -569,6 +574,7 @@ class TdlibTelegramClient implements TelegramClient {
     final message = _messageFrom(json);
     _messages.putIfAbsent(message.chatId, () => []).add(message);
     _controllerFor(message.chatId).add(currentMessagesOf(message.chatId));
+    if (!_incomingController.isClosed) _incomingController.add(message);
   }
 
   TgMessage _messageFrom(Map<String, dynamic> json) {

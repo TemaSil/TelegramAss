@@ -117,6 +117,8 @@
   "language": "Язык",
   "languageSystem": "Системный",
   "privacy": "Конфиденциальность",
+  "messageNotifications": "Уведомления о сообщениях",
+  "messageNotificationsSubtitle": "Держит соединение, чтобы сообщения приходили при закрытом приложении",
   "readReceipts": "Отчёты о прочтении",
   "activeSessions": "Активные сеансы",
   "backend": "Подключение",

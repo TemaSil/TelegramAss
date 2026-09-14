@@ -237,6 +237,17 @@ class SettingsBody extends StatelessWidget {
               header: Text(l10n.privacy, style: TgText.sectionHeader(context)),
               children: [
                 CupertinoListTile.notched(
+                  leading: const Icon(TgIcons.unmute),
+                  title: Text(l10n.messageNotifications),
+                  subtitle: Text(l10n.messageNotificationsSubtitle),
+                  trailing: GlassSwitch(
+                    value: state.notifications,
+                    onChanged: state.setNotifications,
+                    settings: GlassTokens.chrome(context),
+                    activeColor: TgColors.accent.resolveFrom(context),
+                  ),
+                ),
+                CupertinoListTile.notched(
                   leading: const Icon(TgIcons.receipts),
                   title: Text(l10n.readReceipts),
                   trailing: GlassSwitch(

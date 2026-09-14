@@ -9,6 +9,7 @@ import '../../core/formatters.dart';
 import '../../core/glass_tokens.dart';
 import '../../core/tg_theme.dart';
 import '../../data/models.dart';
+import '../../data/notifications.dart';
 import '../common/tg_avatar.dart';
 import '../common/wallpaper.dart';
 import '../common/wallpaper_picker.dart';
@@ -60,6 +61,8 @@ class _ChatScreenState extends State<ChatScreen> {
       if (wasAtBottom) _scrollToBottom();
     });
     client.openChat(widget.chatId);
+    // While this chat is on screen its messages are read, not announced.
+    TgNotifications.instance.setOpenChat(widget.chatId);
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _scrollToBottom(jump: true),
@@ -72,6 +75,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // Keep whatever is in the composer as a draft, the way Telegram does.
     state.setDraft(widget.chatId, _composerController.text.trim());
     state.client.closeChat(widget.chatId);
+    TgNotifications.instance.setOpenChat(null);
     _composerController.dispose();
     _scrollController.dispose();
     super.dispose();

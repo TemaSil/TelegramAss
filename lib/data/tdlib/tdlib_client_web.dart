@@ -155,4 +155,7 @@ class TdlibTelegramClient implements TelegramClient {
 
   @override
   Stream<int?> get typingChatId => const Stream.empty();
+
+  @override
+  Stream<TgMessage> get incomingMessages => const Stream.empty();
 }

@@ -386,6 +386,13 @@ class AppL10nRu extends AppL10n {
   String get privacy => 'Конфиденциальность';
 
   @override
+  String get messageNotifications => 'Уведомления о сообщениях';
+
+  @override
+  String get messageNotificationsSubtitle =>
+      'Держит соединение, чтобы сообщения приходили при закрытом приложении';
+
+  @override
   String get readReceipts => 'Отчёты о прочтении';
 
   @override

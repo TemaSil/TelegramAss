@@ -102,4 +102,10 @@ abstract class TelegramClient {
 
   /// Typing indicator for the currently open chat.
   Stream<int?> get typingChatId;
+
+  /// Every message the server delivers, from every chat.
+  ///
+  /// [messagesOf] only covers conversations the UI has opened, so it cannot
+  /// drive notifications; this is the firehose that can.
+  Stream<TgMessage> get incomingMessages;
 }

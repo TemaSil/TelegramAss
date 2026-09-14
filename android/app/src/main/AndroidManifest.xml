@@ -9,6 +9,15 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+
+    <!-- Notifications. The foreground service is what keeps TDLib connected
+         while the app is closed; without Firebase there is no push channel,
+         so the process has to stay alive itself. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <application
         android:label="Telegram Liquid"
         android:name="${applicationName}"

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'demo_client.dart';
 import 'diagnostics.dart';
+import 'notifications.dart';
 import 'models.dart';
 import 'tdlib/tdlib_backend.dart';
 import 'telegram_client.dart';
@@ -43,6 +44,7 @@ class AppState extends ChangeNotifier {
   bool _readReceipts = true;
   bool _autoNightMode = true;
   bool _darkMode = true;
+  bool _notifications = true;
   double _glassIntensity = 1.0;
   int _messageFontSize = 16;
 
@@ -69,6 +71,7 @@ class AppState extends ChangeNotifier {
   bool get reduceTransparency => _reduceTransparency;
   bool get readReceipts => _readReceipts;
   bool get autoNightMode => _autoNightMode;
+  bool get notifications => _notifications;
 
   /// Used only when [autoNightMode] is off.
   bool get darkMode => _darkMode;
@@ -138,6 +141,11 @@ class AppState extends ChangeNotifier {
     state._restore();
     state._attach();
     if (state._proxy != null) await client.applyProxy(state._proxy);
+
+    TgNotifications.instance.setEnabled(state._notifications);
+    // Not awaited: it asks for a runtime permission, and the chat list should
+    // not sit behind that dialog.
+    unawaited(TgNotifications.instance.start(client));
     return state;
   }
 
@@ -146,6 +154,7 @@ class AppState extends ChangeNotifier {
   static const _kReduceTransparency = 'reduce_transparency';
   static const _kReadReceipts = 'read_receipts';
   static const _kAutoNightMode = 'auto_night_mode';
+  static const _kNotifications = 'notifications';
   static const _kDarkMode = 'dark_mode';
   static const _kGlassIntensity = 'glass_intensity';
   static const _kMessageFontSize = 'message_font_size';
@@ -160,6 +169,7 @@ class AppState extends ChangeNotifier {
         prefs.getBool(_kReduceTransparency) ?? _reduceTransparency;
     _readReceipts = prefs.getBool(_kReadReceipts) ?? _readReceipts;
     _autoNightMode = prefs.getBool(_kAutoNightMode) ?? _autoNightMode;
+    _notifications = prefs.getBool(_kNotifications) ?? _notifications;
     _darkMode = prefs.getBool(_kDarkMode) ?? _darkMode;
     _glassIntensity = prefs.getDouble(_kGlassIntensity) ?? _glassIntensity;
     _messageFontSize = prefs.getInt(_kMessageFontSize) ?? _messageFontSize;
@@ -284,6 +294,13 @@ class AppState extends ChangeNotifier {
   void setReadReceipts(bool value) {
     _readReceipts = value;
     _prefs?.setBool(_kReadReceipts, value);
+    notifyListeners();
+  }
+
+  void setNotifications(bool value) {
+    _notifications = value;
+    _prefs?.setBool(_kNotifications, value);
+    TgNotifications.instance.setEnabled(value);
     notifyListeners();
   }
 

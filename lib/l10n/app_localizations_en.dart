@@ -387,6 +387,13 @@ class AppL10nEn extends AppL10n {
   String get privacy => 'Privacy';
 
   @override
+  String get messageNotifications => 'Message notifications';
+
+  @override
+  String get messageNotificationsSubtitle =>
+      'Keeps the connection alive so messages arrive while the app is closed';
+
+  @override
   String get readReceipts => 'Read receipts';
 
   @override
