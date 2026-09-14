@@ -22,9 +22,16 @@ import '../../l10n/app_localizations.dart';
 
 /// One conversation.
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, required this.chatId});
+  const ChatScreen({super.key, required this.chatId, this.unreadCount});
 
   final int chatId;
+
+  /// How many messages were unread when the row was tapped.
+  ///
+  /// The chat list marks the chat read before pushing this screen, so by the
+  /// time it builds the badge is already gone — the count has to be carried in
+  /// or the unread divider could never be placed.
+  final int? unreadCount;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -136,7 +143,9 @@ class _ChatScreenState extends State<ChatScreen> {
   /// read before anything else and never recomputed.
   void _resolveUnreadAnchor() {
     if (_unreadAnchorResolved) return;
-    final unread = AppScope.read(context).chatById(widget.chatId)?.unreadCount;
+    final unread =
+        widget.unreadCount ??
+        AppScope.read(context).chatById(widget.chatId)?.unreadCount;
     if (unread == null) return;
     _unreadAnchorResolved = true;
     if (unread <= 0) return;

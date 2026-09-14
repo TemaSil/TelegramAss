@@ -184,10 +184,15 @@ class _ChatsBodyState extends State<ChatsBody> {
 
   void _openChat(BuildContext context, TgChat chat) {
     final state = AppScope.read(context);
+    // Read before marking: the divider is placed from this number, and
+    // markChatRead clears it.
+    final unread = chat.unreadCount;
     // With read receipts off we do not tell the server the chat was opened.
     if (state.readReceipts) state.client.markChatRead(chat.id);
     Navigator.of(context).push(
-      CupertinoPageRoute<void>(builder: (_) => ChatScreen(chatId: chat.id)),
+      CupertinoPageRoute<void>(
+        builder: (_) => ChatScreen(chatId: chat.id, unreadCount: unread),
+      ),
     );
   }
 

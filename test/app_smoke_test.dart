@@ -244,4 +244,26 @@ void main() {
     expect(results.messages, isNotEmpty);
     expect(results.messages.any((m) => m.text.contains('refraction')), isTrue);
   });
+
+  test('the unread divider anchors on the first unread message', () async {
+    final state = await signedIn();
+    addTearDown(state.dispose);
+
+    // The demo account seeds a chat with a badge, which is what the divider
+    // is placed from — and what markChatRead clears on the way in.
+    final chat = state.chats.firstWhere((chat) => chat.unreadCount > 0);
+    final unread = chat.unreadCount;
+    final incoming = state.client
+        .currentMessagesOf(chat.id)
+        .where((message) => !message.isOutgoing)
+        .toList();
+    expect(incoming.length, greaterThanOrEqualTo(unread));
+
+    await state.client.markChatRead(chat.id);
+    await settle();
+    expect(state.chatById(chat.id)?.unreadCount, 0);
+
+    // Which is exactly why the count is captured before the screen opens.
+    expect(unread, greaterThan(0));
+  });
 }

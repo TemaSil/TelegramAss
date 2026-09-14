@@ -57,10 +57,12 @@ class ArchiveScreen extends StatelessWidget {
                   chat: chat,
                   isTyping: state.typingChatId == chat.id,
                   onTap: () {
+                    final unread = chat.unreadCount;
                     if (state.readReceipts) state.client.markChatRead(chat.id);
                     Navigator.of(context).push(
                       CupertinoPageRoute<void>(
-                        builder: (_) => ChatScreen(chatId: chat.id),
+                        builder: (_) =>
+                            ChatScreen(chatId: chat.id, unreadCount: unread),
                       ),
                     );
                   },
