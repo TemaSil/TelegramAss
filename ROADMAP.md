@@ -58,7 +58,8 @@ SOCKS5 proxy support; and an in-app diagnostics log.
 | Custom emoji | partial — the fallback emoji renders, the custom image does not |
 | In-chat search | partial — local text, but results jump to the message |
 | Shared media grid | done — real photos, tapping opens the viewer |
-| Polls, locations, contacts, albums | missing |
+| Polls, locations, contacts, dice | partial — shown and readable, not interactive |
+| Albums | missing |
 | Scheduled and silent send | missing |
 | Threads and channel comments | missing |
 
@@ -139,7 +140,8 @@ Need the base first:
    fallback emoji renders, the custom image does not.
 2. **Group and channel administration** — permissions, invite links and
    joining; member lists and leaving are in.
-3. **Polls, locations and albums.**
+3. **Voting in polls, and albums** — polls, locations and contacts are
+   readable now; acting on them is not.
 4. **WebM video stickers**, now that a video player is in the app.
 5. Then the rest of the mod toggles, which are a pleasant layer now that the
    base holds.

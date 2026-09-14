@@ -953,7 +953,79 @@ class TdlibTelegramClient implements TelegramClient {
     final text = content?['text'] as Map<String, dynamic>?;
     if (text != null) return (text['text'] as String?) ?? '';
     final caption = content?['caption'] as Map<String, dynamic>?;
-    return (caption?['text'] as String?) ?? '';
+    final captionText = caption?['text'] as String?;
+    if (captionText != null && captionText.isNotEmpty) return captionText;
+    // Everything TDLib has no text for at all — a poll, a location, somebody
+    // joining — would otherwise be an empty bubble in the middle of a group.
+    return _describe(content) ?? '';
+  }
+
+  /// A readable line for content that carries no text of its own.
+  ///
+  /// Returns null for the kinds that have a bubble of their own to draw,
+  /// which must not be given a caption they did not have.
+  static String? _describe(Map<String, dynamic>? content) {
+    switch (content?['@type'] as String?) {
+      case 'messagePoll':
+        final poll = content?['poll'] as Map<String, dynamic>?;
+        final question = poll?['question'];
+        final title = question is Map
+            ? question['text'] as String? ?? ''
+            : question as String? ?? '';
+        final options = (poll?['options'] as List?) ?? const [];
+        final lines = [
+          '📊 ${title.isEmpty ? 'Poll' : title}',
+          for (final option in options.cast<Map<String, dynamic>>())
+            '• ${(option['text'] is Map ? (option['text'] as Map)['text'] : option['text']) ?? ''}',
+        ];
+        return lines.join('\n');
+      case 'messageLocation':
+        return '📍 Location';
+      case 'messageVenue':
+        final venue = content?['venue'] as Map<String, dynamic>?;
+        return '📍 ${venue?['title'] as String? ?? 'Venue'}';
+      case 'messageContact':
+        final contact = content?['contact'] as Map<String, dynamic>?;
+        final name = [
+          contact?['first_name'] as String? ?? '',
+          contact?['last_name'] as String? ?? '',
+        ].where((part) => part.isNotEmpty).join(' ');
+        return '👤 ${name.isEmpty ? 'Contact' : name}';
+      case 'messageVideoNote':
+        return '📹 Video message';
+      case 'messageDice':
+        return content?['emoji'] as String? ?? '🎲';
+      case 'messageCall':
+        final discard =
+            (content?['discard_reason'] as Map<String, dynamic>?)?['@type'];
+        return discard == 'callDiscardReasonMissed'
+            ? '📞 Missed call'
+            : '📞 Call';
+      case 'messagePinMessage':
+        return '📌 Pinned a message';
+      case 'messageChatAddMembers':
+        return 'Joined the group';
+      case 'messageChatDeleteMember':
+        return 'Left the group';
+      case 'messageChatJoinByLink':
+        return 'Joined by invite link';
+      case 'messageChatChangeTitle':
+        return 'Changed the title to '
+            '${content?['title'] as String? ?? ''}';
+      case 'messageChatChangePhoto':
+        return 'Changed the photo';
+      case 'messageBasicGroupChatCreate':
+      case 'messageSupergroupChatCreate':
+        return 'Created the group';
+      case 'messageScreenshotTaken':
+        return 'Took a screenshot';
+      case 'messageChatSetMessageAutoDeleteTime':
+        return 'Changed the auto-delete timer';
+      case 'messageUnsupported':
+        return 'Unsupported message';
+      default:
+        return null;
+    }
   }
 
   static String? _previewOf(Map<String, dynamic>? message) {
@@ -981,7 +1053,9 @@ class TdlibTelegramClient implements TelegramClient {
       case 'messageSticker':
         return '🎨 Sticker';
       default:
-        return '';
+        // A poll or a service message reads the same in the list as it does in
+        // the bubble; only its first line fits.
+        return _describe(content)?.split('\n').first ?? '';
     }
   }
 
