@@ -611,12 +611,15 @@ class TdlibTelegramClient implements TelegramClient {
     if (id == null || chat == null) return;
 
     final position = update['position'] as Map<String, dynamic>?;
-    final named = _listsFrom(position == null ? null : [position]);
+    // No position at all says nothing about any list; _listsFrom would read
+    // that as "main", which would put archived chats back in the chat list.
+    if (position == null) return;
+    final named = _listsFrom([position]);
     if (named.isEmpty) return;
     final name = named.first;
 
     // order "0" means the chat left that list.
-    final present = (position?['order'] as String?) != '0';
+    final present = (position['order'] as String?) != '0';
     final lists = Set<String>.from(chat.lists);
     if (present) {
       lists.add(name);
@@ -626,7 +629,7 @@ class TdlibTelegramClient implements TelegramClient {
 
     _chatIndex[id] = chat.copyWith(
       lists: lists,
-      isPinned: position?['is_pinned'] as bool? ?? chat.isPinned,
+      isPinned: position['is_pinned'] as bool? ?? chat.isPinned,
     );
     _chatsController.add(currentChats);
   }
@@ -1618,7 +1621,11 @@ class TdlibTelegramClient implements TelegramClient {
     if (chat == null) return;
     _send({
       '@type': 'toggleChatIsPinned',
-      'chat_list': {'@type': 'chatListMain'},
+      // Pinning is per list: pinning an archived chat into the main list is
+      // not what the row means, and TDLib would refuse it.
+      'chat_list': {
+        '@type': chat.isArchived ? 'chatListArchive' : 'chatListMain',
+      },
       'chat_id': chatId,
       'is_pinned': !chat.isPinned,
     });
