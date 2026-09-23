@@ -173,6 +173,7 @@ class _ContactsBodyState extends State<ContactsBody> {
                         initials: user.initials,
                         size: 40,
                         isOnline: user.isOnline,
+                        photoPath: user.photoPath,
                       ),
                       title: Row(
                         children: [

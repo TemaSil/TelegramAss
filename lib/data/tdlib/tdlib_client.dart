@@ -53,6 +53,9 @@ class TdlibTelegramClient implements TelegramClient {
   final _chatOfBasicGroup = <int, int>{};
 
   final _chatOfFile = <int, int>{};
+
+  /// Profile photos still downloading, by file id.
+  final _userOfFile = <int, int>{};
   final _messageOfFile = <int, (int chatId, int messageId)>{};
 
   /// Link-preview images are tracked apart from the message's own media, so a
@@ -293,6 +296,8 @@ class TdlibTelegramClient implements TelegramClient {
           (update['user_id'] as num?)?.toInt(),
           update['status'] as Map<String, dynamic>?,
         );
+      case 'updateChatPhoto':
+        _onChatPhoto(update);
       case 'updateChatPosition':
         _onChatPosition(update);
       case 'updateChatFolders':
@@ -365,8 +370,22 @@ class TdlibTelegramClient implements TelegramClient {
     final last = (json['last_name'] as String?) ?? '';
     final usernames = json['usernames'] as Map<String, dynamic>?;
     final active = (usernames?['active_usernames'] as List?)?.cast<String>();
+    final id = (json['id'] as num).toInt();
+
+    // The small size is the one an avatar needs, and it is a few kilobytes.
+    // TDLib announces every user the account has ever seen, so fetching it
+    // here means the photo is usually on disk before any list asks for it.
+    final photo =
+        (json['profile_photo'] as Map<String, dynamic>?)?['small']
+            as Map<String, dynamic>?;
+    final photoPath = _resolveFile(photo, priority: 32);
+    final photoFileId = (photo?['id'] as num?)?.toInt();
+    if (photoPath == null && photoFileId != null) {
+      _userOfFile[photoFileId] = id;
+    }
+
     return TgUser(
-      id: (json['id'] as num).toInt(),
+      id: id,
       name: '$first $last'.trim().isEmpty ? 'Unknown' : '$first $last'.trim(),
       username: active != null && active.isNotEmpty ? active.first : null,
       phone: json['phone_number'] as String?,
@@ -375,6 +394,7 @@ class TdlibTelegramClient implements TelegramClient {
       isOnline:
           (json['status'] as Map<String, dynamic>?)?['@type'] ==
           'userStatusOnline',
+      photoPath: photoPath,
     );
   }
 
@@ -445,6 +465,14 @@ class TdlibTelegramClient implements TelegramClient {
       if (chat != null) {
         _chatIndex[chatId] = chat.copyWith(photoPath: path);
         _chatsController.add(currentChats);
+      }
+    }
+
+    final userId = _userOfFile.remove(id);
+    if (userId != null) {
+      final user = _userIndex[userId];
+      if (user != null) {
+        _userIndex[userId] = user.copyWith(photoPath: path);
       }
     }
 
@@ -628,6 +656,28 @@ class TdlibTelegramClient implements TelegramClient {
 
   /// A single position changing — a chat archived, unarchived, or added to a
   /// folder. TDLib sends one position at a time, so the rest are kept.
+  /// A chat's photo is not always in the `updateNewChat` that announced it,
+  /// and it changes while the app is running. Without this the avatar stayed
+  /// whatever it was when the chat first appeared.
+  void _onChatPhoto(Map<String, dynamic> update) {
+    final chatId = (update['chat_id'] as num?)?.toInt();
+    if (chatId == null) return;
+    final chat = _chatIndex[chatId];
+    if (chat == null) return;
+
+    final photo =
+        (update['photo'] as Map<String, dynamic>?)?['small']
+            as Map<String, dynamic>?;
+    final path = _resolveFile(photo, priority: 32);
+    final fileId = (photo?['id'] as num?)?.toInt();
+    if (path == null) {
+      if (fileId != null) _chatOfFile[fileId] = chatId;
+      return;
+    }
+    _chatIndex[chatId] = chat.copyWith(photoPath: path);
+    _chatsController.add(currentChats);
+  }
+
   void _onChatPosition(Map<String, dynamic> update) {
     final id = (update['chat_id'] as num?)?.toInt();
     final chat = id == null ? null : _chatIndex[id];

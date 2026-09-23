@@ -300,6 +300,7 @@ class _Header extends StatelessWidget {
             seed: story.seed,
             initials: story.authorName.substring(0, 1),
             size: 36,
+            photoPath: story.photoPath,
           ),
           const SizedBox(width: 10),
           Expanded(

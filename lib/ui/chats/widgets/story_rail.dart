@@ -43,6 +43,7 @@ class StoryRail extends StatelessWidget {
                       size: 58,
                       hasStory: !isOwn,
                       storySeen: story.isSeen,
+                      photoPath: story.photoPath,
                     ),
                     if (isOwn)
                       Positioned(

@@ -46,7 +46,7 @@ SOCKS5 proxy support; and an in-app diagnostics log.
 | Text, replies, editing, deletion, reactions, drafts | done |
 | Formatting, links, spoilers, mentions, hashtags | done |
 | Sending photos, camera shots and files | done |
-| Photos and avatars downloaded and viewable | done |
+| Photos and avatars downloaded and viewable | done — chat and profile photos both, with the monogram for anyone who has none |
 | Voice notes and music: playback, scrubbing, waveform progress | done |
 | Voice recording — hold to record, slide to cancel | done |
 | Link previews | done |

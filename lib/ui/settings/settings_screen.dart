@@ -524,6 +524,7 @@ class _ProfileCard extends StatelessWidget {
             initials: me?.initials ?? '?',
             size: 64,
             isOnline: true,
+            photoPath: me?.photoPath,
           ),
           const SizedBox(width: 14),
           Expanded(

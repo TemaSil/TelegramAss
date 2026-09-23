@@ -128,6 +128,7 @@ class _CallTile extends StatelessWidget {
         seed: call.peerId,
         initials: call.peerName.substring(0, 1),
         size: 40,
+        photoPath: call.photoPath,
       ),
       title: Text(
         call.peerName,

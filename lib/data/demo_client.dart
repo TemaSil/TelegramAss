@@ -160,7 +160,7 @@ class DemoTelegramClient implements TelegramClient {
   }
 
   void _completeLogin() {
-    _me = const TgUser(
+    _me = TgUser(
       id: 1,
       name: 'Artem Silinskiy',
       username: 'temasil',
@@ -168,6 +168,7 @@ class DemoTelegramClient implements TelegramClient {
       bio: 'Building things with glass.',
       isOnline: true,
       isPremium: true,
+      photoPath: _avatarFor(1),
     );
     _setStage(TgAuthStage.ready);
     _chatsController.add(_chats);
@@ -203,25 +204,53 @@ class DemoTelegramClient implements TelegramClient {
   ];
 
   @override
-  List<TgStory> get stories => const [
-    TgStory(id: 1, authorId: 1, authorName: 'My Story', seed: 1, isSeen: true),
+  List<TgStory> get stories => [
+    TgStory(
+      id: 1,
+      authorId: 1,
+      authorName: 'My Story',
+      seed: 1,
+      isSeen: true,
+      photoPath: _avatarFor(1),
+    ),
     TgStory(
       id: 2,
       authorId: 2,
       authorName: 'Nina',
       seed: 2,
       caption: 'Morning run',
+      photoPath: _avatarFor(2),
     ),
-    TgStory(id: 3, authorId: 3, authorName: 'Pavel', seed: 3),
+    TgStory(
+      id: 3,
+      authorId: 3,
+      authorName: 'Pavel',
+      seed: 3,
+      photoPath: _avatarFor(3),
+    ),
     TgStory(id: 4, authorId: 5, authorName: 'Design', seed: 4),
-    TgStory(id: 5, authorId: 7, authorName: 'Marta', seed: 5, isSeen: true),
-    TgStory(id: 6, authorId: 9, authorName: 'Ilya', seed: 6),
+    TgStory(
+      id: 5,
+      authorId: 7,
+      authorName: 'Marta',
+      seed: 5,
+      isSeen: true,
+      photoPath: _avatarFor(7),
+    ),
+    TgStory(
+      id: 6,
+      authorId: 9,
+      authorName: 'Ilya',
+      seed: 6,
+      photoPath: _avatarFor(9),
+    ),
   ];
 
   @override
-  List<TgUser> get contacts => const [
+  List<TgUser> get contacts => [
     TgUser(
       id: 2,
+      photoPath: _avatarFor(2),
       name: 'Nina Kovalenko',
       username: 'ninak',
       phone: '+7 911 222-33-44',
@@ -229,6 +258,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgUser(
       id: 3,
+      photoPath: _avatarFor(3),
       name: 'Pavel Durov',
       username: 'durov',
       phone: '+7 911 555-66-77',
@@ -236,6 +266,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgUser(
       id: 4,
+      photoPath: _avatarFor(4),
       name: 'Sergey Ivanov',
       username: 'sergey',
       phone: '+7 903 111-22-33',
@@ -243,6 +274,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgUser(
       id: 7,
+      photoPath: _avatarFor(7),
       name: 'Marta Lis',
       username: 'martalis',
       phone: '+48 500 100 200',
@@ -250,6 +282,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgUser(
       id: 9,
+      photoPath: _avatarFor(9),
       name: 'Ilya Petrov',
       username: 'ilyap',
       phone: '+7 921 777-88-99',
@@ -257,6 +290,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgUser(
       id: 11,
+      photoPath: _avatarFor(11),
       name: 'Katya Orlova',
       username: 'katya',
       phone: '+7 999 123-45-67',
@@ -268,6 +302,7 @@ class DemoTelegramClient implements TelegramClient {
   List<TgCall> get calls => [
     TgCall(
       id: 1,
+      photoPath: _avatarFor(2),
       peerName: 'Nina Kovalenko',
       peerId: 2,
       date: _ago(const Duration(hours: 2)),
@@ -277,6 +312,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgCall(
       id: 2,
+      photoPath: _avatarFor(7),
       peerName: 'Marta Lis',
       peerId: 7,
       date: _ago(const Duration(hours: 8)),
@@ -286,6 +322,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgCall(
       id: 3,
+      photoPath: _avatarFor(4),
       peerName: 'Sergey Ivanov',
       peerId: 4,
       date: _ago(const Duration(days: 1)),
@@ -295,6 +332,7 @@ class DemoTelegramClient implements TelegramClient {
     ),
     TgCall(
       id: 4,
+      photoPath: _avatarFor(9),
       peerName: 'Ilya Petrov',
       peerId: 9,
       date: _ago(const Duration(days: 2)),
@@ -865,10 +903,28 @@ class DemoTelegramClient implements TelegramClient {
 
   static DateTime _ago(Duration d) => DateTime.now().subtract(d);
 
+  /// Profile photos for the demo account, keyed by the id they belong to.
+  ///
+  /// Not everybody is in here on purpose: Telegram is full of people who
+  /// never set a photo, and the monogram is what it draws for them, so the
+  /// chat list should show both. See `tool/make_demo_avatars.py`.
+  static const _avatars = <int, String>{
+    1: 'assets/avatars/demo-01.png',
+    2: 'assets/avatars/demo-02.png',
+    3: 'assets/avatars/demo-03.png',
+    7: 'assets/avatars/demo-04.png',
+    9: 'assets/avatars/demo-05.png',
+    100: 'assets/avatars/demo-06.png',
+    200: 'assets/avatars/demo-07.png',
+  };
+
+  static String? _avatarFor(int id) => _avatars[id];
+
   void _seed() {
     _chats = [
       TgChat(
         id: 2,
+        photoPath: _avatarFor(2),
         title: 'Nina Kovalenko',
         kind: TgChatKind.private,
         lastMessage: 'Sent you the mockups, take a look 👀',
@@ -880,6 +936,7 @@ class DemoTelegramClient implements TelegramClient {
       ),
       TgChat(
         id: 100,
+        photoPath: _avatarFor(100),
         title: 'Design Team',
         kind: TgChatKind.group,
         lastMessage: 'Pavel: the glass blur is finally right',
@@ -897,6 +954,7 @@ class DemoTelegramClient implements TelegramClient {
       ),
       TgChat(
         id: 3,
+        photoPath: _avatarFor(3),
         title: 'Pavel Durov',
         kind: TgChatKind.private,
         lastMessage: 'Deal. Ship it on Friday.',
@@ -907,6 +965,7 @@ class DemoTelegramClient implements TelegramClient {
       ),
       TgChat(
         id: 200,
+        photoPath: _avatarFor(200),
         title: 'Telegram Tips',
         kind: TgChatKind.channel,
         lastMessage: 'Five gestures you did not know about',
@@ -918,6 +977,7 @@ class DemoTelegramClient implements TelegramClient {
       ),
       TgChat(
         id: 7,
+        photoPath: _avatarFor(7),
         title: 'Marta Lis',
         kind: TgChatKind.private,
         lastMessage: 'Perfect, see you at 8 🙌',
@@ -953,6 +1013,7 @@ class DemoTelegramClient implements TelegramClient {
       ),
       TgChat(
         id: 9,
+        photoPath: _avatarFor(9),
         title: 'Ilya Petrov',
         kind: TgChatKind.private,
         lastMessage: 'Voice message',

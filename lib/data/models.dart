@@ -36,6 +36,7 @@ class TgUser {
     this.lastSeen,
     this.isVerified = false,
     this.isPremium = false,
+    this.photoPath,
   });
 
   final int id;
@@ -47,6 +48,25 @@ class TgUser {
   final String? lastSeen;
   final bool isVerified;
   final bool isPremium;
+
+  /// Profile photo once it is on disk. Null means the monogram stands, which
+  /// is also what Telegram itself shows for someone who has no photo.
+  final String? photoPath;
+
+  TgUser copyWith({String? photoPath, bool? isOnline, String? lastSeen}) {
+    return TgUser(
+      id: id,
+      name: name,
+      username: username,
+      phone: phone,
+      bio: bio,
+      isOnline: isOnline ?? this.isOnline,
+      lastSeen: lastSeen ?? this.lastSeen,
+      isVerified: isVerified,
+      isPremium: isPremium,
+      photoPath: photoPath ?? this.photoPath,
+    );
+  }
 
   String get initials {
     final parts = name.trim().split(RegExp(r'\s+'));
@@ -438,6 +458,7 @@ class TgStory {
     required this.seed,
     this.isSeen = false,
     this.caption,
+    this.photoPath,
   });
 
   final int id;
@@ -446,6 +467,9 @@ class TgStory {
   final int seed;
   final bool isSeen;
   final String? caption;
+
+  /// The author's profile photo, for the ring on the story rail.
+  final String? photoPath;
 }
 
 class TgCall {
@@ -458,6 +482,7 @@ class TgCall {
     required this.isVideo,
     this.isMissed = false,
     this.duration,
+    this.photoPath,
   });
 
   final int id;
@@ -468,6 +493,9 @@ class TgCall {
   final bool isVideo;
   final bool isMissed;
   final Duration? duration;
+
+  /// The other party's profile photo.
+  final String? photoPath;
 }
 
 /// Result of an authorization step.

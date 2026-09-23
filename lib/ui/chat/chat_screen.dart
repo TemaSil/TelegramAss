@@ -1541,6 +1541,7 @@ class _MembersSheet extends StatelessWidget {
                     initials: member.initials,
                     size: 38,
                     isOnline: member.isOnline,
+                    photoPath: member.photoPath,
                   ),
                   title: Text(member.name, maxLines: 1),
                   subtitle: Text(

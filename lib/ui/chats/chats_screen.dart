@@ -344,6 +344,7 @@ class _ChatsBodyState extends State<ChatsBody> {
               return _MessageResultRow(
                 message: message,
                 chatTitle: chat?.title ?? l10n.chats,
+                photoPath: chat?.photoPath,
                 onTap: () => Navigator.of(context).push(
                   CupertinoPageRoute<void>(
                     builder: (_) => ChatScreen(chatId: message.chatId),
@@ -371,11 +372,13 @@ class _MessageResultRow extends StatelessWidget {
     required this.message,
     required this.chatTitle,
     required this.onTap,
+    this.photoPath,
   });
 
   final TgMessage message;
   final String chatTitle;
   final VoidCallback onTap;
+  final String? photoPath;
 
   @override
   Widget build(BuildContext context) {
@@ -390,6 +393,7 @@ class _MessageResultRow extends StatelessWidget {
               seed: message.chatId,
               initials: chatTitle.isEmpty ? '?' : chatTitle[0].toUpperCase(),
               size: 40,
+              photoPath: photoPath,
             ),
             const SizedBox(width: 12),
             Expanded(
