@@ -167,7 +167,7 @@ class SettingsBody extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: GlassCard(
+            child: GlassContainer.card(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               shape: const LiquidRoundedSuperellipse(
                 borderRadius: GlassTokens.cardRadius,
@@ -510,7 +510,7 @@ class _ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final me = state.me;
 
-    return GlassCard(
+    return GlassContainer.card(
       padding: const EdgeInsets.all(18),
       shape: const LiquidRoundedSuperellipse(
         borderRadius: GlassTokens.cardRadius,

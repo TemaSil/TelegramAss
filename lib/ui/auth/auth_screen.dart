@@ -97,7 +97,7 @@ class _AuthScreenState extends State<AuthScreen> {
               children: [
                 _Logo(),
                 const SizedBox(height: 28),
-                GlassCard(
+                GlassContainer.card(
                   padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
                   shape: const LiquidRoundedSuperellipse(borderRadius: 34),
                   settings: GlassTokens.panel(context),

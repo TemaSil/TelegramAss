@@ -581,7 +581,7 @@ class _EmptyState extends StatelessWidget {
     final l10n = AppL10n.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
-      child: GlassCard(
+      child: GlassContainer.card(
         padding: const EdgeInsets.all(26),
         shape: const LiquidRoundedSuperellipse(borderRadius: 30),
         settings: GlassTokens.panel(context),
